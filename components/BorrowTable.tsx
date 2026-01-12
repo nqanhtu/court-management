@@ -2,14 +2,71 @@
 
 import { Search, RotateCcw, Pencil, Trash2, Filter } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { BorrowSlip, User, BorrowItem, File } from "@prisma/client";
+import { format } from "date-fns";
+import { useState, useMemo } from "react";
+
+type BorrowSlipWithDetails = BorrowSlip & {
+  user: User;
+  items: (BorrowItem & { file: File })[];
+};
 
 interface BorrowTableProps {
+  borrowSlips: BorrowSlipWithDetails[];
   onReturn: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }
 
-export default function BorrowTable({ onReturn, onEdit, onDelete }: BorrowTableProps) {
+const ITEMS_PER_PAGE = 15;
+
+export default function BorrowTable({ borrowSlips, onReturn, onEdit, onDelete }: BorrowTableProps) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Filter Logic
+  const filteredSlips = useMemo(() => {
+    return borrowSlips.filter((slip) => {
+      // 1. Search (Code, User Name)
+      const searchLower = searchTerm.toLowerCase();
+      const matchesSearch = 
+        slip.code.toLowerCase().includes(searchLower) ||
+        slip.user.fullName.toLowerCase().includes(searchLower);
+
+      if (!matchesSearch) return false;
+
+      // 2. Status Filter
+      if (selectedStatus !== "all") {
+        const isReturned = slip.status === "RETURNED";
+        const isOverdue = slip.status === "OVERDUE" || (new Date() > new Date(slip.dueDate) && !isReturned);
+        
+        if (selectedStatus === "RETURNED" && !isReturned) return false;
+        if (selectedStatus === "OVERDUE" && !isOverdue) return false;
+        if (selectedStatus === "BORROWING" && (isReturned || isOverdue)) return false;
+      }
+
+      return true;
+    });
+  }, [borrowSlips, searchTerm, selectedStatus]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredSlips.length / ITEMS_PER_PAGE);
+  const paginatedSlips = filteredSlips.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
+
+  useMemo(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedStatus]);
+
   return (
     <div className="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
        {/* Header / Filters */}
@@ -21,17 +78,27 @@ export default function BorrowTable({ onReturn, onEdit, onDelete }: BorrowTableP
         <div className="h-6 w-px bg-slate-200 mx-2 hidden md:block"></div>
         
         <div className="flex items-center gap-2">
-           <select className="bg-slate-50 border border-slate-200 rounded-lg text-sm px-3 py-1.5 outline-none">
-             <option>Tất cả trạng thái</option>
-             <option>Đang mượn</option>
-             <option>Quá hạn</option>
-             <option>Đã trả</option>
+           <select 
+             value={selectedStatus}
+             onChange={(e) => setSelectedStatus(e.target.value)}
+             className="bg-slate-50 border border-slate-200 rounded-lg text-sm px-3 py-1.5 outline-none cursor-pointer focus:border-indigo-500 transition-colors"
+            >
+             <option value="all">Tất cả trạng thái</option>
+             <option value="BORROWING">Đang mượn</option>
+             <option value="OVERDUE">Quá hạn</option>
+             <option value="RETURNED">Đã trả</option>
            </select>
         </div>
 
         <div className="flex-1 min-w-[200px] relative max-w-md ml-auto">
            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-           <input type="text" placeholder="Tìm kiếm phiếu mượn..." className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 transition-all" />
+           <input 
+             type="text" 
+             placeholder="Tìm kiếm phiếu mượn..." 
+             value={searchTerm}
+             onChange={(e) => setSearchTerm(e.target.value)}
+             className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 transition-all" 
+            />
         </div>
       </div>
 
@@ -47,25 +114,38 @@ export default function BorrowTable({ onReturn, onEdit, onDelete }: BorrowTableP
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 bg-white">
-            {Array.from({ length: 15 }).map((_, i) => {
-               const isOverdue = i % 5 === 0;
-               const isReturned = i % 3 === 0;
+            {paginatedSlips.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-8 text-center text-slate-500">
+                  {filteredSlips.length === 0 && borrowSlips.length > 0 ? "Không tìm thấy kết quả phù hợp." : "Chưa có phiếu mượn nào."}
+                </td>
+              </tr>
+            ) : (
+              paginatedSlips.map((slip) => {
+               const isReturned = slip.status === "RETURNED";
+               const isOverdue = slip.status === "OVERDUE" || (new Date() > new Date(slip.dueDate) && !isReturned);
+               
                return (
-                <tr key={i} className="hover:bg-indigo-50/50 transition-colors group">
-                  <td className="px-6 py-3 font-mono text-slate-500">PM-{202500 + i}</td>
+                <tr key={slip.id} className="hover:bg-indigo-50/50 transition-colors group">
+                  <td className="px-6 py-3 font-mono text-slate-500">{slip.code}</td>
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-3">
                        <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700">
-                         NV
+                         {slip.user.fullName.charAt(0)}
                        </div>
-                       <span className="font-medium text-slate-800">Nguyễn Văn {String.fromCharCode(65 + i)}</span>
+                       <span className="font-medium text-slate-800">{slip.user.fullName}</span>
                     </div>
                   </td>
-                  <td className="px-6 py-3 text-slate-600">03/03/2025</td>
+                  <td className="px-6 py-3 text-slate-600">{format(new Date(slip.borrowDate), "dd/MM/yyyy")}</td>
                   <td className={cn("px-6 py-3 font-medium", isOverdue && !isReturned ? "text-red-600" : "text-slate-600")}>
-                    10/03/2025
+                    {format(new Date(slip.dueDate), "dd/MM/yyyy")}
                   </td>
-                  <td className="px-6 py-3 text-slate-600">HS-2025-{840+i}</td>
+                  <td className="px-6 py-3 text-slate-600">
+                    {slip.items.length > 0 
+                      ? slip.items.map(item => item.file.code).join(", ") 
+                      : <span className="text-slate-400 italic">Không có hồ sơ</span>
+                    }
+                  </td>
                   <td className="px-6 py-3">
                     {isReturned ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium border border-emerald-200">
@@ -85,7 +165,7 @@ export default function BorrowTable({ onReturn, onEdit, onDelete }: BorrowTableP
                      <div className="flex items-center gap-2">
                         {!isReturned && (
                           <button 
-                            onClick={() => onReturn(`PM-${202500+i}`)}
+                            onClick={() => onReturn(slip.id)}
                             className="p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors shadow-sm"
                             title="Trả hồ sơ"
                           >
@@ -93,14 +173,14 @@ export default function BorrowTable({ onReturn, onEdit, onDelete }: BorrowTableP
                           </button>
                         )}
                         <button 
-                          onClick={() => onEdit(`PM-${202500+i}`)}
+                          onClick={() => onEdit(slip.id)}
                           className="p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm"
                           title="Chỉnh sửa"
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button 
-                          onClick={() => onDelete(`PM-${202500+i}`)}
+                          onClick={() => onDelete(slip.id)}
                           className="p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm"
                           title="Xóa"
                         >
@@ -110,19 +190,36 @@ export default function BorrowTable({ onReturn, onEdit, onDelete }: BorrowTableP
                   </td>
                 </tr>
                );
-            })}
+            })
+          )}
           </tbody>
         </table>
       </div>
 
        {/* Pagination */}
       <div className="p-3 border-t border-slate-100 bg-white flex items-center justify-between shrink-0">
-           <span className="text-xs text-slate-500">Hiển thị 15 trên 42 phiếu mượn</span>
+           <span className="text-xs text-slate-500">
+             Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1} - {Math.min(currentPage * ITEMS_PER_PAGE, filteredSlips.length)} trên {filteredSlips.length} phiếu mượn
+           </span>
            <div className="flex gap-2">
-             <button className="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50">Trước</button>
-             <button className="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50">Sau</button>
+             <button 
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+             >
+               Trước
+             </button>
+             <button 
+               onClick={() => handlePageChange(currentPage + 1)}
+               disabled={currentPage === totalPages || totalPages === 0}
+               className="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+             >
+               Sau
+             </button>
            </div>
       </div>
     </div>
   );
 }
+
+

@@ -1,7 +1,13 @@
 import { BarChart3, TrendingUp, AlertCircle, CheckCircle2, FileClock, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { getReportStats } from "@/lib/actions/borrows";
+import { format } from "date-fns";
 
-export default function Reports() {
+export const dynamic = 'force-dynamic';
+
+export default async function Reports() {
+  const { totalBorrows, activeBorrows, overdueBorrows, returnedRate, recentBorrows } = await getReportStats();
+
   return (
     <div className="flex flex-col h-full gap-6 max-w-7xl mx-auto w-full">
       {/* Header */}
@@ -18,10 +24,10 @@ export default function Reports() {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         {[
-          { label: "Tổng lượt mượn", value: "1,248", icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
-          { label: "Đang mượn", value: "42", icon: FileClock, color: "text-amber-600", bg: "bg-amber-50" },
-          { label: "Quá hạn", value: "5", icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" },
-          { label: "Đã trả đúng hạn", value: "98%", icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+          { label: "Tổng lượt mượn", value: totalBorrows.toString(), icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
+          { label: "Đang mượn", value: activeBorrows.toString(), icon: FileClock, color: "text-amber-600", bg: "bg-amber-50" },
+          { label: "Quá hạn", value: overdueBorrows.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" },
+          { label: "Đã trả đúng hạn", value: `${returnedRate}%`, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
         ].map((stat, i) => (
           <div key={i} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-shadow">
              <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}>
@@ -39,7 +45,7 @@ export default function Reports() {
       <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
         <div className="p-5 border-b border-slate-100 flex items-center gap-2">
            <BarChart3 className="w-5 h-5 text-slate-400" />
-           <h3 className="font-semibold text-slate-800">Chi tiết giao dịch</h3>
+           <h3 className="font-semibold text-slate-800">Chi tiết giao dịch gần đây</h3>
         </div>
 
         <div className="flex-1 overflow-auto">
@@ -55,48 +61,54 @@ export default function Reports() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {Array.from({ length: 15 }).map((_, i) => {
-                const isOverdue = i % 10 === 0;
-                const isReturned = i % 3 === 0;
-                
-                return (
-                  <tr key={i} className="hover:bg-slate-50/80 transition-colors group">
-                    <td className="px-6 py-3.5 font-medium text-slate-800 group-hover:text-indigo-600 transition-colors">PM-2025-{1000+i}</td>
-                    <td className="px-6 py-3.5 text-slate-600">HS-2024-{500+i}</td>
-                    <td className="px-6 py-3.5 text-slate-600">01/03/2025</td>
-                    <td className="px-6 py-3.5 text-slate-600">08/03/2025</td>
-                    <td className="px-6 py-3.5 text-slate-600">
-                      {isReturned ? "05/03/2025" : "-"}
-                    </td>
-                    <td className="px-6 py-3.5">
-                      {isReturned ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium border border-emerald-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Đã trả
-                        </span>
-                      ) : isOverdue ? (
-                         <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium border border-red-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Quá hạn
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-medium border border-amber-200">
-                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Đang mượn
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+              {recentBorrows.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                    Chưa có dữ liệu giao dịch.
+                  </td>
+                </tr>
+              ) : (
+                recentBorrows.map((slip) => {
+                  const isReturned = slip.status === "RETURNED";
+                  const isOverdue = slip.status === "OVERDUE" || (new Date() > new Date(slip.dueDate) && !isReturned);
+                  
+                  return (
+                    <tr key={slip.id} className="hover:bg-slate-50/80 transition-colors group">
+                      <td className="px-6 py-3.5 font-medium text-slate-800 group-hover:text-indigo-600 transition-colors">{slip.code}</td>
+                      <td className="px-6 py-3.5 text-slate-600">
+                        {slip.items.length > 0 ? slip.items.map(i => i.file.code).join(", ") : "-"}
+                      </td>
+                      <td className="px-6 py-3.5 text-slate-600">{format(new Date(slip.borrowDate), "dd/MM/yyyy")}</td>
+                      <td className="px-6 py-3.5 text-slate-600">{format(new Date(slip.dueDate), "dd/MM/yyyy")}</td>
+                      <td className="px-6 py-3.5 text-slate-600">
+                        {slip.returnDate ? format(new Date(slip.returnDate), "dd/MM/yyyy") : "-"}
+                      </td>
+                      <td className="px-6 py-3.5">
+                        {isReturned ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium border border-emerald-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Đã trả
+                          </span>
+                        ) : isOverdue ? (
+                           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium border border-red-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Quá hạn
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-medium border border-amber-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Đang mượn
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
         
-        {/* Pagination Footer */}
+        {/* Pagination Footer - Static for now since we only fetch 20 */}
         <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-           <span className="text-xs text-slate-500">Hiển thị 15 trên 1,248 bản ghi</span>
-           <div className="flex gap-2">
-             <button className="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50">Trước</button>
-             <button className="px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50">Sau</button>
-           </div>
+           <span className="text-xs text-slate-500">Hiển thị {recentBorrows.length} giao dịch gần nhất</span>
         </div>
       </div>
     </div>

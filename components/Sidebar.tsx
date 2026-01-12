@@ -84,16 +84,6 @@ export default function Sidebar() {
           </div>
         ))}
       </div>
-
-      <div className='p-4 border-t border-slate-100'>
-        <div className='bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl p-4 text-white'>
-          <p className='text-xs font-medium opacity-80 mb-1'>Phiên bản Pro</p>
-          <p className='text-sm font-bold mb-3'>Nâng cấp ngay</p>
-          <button className='w-full py-1.5 bg-white/20 hover:bg-white/30 rounded text-xs font-semibold transition-colors'>
-            Xem chi tiết
-          </button>
-        </div>
-      </div>
     </aside>
   );
 }

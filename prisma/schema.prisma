@@ -1,0 +1,91 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// Hồ sơ lưu trữ
+model File {
+  id          String   @id @default(uuid())
+  code        String   @unique // Mã hồ sơ (System generated)
+  refCode     String?  // Mã tham chiếu (User input)
+  title       String   // Tiêu đề hồ sơ
+  type        String   // Loại án (Hình sự, Dân sự...)
+  pageCount   Int?     // Số tờ
+  
+  // Thời gian
+  startDate   DateTime?
+  endDate     DateTime?
+  retention   String?  // Thời hạn bảo quản (Vĩnh viễn, 20 năm...)
+  
+  // Dữ liệu quản lý
+  mlhs        String?  // Mục lục hồ sơ
+  mlvb        String?  // Mục lục văn bản
+  
+  // Vị trí lưu kho
+  room        String?  // Kho
+  shelf       String?  // Kệ
+  box         String?  // Hộp/Cặp
+  
+  note        String?  // Ghi chú
+  status      String   @default("IN_STOCK") // IN_STOCK, BORROWED, LOST
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  borrowItems BorrowItem[]
+}
+
+// Người dùng hệ thống / Cán bộ mượn
+model User {
+  id          String   @id @default(uuid())
+  code        String   @unique // Mã nhân viên / ID
+  fullName    String
+  unit        String?  // Đơn vị công tác
+  phone       String?
+  email       String?
+  cccd        String?  // Căn cước công dân
+  address     String?
+  note        String?
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  borrowSlips BorrowSlip[]
+}
+
+// Phiếu mượn hồ sơ
+model BorrowSlip {
+  id          String   @id @default(uuid())
+  code        String   @unique // Mã phiếu mượn (PM-2025-XXX)
+  borrowDate  DateTime @default(now())
+  dueDate     DateTime // Hạn trả
+  returnDate  DateTime? // Ngày trả thực tế (nếu null là chưa trả hết)
+  note        String?
+  status      String   @default("BORROWING") // BORROWING, RETURNED, OVERDUE
+
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  
+  items       BorrowItem[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// Chi tiết phiếu mượn (Liên kết N-N giữa Phiếu mượn và Hồ sơ)
+model BorrowItem {
+  id           String     @id @default(uuid())
+  borrowSlipId String
+  borrowSlip   BorrowSlip @relation(fields: [borrowSlipId], references: [id], onDelete: Cascade)
+  
+  fileId       String
+  file         File       @relation(fields: [fileId], references: [id])
+  
+  returnDate   DateTime?  // Ngày trả cụ thể của từng hồ sơ
+  status       String     @default("BORROWING") // BORROWING, RETURNED
+
+  @@unique([borrowSlipId, fileId])
+}

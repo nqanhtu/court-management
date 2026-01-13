@@ -1,11 +1,11 @@
 'use client';
 
 import { Search, Pencil, Trash2, Filter } from 'lucide-react';
-import { UserModel as User } from '@/app/generated/prisma/models';
+import { UserModel } from '@/app/generated/prisma/models';
 import { useState, useMemo } from 'react';
 
 interface UserTableProps {
-  users: User[];
+  users: UserModel[];
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
 }

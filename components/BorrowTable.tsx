@@ -3,17 +3,17 @@
 import { Search, RotateCcw, Pencil, Trash2, Filter } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
-  BorrowSlipModel as BorrowSlip,
-  UserModel as User,
-  BorrowItemModel as BorrowItem,
-  FileModel as File,
+  BorrowSlipModel,
+  UserModel,
+  BorrowItemModel,
+  FileModel,
 } from '@/app/generated/prisma/models';
 import { format } from 'date-fns';
 import { useState, useMemo } from 'react';
 
-type BorrowSlipWithDetails = BorrowSlip & {
-  user: User;
-  items: (BorrowItem & { file: File })[];
+type BorrowSlipWithDetails = BorrowSlipModel & {
+  user: UserModel;
+  items: (BorrowItemModel & { file: FileModel })[];
 };
 
 interface BorrowTableProps {

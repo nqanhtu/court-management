@@ -1,7 +1,7 @@
 'use server';
 
 import db from '@/lib/db';
-import { UserModel as User } from '@/app/generated/prisma/models';
+import { UserModel } from '@/app/generated/prisma/models';
 
 export async function getUsers() {
   try {
@@ -30,7 +30,7 @@ export async function getUser(id: string) {
 }
 
 export async function createUser(
-  data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<UserModel, 'id' | 'createdAt' | 'updatedAt'>
 ) {
   try {
     const user = await db.user.create({
@@ -43,7 +43,7 @@ export async function createUser(
   }
 }
 
-export async function updateUser(id: string, data: Partial<User>) {
+export async function updateUser(id: string, data: Partial<UserModel>) {
   try {
     const user = await db.user.update({
       where: { id },

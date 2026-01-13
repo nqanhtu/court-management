@@ -1,7 +1,7 @@
 'use server';
 
 import db from '@/lib/db';
-import { FileModel as File } from '@/app/generated/prisma/models';
+import { FileModel } from '@/app/generated/prisma/models';
 
 export async function getFiles() {
   try {
@@ -30,7 +30,7 @@ export async function getFile(id: string) {
 }
 
 export async function createFile(
-  data: Omit<File, 'id' | 'createdAt' | 'updatedAt'>
+  data: Omit<FileModel, 'id' | 'createdAt' | 'updatedAt'>
 ) {
   try {
     const file = await db.file.create({

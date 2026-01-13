@@ -1,7 +1,6 @@
 "use client";
 
-import { Filter, Search, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Filter, Search, Pencil, Trash2 } from "lucide-react";
 import { File as FileModel } from "@prisma/client";
 import { format } from "date-fns";
 import { useState, useMemo } from "react";
@@ -49,6 +48,21 @@ export default function ArchiveTable({ files, onEdit, onDelete }: ArchiveTablePr
     });
   }, [files, searchTerm, selectedType, selectedYear]);
 
+  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedType(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSelectedYear(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
+
   // Pagination Logic
   const totalPages = Math.ceil(filteredFiles.length / ITEMS_PER_PAGE);
   const paginatedFiles = filteredFiles.slice(
@@ -61,11 +75,6 @@ export default function ArchiveTable({ files, onEdit, onDelete }: ArchiveTablePr
       setCurrentPage(newPage);
     }
   };
-
-  // Reset page when filters change
-  useMemo(() => {
-    setCurrentPage(1);
-  }, [searchTerm, selectedType, selectedYear]);
 
 
   return (
@@ -86,7 +95,7 @@ export default function ArchiveTable({ files, onEdit, onDelete }: ArchiveTablePr
         <div className="flex items-center gap-2">
           <select 
             value={selectedType}
-            onChange={(e) => setSelectedType(e.target.value)}
+            onChange={handleTypeChange}
             className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-500 transition-colors"
           >
             <option value="all">Tất cả loại án</option>
@@ -100,7 +109,7 @@ export default function ArchiveTable({ files, onEdit, onDelete }: ArchiveTablePr
             type="text" 
             placeholder="Năm"
             value={selectedYear}
-            onChange={(e) => setSelectedYear(e.target.value)}
+            onChange={handleYearChange}
             className="border border-slate-200 rounded-lg px-3 py-1.5 w-20 text-center text-sm outline-none focus:border-indigo-500 transition-colors"
           />
         </div>
@@ -111,7 +120,7 @@ export default function ArchiveTable({ files, onEdit, onDelete }: ArchiveTablePr
             type="text" 
             placeholder="Nhập mã hồ sơ, tiêu đề..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={handleSearchChange}
             className="w-full pl-9 pr-4 py-1.5 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white transition-all"
           />
         </div>

@@ -1,7 +1,6 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { BorrowSlip } from "@prisma/client";
 
 export async function getBorrowSlips() {
   try {

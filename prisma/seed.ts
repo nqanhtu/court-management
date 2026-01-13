@@ -1,9 +1,13 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
 
-const prisma = new PrismaClient()
+const adapter = new PrismaPg({
+  connectionString: process.env.DATABASE_URL,
+});
+const prisma = new PrismaClient({ adapter });
 
 async function main() {
-  console.log('Start seeding ...')
+  console.log('Start seeding ...');
 
   // 1. Seed Users
   const userA = await prisma.user.create({
@@ -14,9 +18,9 @@ async function main() {
       phone: '0901234567',
       email: 'nguyenvana@example.com',
       cccd: '012345678901',
-      address: 'Số 1, Đường ABC, TP.HCM'
-    }
-  })
+      address: 'Số 1, Đường ABC, TP.HCM',
+    },
+  });
 
   const userB = await prisma.user.create({
     data: {
@@ -25,13 +29,13 @@ async function main() {
       unit: 'Phòng Kế Toán',
       phone: '0909876543',
       email: 'lethib@example.com',
-    }
-  })
+    },
+  });
 
-  console.log('Created Users:', userA.fullName, userB.fullName)
+  console.log('Created Users:', userA.fullName, userB.fullName);
 
   // 2. Seed Files (Hồ sơ)
-  const files = []
+  const files = [];
   for (let i = 1; i <= 20; i++) {
     const file = await prisma.file.create({
       data: {
@@ -44,12 +48,12 @@ async function main() {
         room: 'Kho A',
         shelf: 'Kệ 01',
         box: 'Hộp 05',
-        status: i > 15 ? 'BORROWED' : 'IN_STOCK' // Vài hồ sơ đang mượn
-      }
-    })
-    files.push(file)
+        status: i > 15 ? 'BORROWED' : 'IN_STOCK', // Vài hồ sơ đang mượn
+      },
+    });
+    files.push(file);
   }
-  console.log(`Created ${files.length} Files`)
+  console.log(`Created ${files.length} Files`);
 
   // 3. Seed Borrow Slips (Phiếu mượn)
   const slip1 = await prisma.borrowSlip.create({
@@ -63,10 +67,10 @@ async function main() {
         create: [
           { fileId: files[16].id }, // Mượn hồ sơ 17
           { fileId: files[17].id }, // Mượn hồ sơ 18
-        ]
-      }
-    }
-  })
+        ],
+      },
+    },
+  });
 
   const slip2 = await prisma.borrowSlip.create({
     data: {
@@ -78,22 +82,26 @@ async function main() {
       status: 'RETURNED',
       items: {
         create: [
-          { fileId: files[0].id, status: 'RETURNED', returnDate: new Date('2025-02-26') }
-        ]
-      }
-    }
-  })
+          {
+            fileId: files[0].id,
+            status: 'RETURNED',
+            returnDate: new Date('2025-02-26'),
+          },
+        ],
+      },
+    },
+  });
 
-  console.log('Created Borrow Slips')
-  console.log('Seeding finished.')
+  console.log('Created Borrow Slips:', slip1.code, slip2.code);
+  console.log('Seeding finished.');
 }
 
 main()
   .then(async () => {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.error(e)
-    await prisma.$disconnect()
-    process.exit(1)
-  })
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });

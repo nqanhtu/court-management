@@ -17,6 +17,7 @@ export default function Modal({ isOpen, onClose, title, children, className }: M
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 

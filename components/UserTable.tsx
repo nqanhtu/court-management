@@ -45,9 +45,10 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
     }
   };
 
-  useMemo(() => {
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
     setCurrentPage(1);
-  }, [searchTerm]);
+  };
 
   return (
     <div className="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -65,7 +66,7 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
              type="text" 
              placeholder="Tìm kiếm theo tên, SĐT, đơn vị..." 
              value={searchTerm}
-             onChange={(e) => setSearchTerm(e.target.value)}
+             onChange={handleSearchChange}
              className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 transition-all" 
            />
         </div>

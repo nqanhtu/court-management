@@ -2,10 +2,8 @@
 
 import { 
   Save, 
-  FileText, 
   Calendar, 
   Tag, 
-  Database, 
   Hash, 
   ScanLine, 
   UploadCloud, 
@@ -13,8 +11,6 @@ import {
   AlertCircle, 
   MapPin,
   CheckCircle2,
-  Printer,
-  Archive,
   Grid
 } from "lucide-react";
 import { cn } from "@/lib/utils";

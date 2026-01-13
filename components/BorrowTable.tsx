@@ -63,9 +63,15 @@ export default function BorrowTable({ borrowSlips, onReturn, onEdit, onDelete }:
     }
   };
 
-  useMemo(() => {
+  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedStatus(e.target.value);
     setCurrentPage(1);
-  }, [searchTerm, selectedStatus]);
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(1);
+  };
 
   return (
     <div className="flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -80,7 +86,7 @@ export default function BorrowTable({ borrowSlips, onReturn, onEdit, onDelete }:
         <div className="flex items-center gap-2">
            <select 
              value={selectedStatus}
-             onChange={(e) => setSelectedStatus(e.target.value)}
+             onChange={handleStatusChange}
              className="bg-slate-50 border border-slate-200 rounded-lg text-sm px-3 py-1.5 outline-none cursor-pointer focus:border-indigo-500 transition-colors"
             >
              <option value="all">Tất cả trạng thái</option>
@@ -96,7 +102,7 @@ export default function BorrowTable({ borrowSlips, onReturn, onEdit, onDelete }:
              type="text" 
              placeholder="Tìm kiếm phiếu mượn..." 
              value={searchTerm}
-             onChange={(e) => setSearchTerm(e.target.value)}
+             onChange={handleSearchChange}
              className="w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 transition-all" 
             />
         </div>

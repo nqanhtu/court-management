@@ -5,7 +5,12 @@ import { Plus } from "lucide-react";
 import BorrowTable from "@/components/BorrowTable";
 import Modal from "@/components/Modal";
 import BorrowForm from "@/components/BorrowForm";
-import { BorrowSlip, User, BorrowItem, File } from "@prisma/client";
+import { 
+  BorrowSlipModel as BorrowSlip, 
+  UserModel as User, 
+  BorrowItemModel as BorrowItem, 
+  FileModel as File 
+} from "@/app/generated/prisma/models";
 
 type BorrowSlipWithDetails = BorrowSlip & {
   user: User;

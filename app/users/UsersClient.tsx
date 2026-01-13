@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import UserTable from "@/components/UserTable";
 import Modal from "@/components/Modal";
 import UserForm from "@/components/UserForm";
-import { User } from "@prisma/client";
+import { UserModel as User } from "@/app/generated/prisma/models";
 
 interface UsersClientProps {
   initialUsers: User[];

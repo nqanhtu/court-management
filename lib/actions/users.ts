@@ -1,18 +1,18 @@
-"use server";
+'use server';
 
-import { db } from "@/lib/db";
-import { User } from "@prisma/client";
+import db from '@/lib/db';
+import { UserModel as User } from '@/app/generated/prisma/models';
 
 export async function getUsers() {
   try {
     const users = await db.user.findMany({
       orderBy: {
-        createdAt: "desc",
+        createdAt: 'desc',
       },
     });
     return users;
   } catch (error) {
-    console.error("Error fetching users:", error);
+    console.error('Error fetching users:', error);
     return [];
   }
 }
@@ -24,19 +24,21 @@ export async function getUser(id: string) {
     });
     return user;
   } catch (error) {
-    console.error("Error fetching user:", error);
+    console.error('Error fetching user:', error);
     return null;
   }
 }
 
-export async function createUser(data: Omit<User, "id" | "createdAt" | "updatedAt">) {
+export async function createUser(
+  data: Omit<User, 'id' | 'createdAt' | 'updatedAt'>
+) {
   try {
     const user = await db.user.create({
       data,
     });
     return user;
   } catch (error) {
-    console.error("Error creating user:", error);
+    console.error('Error creating user:', error);
     throw error;
   }
 }
@@ -49,7 +51,7 @@ export async function updateUser(id: string, data: Partial<User>) {
     });
     return user;
   } catch (error) {
-    console.error("Error updating user:", error);
+    console.error('Error updating user:', error);
     throw error;
   }
 }
@@ -61,7 +63,7 @@ export async function deleteUser(id: string) {
     });
     return user;
   } catch (error) {
-    console.error("Error deleting user:", error);
+    console.error('Error deleting user:', error);
     throw error;
   }
 }

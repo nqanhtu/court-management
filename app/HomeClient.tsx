@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 import ArchiveTable from "@/components/ArchiveTable";
 import Modal from "@/components/Modal";
 import FileForm from "@/components/FileForm";
-import { File } from "@prisma/client";
+import { FileModel as File } from "@/app/generated/prisma/models";
 
 interface HomeClientProps {
   initialFiles: File[];

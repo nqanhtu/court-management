@@ -9,19 +9,24 @@ import { UserModel as User } from "@/app/generated/prisma/models";
 
 interface UsersClientProps {
   initialUsers: User[];
+  currentUserRole?: string;
 }
 
-export default function UsersClient({ initialUsers }: UsersClientProps) {
+export default function UsersClient({ initialUsers, currentUserRole }: UsersClientProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
+  const isAdmin = currentUserRole === 'ADMIN';
+
   const handleEdit = (id: string) => {
+    if (!isAdmin) return;
     setEditingUserId(id);
     setIsEditModalOpen(true);
   };
 
   const handleDelete = (id: string) => {
+    if (!isAdmin) return;
     if (confirm(`Bạn có chắc muốn xóa người dùng ${id}?`)) {
       console.log("Delete", id);
     }
@@ -31,21 +36,23 @@ export default function UsersClient({ initialUsers }: UsersClientProps) {
     <div className="flex flex-col h-full space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between shrink-0">
-         <div>
+        <div>
           <h1 className="text-2xl font-bold text-slate-800">Quản lý người dùng</h1>
           <p className="text-slate-500 text-sm mt-1">Danh sách cán bộ và người dùng hệ thống.</p>
         </div>
-        <button 
-           onClick={() => setIsAddModalOpen(true)}
-           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm shadow-indigo-200 transition-all"
-         >
-           <Plus className="w-4 h-4" /> Thêm người dùng
-        </button>
+        {isAdmin && (
+          <button
+            onClick={() => setIsAddModalOpen(true)}
+            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm shadow-indigo-200 transition-all"
+          >
+            <Plus className="w-4 h-4" /> Thêm người dùng
+          </button>
+        )}
       </div>
 
       {/* Main Table */}
       <div className="flex-1 min-h-0">
-        <UserTable users={initialUsers} onEdit={handleEdit} onDelete={handleDelete} />
+        <UserTable users={initialUsers} onEdit={handleEdit} onDelete={handleDelete} currentUserRole={currentUserRole} />
       </div>
 
       {/* Modals */}

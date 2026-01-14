@@ -26,12 +26,11 @@ export default function ArchiveTable({
   // Filter Logic
   const filteredFiles = useMemo(() => {
     return files.filter((file) => {
-      // 1. Search Term (Code, Title, Note)
+      // 1. Search Term (Code, Title)
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch =
         file.code.toLowerCase().includes(searchLower) ||
-        file.title.toLowerCase().includes(searchLower) ||
-        (file.note && file.note.toLowerCase().includes(searchLower));
+        file.title.toLowerCase().includes(searchLower);
 
       if (!matchesSearch) return false;
 
@@ -42,9 +41,7 @@ export default function ArchiveTable({
 
       // 3. Year Filter
       if (selectedYear) {
-        const fileYear = file.startDate
-          ? new Date(file.startDate).getFullYear().toString()
-          : '';
+        const fileYear = file.year.toString();
         if (fileYear !== selectedYear) {
           return false;
         }
@@ -53,6 +50,19 @@ export default function ArchiveTable({
       return true;
     });
   }, [files, searchTerm, selectedType, selectedYear]);
+
+  // Pagination Logic
+  const totalPages = Math.ceil(filteredFiles.length / ITEMS_PER_PAGE);
+  const paginatedFiles = filteredFiles.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (newPage: number) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
+    }
+  };
 
   const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedType(e.target.value);
@@ -67,19 +77,6 @@ export default function ArchiveTable({
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
-  };
-
-  // Pagination Logic
-  const totalPages = Math.ceil(filteredFiles.length / ITEMS_PER_PAGE);
-  const paginatedFiles = filteredFiles.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
-  );
-
-  const handlePageChange = (newPage: number) => {
-    if (newPage >= 1 && newPage <= totalPages) {
-      setCurrentPage(newPage);
-    }
   };
 
   return (
@@ -145,14 +142,11 @@ export default function ArchiveTable({
               {[
                 'Hồ sơ số',
                 'Số tờ',
-                'Thời gian',
+                'Năm',
                 'Loại án',
                 'Tiêu đề',
-                'Hộp số',
-                'MLHS',
-                'MLVB',
                 'THBQ',
-                'Ghi chú',
+                'Ngày xử',
                 'Trạng thái',
                 'Hành động',
               ].map((head) => (
@@ -169,7 +163,7 @@ export default function ArchiveTable({
             {paginatedFiles.length === 0 ? (
               <tr>
                 <td
-                  colSpan={12}
+                  colSpan={9}
                   className='px-6 py-8 text-center text-slate-500'
                 >
                   {filteredFiles.length === 0 && files.length > 0
@@ -190,9 +184,7 @@ export default function ArchiveTable({
                     {file.pageCount || '-'}
                   </td>
                   <td className='px-4 py-2.5 text-slate-600'>
-                    {file.startDate
-                      ? format(new Date(file.startDate), 'dd/MM/yyyy')
-                      : '-'}
+                    {file.year}
                   </td>
                   <td className='px-4 py-2.5 text-slate-600'>{file.type}</td>
                   <td
@@ -202,19 +194,10 @@ export default function ArchiveTable({
                     {file.title}
                   </td>
                   <td className='px-4 py-2.5 text-slate-600'>
-                    {file.box || '-'}
-                  </td>
-                  <td className='px-4 py-2.5 text-slate-600'>
-                    {file.mlhs || '-'}
-                  </td>
-                  <td className='px-4 py-2.5 text-slate-600'>
-                    {file.mlvb || '-'}
-                  </td>
-                  <td className='px-4 py-2.5 text-slate-600'>
                     {file.retention || '-'}
                   </td>
-                  <td className='px-4 py-2.5 text-slate-400 italic truncate max-w-25'>
-                    {file.note || '-'}
+                  <td className='px-4 py-2.5 text-slate-600'>
+                    {file.judgmentDate ? format(new Date(file.judgmentDate), 'dd/MM/yyyy') : '-'}
                   </td>
                   <td className='px-4 py-2.5'>
                     {file.status === 'IN_STOCK' && (
@@ -235,10 +218,10 @@ export default function ArchiveTable({
                     {!['IN_STOCK', 'BORROWED', 'LOST'].includes(
                       file.status
                     ) && (
-                      <span className='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800'>
-                        {file.status}
-                      </span>
-                    )}
+                        <span className='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800'>
+                          {file.status}
+                        </span>
+                      )}
                   </td>
                   <td className='px-4 py-2.5 pr-6'>
                     <div className='flex items-center gap-2'>

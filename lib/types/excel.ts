@@ -1,0 +1,36 @@
+export interface ExtractedFile {
+    code: string
+    title: string
+    type: string
+    year: number
+    pageCount: number
+    retention: string
+    startDate?: Date
+    endDate?: Date
+    details: Record<string, unknown>
+    boxCode: string // Links to Location
+}
+
+export interface ExtractedDocument {
+    fileCode: string // Links to Parent File
+    code: string
+    title: string
+    pageCount: number
+    year: number
+    order: number
+}
+
+export interface ExtractedLocation {
+    warehouse: string
+    line: string
+    shelf: string
+    slot: string
+    boxNumber: string
+    fullCode: string // Kxx-Dxx-Gxx-Nxx-Hxx
+}
+
+export interface ImportData {
+    files: ExtractedFile[]
+    documents: ExtractedDocument[]
+    boxes: ExtractedLocation[]
+}

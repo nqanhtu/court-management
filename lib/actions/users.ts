@@ -1,6 +1,6 @@
 'use server';
 
-import db from '@/lib/db';
+import { db } from '@/lib/db';
 import { UserModel } from '@/app/generated/prisma/models';
 
 export async function getUsers() {

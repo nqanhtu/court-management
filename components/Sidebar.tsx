@@ -11,34 +11,52 @@ import {
   Database,
   Bot,
   FolderArchive,
+  Upload,
+  History as HistoryIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { User } from '@/lib/types/user';
 
-const menuItems = [
-  {
-    category: 'Quản lý',
-    items: [
-      { name: 'Hồ sơ', href: '/', icon: LayoutDashboard },
-      { name: 'Mượn trả', href: '/borrow', icon: FileText },
-      { name: 'Người dùng', href: '/users', icon: Users },
-    ],
-  },
-  {
-    category: 'Báo cáo',
-    items: [{ name: 'Thống kê', href: '/reports', icon: BarChart3 }],
-  },
-  {
-    category: 'Hệ thống',
-    items: [
-      { name: 'Cấu hình', href: '#', icon: Settings },
-      { name: 'Dữ liệu', href: '#', icon: Database },
-      { name: 'Trợ lý AI', href: '#', icon: Bot },
-    ],
-  },
-];
+interface SidebarProps {
+  user?: User;
+}
 
-export default function Sidebar() {
+export default function Sidebar({ user }: SidebarProps) {
   const pathname = usePathname();
+
+  if (pathname === '/login') return null;
+
+  const role = user?.role;
+
+  // Define menu logic dynamically
+  const menuItems = [
+    {
+      category: 'Quản lý',
+      items: [
+        { name: 'Hồ sơ', href: '/', icon: LayoutDashboard }, // All
+        { name: 'Mượn trả', href: '/borrow', icon: FileText }, // All (view status at least)
+        // Users: Admin only
+        ...(role === 'ADMIN' ? [
+          { name: 'Người dùng', href: '/users', icon: Users },
+          { name: 'Nhật ký', href: '/admin/audit', icon: HistoryIcon }
+        ] : []),
+        // Upload: Admin or Upload
+        ...((role === 'ADMIN' || role === 'UPLOAD') ? [{ name: 'Nhập liệu', href: '/upload', icon: Upload }] : []),
+      ],
+    },
+    {
+      category: 'Báo cáo',
+      items: [{ name: 'Thống kê', href: '/reports', icon: BarChart3 }],
+    },
+    {
+      category: 'Hệ thống',
+      items: [
+        { name: 'Cấu hình', href: '#', icon: Settings },
+        { name: 'Dữ liệu', href: '#', icon: Database },
+        { name: 'Trợ lý AI', href: '#', icon: Bot },
+      ],
+    },
+  ];
 
   return (
     <aside className='w-64 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 transition-all duration-300'>

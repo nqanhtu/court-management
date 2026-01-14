@@ -8,26 +8,24 @@ interface UserTableProps {
   users: UserModel[];
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  currentUserRole?: string;
 }
 
 const ITEMS_PER_PAGE = 15;
 
-export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
+export default function UserTable({ users, onEdit, onDelete, currentUserRole }: UserTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const isAdmin = currentUserRole === 'ADMIN';
 
   // Filter Logic
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
       const searchLower = searchTerm.toLowerCase();
       return (
-        user.code.toLowerCase().includes(searchLower) ||
+        user.username.toLowerCase().includes(searchLower) ||
         user.fullName.toLowerCase().includes(searchLower) ||
-        (user.unit && user.unit.toLowerCase().includes(searchLower)) ||
-        (user.phone && user.phone.includes(searchTerm)) ||
-        (user.email && user.email.toLowerCase().includes(searchLower)) ||
-        (user.cccd && user.cccd.includes(searchTerm)) ||
-        (user.address && user.address.toLowerCase().includes(searchLower))
+        (user.unit && user.unit.toLowerCase().includes(searchLower))
       );
     });
   }, [users, searchTerm]);
@@ -64,7 +62,7 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
           <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
           <input
             type='text'
-            placeholder='Tìm kiếm theo tên, SĐT, đơn vị...'
+            placeholder='Tìm kiếm theo tên, đơn vị...'
             value={searchTerm}
             onChange={handleSearchChange}
             className='w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 transition-all'
@@ -77,12 +75,11 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
           <thead className='bg-white text-slate-600 sticky top-0 shadow-sm z-10'>
             <tr>
               {[
-                'ID',
+                'Tên đăng nhập',
                 'Họ và Tên',
+                'Vai trò',
                 'Đơn vị',
-                'Liên lạc',
-                'CCCD',
-                'Địa chỉ',
+                'Trạng thái',
                 'Hành động',
               ].map((head) => (
                 <th
@@ -98,7 +95,7 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
             {paginatedUsers.length === 0 ? (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={6}
                   className='px-6 py-8 text-center text-slate-500'
                 >
                   {filteredUsers.length === 0 && users.length > 0
@@ -112,44 +109,38 @@ export default function UserTable({ users, onEdit, onDelete }: UserTableProps) {
                   key={user.id}
                   className='hover:bg-indigo-50/50 transition-colors group'
                 >
-                  <td className='px-6 py-3 text-slate-500'>{user.code}</td>
+                  <td className='px-6 py-3 text-slate-500'>{user.username}</td>
                   <td className='px-6 py-3 font-medium text-slate-800'>
                     {user.fullName}
+                  </td>
+                  <td className='px-6 py-3 text-slate-600'>
+                    {user.role}
                   </td>
                   <td className='px-6 py-3 text-slate-600'>
                     {user.unit || '-'}
                   </td>
                   <td className='px-6 py-3 text-slate-600'>
-                    <div className='flex flex-col text-xs'>
-                      <span>{user.phone || '-'}</span>
-                      <span className='text-slate-400'>
-                        {user.email || '-'}
-                      </span>
-                    </div>
-                  </td>
-                  <td className='px-6 py-3 text-slate-600'>
-                    {user.cccd || '-'}
-                  </td>
-                  <td className='px-6 py-3 text-slate-600 truncate max-w-[150px]'>
-                    {user.address || '-'}
+                    {user.status ? 'Hoạt động' : 'Khoá'}
                   </td>
                   <td className='px-6 py-3'>
-                    <div className='flex items-center gap-2'>
-                      <button
-                        onClick={() => onEdit(user.id)}
-                        className='p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm'
-                        title='Chỉnh sửa'
-                      >
-                        <Pencil className='w-4 h-4' />
-                      </button>
-                      <button
-                        onClick={() => onDelete(user.id)}
-                        className='p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm'
-                        title='Xóa'
-                      >
-                        <Trash2 className='w-4 h-4' />
-                      </button>
-                    </div>
+                    {isAdmin && (
+                      <div className='flex items-center gap-2'>
+                        <button
+                          onClick={() => onEdit(user.id)}
+                          className='p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm'
+                          title='Chỉnh sửa'
+                        >
+                          <Pencil className='w-4 h-4' />
+                        </button>
+                        <button
+                          onClick={() => onDelete(user.id)}
+                          className='p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm'
+                          title='Xóa'
+                        >
+                          <Trash2 className='w-4 h-4' />
+                        </button>
+                      </div>
+                    )}
                   </td>
                 </tr>
               ))

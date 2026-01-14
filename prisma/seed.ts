@@ -1,111 +1,66 @@
-import { PrismaClient } from '../app/generated/prisma/client';
-import { PrismaPg } from '@prisma/adapter-pg';
-import 'dotenv/config';
+import 'dotenv/config'
+import { Pool } from 'pg'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { PrismaClient } from '../app/generated/prisma/client'
+import { UserRole } from '../app/generated/prisma/enums'
+import bcrypt from 'bcryptjs'
 
-const adapter = new PrismaPg({
-  connectionString: process.env.DATABASE_URL,
-});
-
-const prisma = new PrismaClient({
-  adapter,
-});
+const connectionString = process.env.DATABASE_URL
+const pool = new Pool({ connectionString })
+const adapter = new PrismaPg(pool)
+const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  console.log('Start seeding ...');
+  console.log('Start seeding...')
 
-  // 1. Seed Users
-  const userA = await prisma.user.create({
-    data: {
-      code: 'NV001',
-      fullName: 'Nguyễn Văn A',
-      unit: 'Phòng Hành Chính',
-      phone: '0901234567',
-      email: 'nguyenvana@example.com',
-      cccd: '012345678901',
-      address: 'Số 1, Đường ABC, TP.HCM',
+  // 1. Seed Agency History
+  const agencies = [
+    {
+      name: 'TAND tỉnh Sông Bé',
+      startDate: new Date('1976-01-01'),
+      endDate: new Date('1996-12-31'),
     },
-  });
-
-  const userB = await prisma.user.create({
-    data: {
-      code: 'NV002',
-      fullName: 'Lê Thị B',
-      unit: 'Phòng Kế Toán',
-      phone: '0909876543',
-      email: 'lethib@example.com',
+    {
+      name: 'TAND tỉnh Bình Dương',
+      startDate: new Date('1997-01-01'),
+      endDate: null, // Present
     },
-  });
+  ]
 
-  console.log('Created Users:', userA.fullName, userB.fullName);
-
-  // 2. Seed Files (Hồ sơ)
-  const files = [];
-  for (let i = 1; i <= 20; i++) {
-    const file = await prisma.file.create({
-      data: {
-        code: `HS-2025-${800 + i}`,
-        title: `Hồ sơ vụ án tranh chấp đất đai số ${i}`,
-        type: i % 2 === 0 ? 'Dân sự' : 'Hình sự',
-        pageCount: 10 + i,
-        startDate: new Date('2025-01-01'),
-        retention: 'Vĩnh viễn',
-        room: 'Kho A',
-        shelf: 'Kệ 01',
-        box: 'Hộp 05',
-        status: i > 15 ? 'BORROWED' : 'IN_STOCK', // Vài hồ sơ đang mượn
-      },
-    });
-    files.push(file);
+  for (const agency of agencies) {
+    const exists = await prisma.agencyHistory.findFirst({
+      where: { name: agency.name },
+    })
+    if (!exists) {
+      await prisma.agencyHistory.create({ data: agency })
+      console.log(`Created agency: ${agency.name}`)
+    }
   }
-  console.log(`Created ${files.length} Files`);
 
-  // 3. Seed Borrow Slips (Phiếu mượn)
-  const slip1 = await prisma.borrowSlip.create({
-    data: {
-      code: 'PM-2025-001',
-      userId: userA.id,
-      borrowDate: new Date('2025-03-01'),
-      dueDate: new Date('2025-03-08'),
-      status: 'BORROWING',
-      items: {
-        create: [
-          { fileId: files[16].id }, // Mượn hồ sơ 17
-          { fileId: files[17].id }, // Mượn hồ sơ 18
-        ],
-      },
+  // 2. Seed Admin User
+  const adminPassword = await bcrypt.hash('admin@123', 10)
+  const admin = await prisma.user.upsert({
+    where: { username: 'admin' },
+    update: {},
+    create: {
+      username: 'admin',
+      fullName: 'Quản trị viên',
+      role: UserRole.ADMIN,
+      password: adminPassword,
+      status: true,
+      unit: 'Phòng Lưu Trữ',
     },
-  });
+  })
+  console.log(`Created admin user: ${admin.username}`)
 
-  const slip2 = await prisma.borrowSlip.create({
-    data: {
-      code: 'PM-2025-002',
-      userId: userB.id,
-      borrowDate: new Date('2025-02-20'),
-      dueDate: new Date('2025-02-27'),
-      returnDate: new Date('2025-02-26'),
-      status: 'RETURNED',
-      items: {
-        create: [
-          {
-            fileId: files[0].id,
-            status: 'RETURNED',
-            returnDate: new Date('2025-02-26'),
-          },
-        ],
-      },
-    },
-  });
-
-  console.log('Created Borrow Slips:', slip1.code, slip2.code);
-  console.log('Seeding finished.');
+  console.log('Seeding finished.')
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
+  .catch((e) => {
+    console.error(e)
+    process.exit(1)
   })
-  .catch(async (e) => {
-    console.error(e);
-    await prisma.$disconnect();
-    process.exit(1);
-  });
+  .finally(async () => {
+    await prisma.$disconnect()
+  })

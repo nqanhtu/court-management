@@ -1,12 +1,12 @@
 'use server';
 
-import db from '@/lib/db';
+import { db } from '@/lib/db';
 
 export async function getBorrowSlips() {
   try {
     const borrowSlips = await db.borrowSlip.findMany({
       include: {
-        user: true,
+        lender: true,
         items: {
           include: {
             file: true,
@@ -29,7 +29,7 @@ export async function getBorrowSlip(id: string) {
     const borrowSlip = await db.borrowSlip.findUnique({
       where: { id },
       include: {
-        user: true,
+        lender: true,
         items: {
           include: {
             file: true,

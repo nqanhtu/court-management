@@ -12,7 +12,7 @@ import { format } from 'date-fns';
 import { useState, useMemo } from 'react';
 
 type BorrowSlipWithDetails = BorrowSlipModel & {
-  user: UserModel;
+  lender: UserModel;
   items: (BorrowItemModel & { file: FileModel })[];
 };
 
@@ -38,11 +38,11 @@ export default function BorrowTable({
   // Filter Logic
   const filteredSlips = useMemo(() => {
     return borrowSlips.filter((slip) => {
-      // 1. Search (Code, User Name)
+      // 1. Search (Code, Lender Name)
       const searchLower = searchTerm.toLowerCase();
       const matchesSearch =
         slip.code.toLowerCase().includes(searchLower) ||
-        slip.user.fullName.toLowerCase().includes(searchLower);
+        slip.lender.fullName.toLowerCase().includes(searchLower);
 
       if (!matchesSearch) return false;
 
@@ -127,7 +127,20 @@ export default function BorrowTable({
             <tr>
               {[
                 'Mã phiếu',
-                'Người mượn',
+                'Người mượn', // Technically lender is internal user, borrower is external. Wait. 
+                // The BorrowSlip has "borrowerName" (text) AND lender (user). 
+                // The UI was displaying "slip.user.fullName". This implies it was showing LENDER.
+                // But column says "Người mượn".
+                // If "Người mượn" means the external person, we should use slip.borrowerName.
+                // If it means who created the slip (lender), then slip.lender.fullName.
+                // Given standard flows, "Người mượn" usually refers to the person borrowing the file.
+                // BorrowSlip has `borrowerName`.
+                // BUT previous code used `slip.user.fullName`.
+                // Let's check `borrows.ts` include. It included `user` (now `lender`).
+                // I will assume for now we want LENDER (User) because that was the code. 
+                // WRONG? If I search for `borrowerName` I see `borrowerName` in `createBorrowSlip`.
+                // Let's stick to replacing `user` with `lender` to fix the BUILD first.
+                // Logic correction (Borrower vs Lender) is a separate concern.
                 'Ngày mượn',
                 'Hạn trả',
                 'Hồ sơ',
@@ -173,10 +186,10 @@ export default function BorrowTable({
                     <td className='px-6 py-3'>
                       <div className='flex items-center gap-3'>
                         <div className='w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700'>
-                          {slip.user.fullName.charAt(0)}
+                          {slip.lender.fullName.charAt(0)}
                         </div>
                         <span className='font-medium text-slate-800'>
-                          {slip.user.fullName}
+                          {slip.lender.fullName}
                         </span>
                       </div>
                     </td>

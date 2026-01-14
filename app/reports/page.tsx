@@ -13,8 +13,8 @@ export default async function Reports() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-           <h1 className="text-2xl font-bold text-slate-800">Báo cáo thống kê</h1>
-           <p className="text-slate-500 text-sm mt-1">Tổng hợp tình hình mượn trả hồ sơ.</p>
+          <h1 className="text-2xl font-bold text-slate-800">Báo cáo thống kê</h1>
+          <p className="text-slate-500 text-sm mt-1">Tổng hợp tình hình mượn trả hồ sơ.</p>
         </div>
         <button className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
           <Download className="w-4 h-4" /> Xuất Excel
@@ -30,13 +30,13 @@ export default async function Reports() {
           { label: "Đã trả đúng hạn", value: `${returnedRate}%`, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
         ].map((stat, i) => (
           <div key={i} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-shadow">
-             <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}>
-               <stat.icon className="w-6 h-6" />
-             </div>
-             <div>
-               <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-               <h3 className="text-2xl font-bold text-slate-800">{stat.value}</h3>
-             </div>
+            <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}>
+              <stat.icon className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-sm font-medium text-slate-500">{stat.label}</p>
+              <h3 className="text-2xl font-bold text-slate-800">{stat.value}</h3>
+            </div>
           </div>
         ))}
       </div>
@@ -44,8 +44,8 @@ export default async function Reports() {
       {/* Data Table Card */}
       <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
         <div className="p-5 border-b border-slate-100 flex items-center gap-2">
-           <BarChart3 className="w-5 h-5 text-slate-400" />
-           <h3 className="font-semibold text-slate-800">Chi tiết giao dịch gần đây</h3>
+          <BarChart3 className="w-5 h-5 text-slate-400" />
+          <h3 className="font-semibold text-slate-800">Chi tiết giao dịch gần đây</h3>
         </div>
 
         <div className="flex-1 overflow-auto">
@@ -71,7 +71,7 @@ export default async function Reports() {
                 recentBorrows.map((slip) => {
                   const isReturned = slip.status === "RETURNED";
                   const isOverdue = slip.status === "OVERDUE" || (new Date() > new Date(slip.dueDate) && !isReturned);
-                  
+
                   return (
                     <tr key={slip.id} className="hover:bg-slate-50/80 transition-colors group">
                       <td className="px-6 py-3.5 font-medium text-slate-800 group-hover:text-indigo-600 transition-colors">{slip.code}</td>
@@ -81,7 +81,7 @@ export default async function Reports() {
                       <td className="px-6 py-3.5 text-slate-600">{format(new Date(slip.borrowDate), "dd/MM/yyyy")}</td>
                       <td className="px-6 py-3.5 text-slate-600">{format(new Date(slip.dueDate), "dd/MM/yyyy")}</td>
                       <td className="px-6 py-3.5 text-slate-600">
-                        {slip.returnDate ? format(new Date(slip.returnDate), "dd/MM/yyyy") : "-"}
+                        {slip.returnedDate ? format(new Date(slip.returnedDate), "dd/MM/yyyy") : "-"}
                       </td>
                       <td className="px-6 py-3.5">
                         {isReturned ? (
@@ -89,7 +89,7 @@ export default async function Reports() {
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Đã trả
                           </span>
                         ) : isOverdue ? (
-                           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium border border-red-200">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium border border-red-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Quá hạn
                           </span>
                         ) : (
@@ -105,10 +105,10 @@ export default async function Reports() {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination Footer - Static for now since we only fetch 20 */}
         <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-           <span className="text-xs text-slate-500">Hiển thị {recentBorrows.length} giao dịch gần nhất</span>
+          <span className="text-xs text-slate-500">Hiển thị {recentBorrows.length} giao dịch gần nhất</span>
         </div>
       </div>
     </div>

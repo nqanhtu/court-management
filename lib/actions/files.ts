@@ -48,9 +48,6 @@ export async function getFile(id: string) {
     where: { id },
     include: {
       box: true,
-      documents: {
-        orderBy: { order: 'asc' }
-      },
       borrowItems: {
         where: { status: 'BORROWING' },
         include: { borrowSlip: true }

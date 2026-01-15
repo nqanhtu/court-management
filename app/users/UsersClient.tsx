@@ -17,16 +17,16 @@ export default function UsersClient({ initialUsers, currentUserRole }: UsersClie
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
 
-  const isAdmin = currentUserRole === 'ADMIN';
+  const isSuperAdmin = currentUserRole === 'SUPER_ADMIN';
 
   const handleEdit = (id: string) => {
-    if (!isAdmin) return;
+    if (!isSuperAdmin) return;
     setEditingUserId(id);
     setIsEditModalOpen(true);
   };
 
   const handleDelete = (id: string) => {
-    if (!isAdmin) return;
+    if (!isSuperAdmin) return;
     if (confirm(`Bạn có chắc muốn xóa người dùng ${id}?`)) {
       console.log("Delete", id);
     }
@@ -40,7 +40,7 @@ export default function UsersClient({ initialUsers, currentUserRole }: UsersClie
           <h1 className="text-2xl font-bold text-slate-800">Quản lý người dùng</h1>
           <p className="text-slate-500 text-sm mt-1">Danh sách cán bộ và người dùng hệ thống.</p>
         </div>
-        {isAdmin && (
+        {isSuperAdmin && (
           <button
             onClick={() => setIsAddModalOpen(true)}
             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm shadow-indigo-200 transition-all"

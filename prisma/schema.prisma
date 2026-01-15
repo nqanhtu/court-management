@@ -12,29 +12,29 @@ datasource db {
 // ==========================================
 
 enum UserRole {
-  ADMIN     // Quản trị: Sửa nội dung, quản lý user
-  UPLOAD    // Chỉ được upload Excel
-  VIEWER    // Xem chi tiết hồ sơ
-  BASIC     // Chỉ xem danh sách/trạng thái (người dùng cấp thấp)
+  SUPER_ADMIN // SuperAdmin: Toàn quyền, quản lý user
+  ADMIN // Admin (Chánh án): Xem, sửa, xoá hồ sơ, xem phiếu mượn
+  VIEWER // View (Thẩm phán): Xem hồ sơ
+  COORDINATOR // Coordinate: Xem hồ sơ, tạo phiếu mượn trả, xem vị trí lưu kho
 }
 
 model User {
-  id          String   @id @default(uuid())
-  username    String   @unique
-  password    String   // Hashed
-  fullName    String
-  role        UserRole @default(BASIC)
-  
+  id       String   @id @default(uuid())
+  username String   @unique
+  password String // Hashed
+  fullName String
+  role     UserRole @default(VIEWER)
+
   // Thông tin thêm
-  unit        String?  // Đơn vị
-  status      Boolean  @default(true) // Active/Inactive
+  unit   String? // Đơn vị
+  status Boolean @default(true) // Active/Inactive
 
   // Quan hệ
-  borrowSlipsCreated BorrowSlip[] @relation("Lender") // Người cho mượn (Cán bộ lưu trữ)
-  auditLogs          AuditLog[]
+  auditLogs   AuditLog[]
+  borrowSlips BorrowSlip[] @relation("Lender")
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 // ==========================================
@@ -43,93 +43,133 @@ model User {
 
 // Lịch sử tên cơ quan (Phông lưu trữ)
 model AgencyHistory {
-  id        String   @id @default(uuid())
-  name      String   // Tên cơ quan (VD: TAND tỉnh Sông Bé)
+  id        String    @id @default(uuid())
+  name      String // Tên cơ quan (VD: TAND tỉnh Sông Bé)
   startDate DateTime // Bắt đầu giai đoạn
   endDate   DateTime? // Kết thúc giai đoạn (null = đến nay)
-  
-  boxes     StorageBox[]
+
+  boxes StorageBox[]
 }
 
 // Quản lý Vị trí & Hộp
 model StorageBox {
-  id           String   @id @default(uuid())
-  code         String   @unique // Mã hộp (generated or QR code content)
-  
+  id   String @id @default(uuid())
+  code String @unique // Mã hộp (generated or QR code content)
+
   // Vị trí vật lý (Kho -> Dãy -> Giá -> Ngăn -> Hộp)
-  warehouse    String   // Kho
-  line         String   // Dãy
-  shelf        String   // Giá/Kệ
-  slot         String   // Ngăn
-  boxNumber    String   // Số thứ tự hộp trên ngăn
-  
+  warehouse String // Kho
+  line      String // Dãy
+  shelf     String // Giá/Kệ
+  slot      String // Ngăn
+  boxNumber String // Hộp số (số thứ tự hộp)
+
   // Thông tin nhãn hộp
   agencyId     String?
   agency       AgencyHistory? @relation(fields: [agencyId], references: [id])
-  labelDetails Json?    // Lưu thêm: Loại án, Năm, Từ hồ sơ... đến hồ sơ...
+  caseType     String? // Loại án (Hình sự, Dân sự, ...)
+  year         Int? // Năm
+  fromFileCode String? // Từ hồ sơ (mã hồ sơ bắt đầu)
+  toFileCode   String? // Đến hồ sơ (mã hồ sơ kết thúc)
+  retention    String? // Thời hạn bảo quản (Vĩnh viễn, 10 năm...)
 
-  files        File[]
+  files File[]
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  storageBoxLabels StorageBoxLabel[]
 
   @@index([warehouse, line, shelf, slot])
 }
 
+model StorageBoxLabel {
+  id           String      @id @default(uuid())
+  agencyId     String?
+  fromYear     Int?
+  toYear       Int?
+  label        String
+  storageBoxId String?
+  storageBox   StorageBox? @relation(fields: [storageBoxId], references: [id])
+}
+
 // Hồ sơ Vụ án (Vỏ hồ sơ)
 model File {
-  id          String   @id @default(uuid())
-  code        String   @unique // Quy ước: HS - loại án - năm - STT
-  
+  id   String @id @default(uuid())
+  code String @unique // Quy ước: HS - loại án - năm - STT
+
   // Thông tin chung (Sheet 1)
-  title       String   // Tiêu đề
-  type        String   // Loại án (Hình sự, Dân sự, ...)
-  year        Int      // Năm hồ sơ
-  pageCount   Int?     // Số tờ
-  
+  title     String // Tiêu đề
+  type      String // Loại án (Hình sự, Dân sự, ...)
+  datetime  DateTime // Năm hồ sơ
+  year      Int? // Năm (Filter)
+  pageCount Int? // Số tờ
+
   // Chi tiết (Lưu JSON để linh động theo loại án: Bị cáo, Nguyên đơn, Về việc...)
-  /*
-    Ví dụ Shape:
-    {
-      "summary": "Về việc tranh chấp đất đai",
-      "defendants": ["Nguyen Van A", "Tran Van B"],
-      "plaintiffs": ["Le Thi C"],
-      "judgmentNumber": "12/2024/HS-ST",
-      "judgmentDate": "2024-01-01"
-    }
-  */
-  details     Json?
-  
+  /**
+   * /**
+   * /**
+   * /**
+   * /**
+   * /**
+   * /**
+   * /**
+   * /**
+   * /**
+   * /**
+   * /**
+   * /*
+   * Ví dụ Shape:
+   * {
+   * "summary": "Về việc tranh chấp đất đai",
+   * "defendants": ["Nguyen Van A", "Tran Van B"],
+   * "plaintiffs": ["Le Thi C"],
+   * "judgmentNumber": "12/2024/HS-ST",
+   * "judgmentDate": "2024-01-01"
+   * }
+   */
+  details Json?
+
   // Thời gian & Bảo quản
   judgmentDate DateTime? // Ngày xét xử
-  retention   String?    // Thời hạn bảo quản (Vĩnh viễn, 10 năm...)
-  
+  retention    String? // Thời hạn bảo quản (Vĩnh viễn, 10 năm...)
+
   // Trạng thái & Khóa
-  isLocked    Boolean  @default(false) // Đã khóa (chỉ Admin sửa)
-  status      String   @default("IN_STOCK") // IN_STOCK, BORROWED, LOST
+  isLocked Boolean @default(false) // Đã khóa (chỉ Admin sửa)
+  status   String  @default("IN_STOCK") // IN_STOCK, BORROWED, LOST
 
   // Quan hệ
   boxId       String?
-  box         StorageBox? @relation(fields: [boxId], references: [id])
-  
-  documents   Document[]   // Văn bản con (Sheet 2)
+  box         StorageBox?  @relation(fields: [boxId], references: [id])
+  fileIndex   FileIndex?
+  // documents   Document[]   // Văn bản con (Sheet 2)
   borrowItems BorrowItem[]
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FileIndex {
+  id     String @id @default(uuid())
+  fileId String @unique
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  attachments  String[]
+  totalPage    Int
+  judgmentTime DateTime
 }
 
 // Văn bản trong hồ sơ (Sheet 2 - Mục lục văn bản)
 model Document {
-  id          String   @id @default(uuid())
-  code        String?  // Mã văn bản con (nếu có)
-  title       String   // Trích yếu / Tên văn bản
-  year        Int?
-  pageCount   Int?
-  order       Int      // Số thứ tự trong hồ sơ
+  id        String  @id @default(uuid())
+  code      String? // Mã văn bản con (nếu có)
+  title     String // Trích yếu / Tên văn bản
+  year      Int?
+  pageCount Int?
+  order     Int // Số thứ tự trong hồ sơ
 
-  fileId      String
-  file        File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  // fileId      String
+  // file        File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
 }
 
 // ==========================================
@@ -137,43 +177,43 @@ model Document {
 // ==========================================
 
 model BorrowSlip {
-  id          String   @id @default(uuid())
-  code        String   @unique // Mã phiếu (PM-YYYY-XXX)
-  
+  id   String @id @default(uuid())
+  code String @unique // Mã phiếu (PM-YYYY-XXX)
+
   // Thông tin người mượn (Khách) - Lưu text vì không phải User hệ thống
-  borrowerName String
-  borrowerUnit String?  // Đơn vị/Phòng ban
+  borrowerName  String
+  borrowerUnit  String? // Đơn vị/Phòng ban
   borrowerTitle String? // Chức danh
-  reason       String?  // Lý do mượn
-  
+  reason        String? // Lý do mượn
+
   // Thông tin phiếu
-  borrowDate   DateTime @default(now())
+  borrowDate   DateTime  @default(now())
   dueDate      DateTime // Hạn trả
   returnedDate DateTime? // Ngày trả hết toàn bộ
-  status       String   @default("BORROWING") // BORROWING, PARTIAL_RETURN, RETURNED, OVERDUE
+  status       String    @default("BORROWING") // BORROWING, PARTIAL_RETURN, RETURNED, OVERDUE
 
   // Người lập phiếu (Cán bộ lưu trữ)
-  lenderId     String
-  lender       User     @relation("Lender", fields: [lenderId], references: [id])
-  
-  items        BorrowItem[]
+  lenderId String
+  lender   User   @relation("Lender", fields: [lenderId], references: [id])
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  items BorrowItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model BorrowItem {
-  id           String     @id @default(uuid())
-  
+  id String @id @default(uuid())
+
   borrowSlipId String
   borrowSlip   BorrowSlip @relation(fields: [borrowSlipId], references: [id], onDelete: Cascade)
-  
-  fileId       String
-  file         File       @relation(fields: [fileId], references: [id])
-  
-  returnedDate DateTime?  // Ngày trả cụ thể
-  status       String     @default("BORROWING") // BORROWING, RETURNED
-  condition    String?    // Tình trạng khi trả
+
+  fileId String
+  file   File   @relation(fields: [fileId], references: [id])
+
+  returnedDate DateTime? // Ngày trả cụ thể
+  status       String    @default("BORROWING") // BORROWING, RETURNED
+  condition    String? // Tình trạng khi trả
 
   @@unique([borrowSlipId, fileId])
 }
@@ -183,15 +223,15 @@ model BorrowItem {
 // ==========================================
 
 model AuditLog {
-  id        String   @id @default(uuid())
-  action    String   // LOGIN, VIEW, CREATE, UPDATE, DELETE, EXPORT
-  target    String   // Tên bảng/đối tượng bị tác động (File/User...)
-  targetId  String?  // ID đối tượng
-  detail    Json?    // Chi tiết thay đổi (Old value -> New value)
+  id        String  @id @default(uuid())
+  action    String // LOGIN, VIEW, CREATE, UPDATE, DELETE, EXPORT
+  target    String // Tên bảng/đối tượng bị tác động (File/User...)
+  targetId  String? // ID đối tượng
+  detail    Json? // Chi tiết thay đổi (Old value -> New value)
   ipAddress String?
 
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
-  
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id])
+
   createdAt DateTime @default(now())
 }

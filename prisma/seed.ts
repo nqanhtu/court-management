@@ -37,21 +37,69 @@ async function main() {
     }
   }
 
-  // 2. Seed Admin User
+  // 2. Seed Users
+  const genericPassword = await bcrypt.hash('123456', 10)
   const adminPassword = await bcrypt.hash('admin@123', 10)
-  const admin = await prisma.user.upsert({
+
+  // SuperAdmin
+  await prisma.user.upsert({
+    where: { username: 'superadmin' },
+    update: {},
+    create: {
+      username: 'superadmin',
+      fullName: 'Quản trị hệ thống',
+      role: UserRole.SUPER_ADMIN,
+      password: adminPassword,
+      status: true,
+      unit: 'Ban Quản Trị',
+    },
+  })
+  console.log(`Created SuperAdmin: superadmin`)
+
+  // Admin (Chánh sán)
+  await prisma.user.upsert({
     where: { username: 'admin' },
     update: {},
     create: {
       username: 'admin',
-      fullName: 'Quản trị viên',
+      fullName: 'Nguyễn Văn A (Chánh án)',
       role: UserRole.ADMIN,
-      password: adminPassword,
+      password: genericPassword,
       status: true,
-      unit: 'Phòng Lưu Trữ',
+      unit: 'Lãnh đạo Tòa',
     },
   })
-  console.log(`Created admin user: ${admin.username}`)
+  console.log(`Created Admin: admin`)
+
+  // Viewer (Thẩm phán)
+  await prisma.user.upsert({
+    where: { username: 'viewer' },
+    update: {},
+    create: {
+      username: 'viewer',
+      fullName: 'Trần Văn B (Thẩm phán)',
+      role: UserRole.VIEWER,
+      password: genericPassword,
+      status: true,
+      unit: 'Tòa Hình sự',
+    },
+  })
+  console.log(`Created Viewer: viewer`)
+
+  // Coordinator
+  await prisma.user.upsert({
+    where: { username: 'coordinator' },
+    update: {},
+    create: {
+      username: 'coordinator',
+      fullName: 'Lê Thị C (Điều phối)',
+      role: UserRole.COORDINATOR,
+      password: genericPassword,
+      status: true,
+      unit: 'Phòng Hành chính Tư pháp',
+    },
+  })
+  console.log(`Created Coordinator: coordinator`)
 
   console.log('Seeding finished.')
 }

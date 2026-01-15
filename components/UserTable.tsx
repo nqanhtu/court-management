@@ -16,7 +16,7 @@ const ITEMS_PER_PAGE = 15;
 export default function UserTable({ users, onEdit, onDelete, currentUserRole }: UserTableProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const isAdmin = currentUserRole === 'ADMIN';
+  const isAdmin = currentUserRole === 'SUPER_ADMIN';
 
   // Filter Logic
   const filteredUsers = useMemo(() => {

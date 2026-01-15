@@ -34,14 +34,17 @@ export default function Sidebar({ user }: SidebarProps) {
       category: 'Quản lý',
       items: [
         { name: 'Hồ sơ', href: '/', icon: LayoutDashboard }, // All
-        { name: 'Mượn trả', href: '/borrow', icon: FileText }, // All (view status at least)
-        // Users: Admin only
-        ...(role === 'ADMIN' ? [
+        // Borrow: SuperAdmin, Admin, Coordinator
+        ...((role === 'SUPER_ADMIN' || role === 'ADMIN' || role === 'COORDINATOR')
+          ? [{ name: 'Mượn trả', href: '/borrow', icon: FileText }]
+          : []),
+        // Users: SuperAdmin only
+        ...(role === 'SUPER_ADMIN' ? [
           { name: 'Người dùng', href: '/users', icon: Users },
           { name: 'Nhật ký', href: '/admin/audit', icon: HistoryIcon }
         ] : []),
-        // Upload: Admin or Upload
-        ...((role === 'ADMIN' || role === 'UPLOAD') ? [{ name: 'Nhập liệu', href: '/upload', icon: Upload }] : []),
+        // Upload: SuperAdmin or Admin
+        ...((role === 'SUPER_ADMIN' || role === 'ADMIN') ? [{ name: 'Nhập liệu', href: '/upload', icon: Upload }] : []),
       ],
     },
     {

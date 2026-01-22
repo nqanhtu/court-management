@@ -1,10 +1,15 @@
-import { Suspense } from 'react'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft, Loader2 } from 'lucide-react'
-import Link from 'next/link'
-import { FileDetailLoader } from '@/components/files/file-detail-content'
+'use client'
 
-export default function FileDetailPage({ params }: { params: Promise<{ id: string }> }) {
+import { Button } from '@/components/ui/button'
+import { ArrowLeft } from 'lucide-react'
+import Link from 'next/link'
+import { FileDetailContent } from '@/components/files/file-detail-content'
+import { useParams } from 'next/navigation'
+
+export default function FileDetailPage() {
+    const params = useParams()
+    const id = params.id as string
+
     return (
         <div className="flex flex-col h-full space-y-4 w-full">
             <div className="shrink-0">
@@ -16,13 +21,7 @@ export default function FileDetailPage({ params }: { params: Promise<{ id: strin
                 </Button>
             </div>
 
-            <Suspense fallback={
-                <div className="flex justify-center p-10">
-                    <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
-                </div>
-            }>
-                <FileDetailLoader params={params} />
-            </Suspense>
+            <FileDetailContent id={id} />
         </div>
     )
 }

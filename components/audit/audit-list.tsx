@@ -1,35 +1,27 @@
-import { getAuditLogs } from '@/lib/actions/audit';
+'use client'
+
+import { useSearchParams } from 'next/navigation';
+import { useAudit } from '@/lib/hooks/use-audit';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 import { PaginationControls } from '@/components/ui/pagination-controls';
+import { Loader2 } from 'lucide-react';
 
-interface AuditListProps {
-    searchParams: {
-        page?: string;
-        q?: string;
-        action?: string;
-    };
-}
+export function AuditList() {
+    const searchParams = useSearchParams();
+    const page = Number(searchParams.get('page')) || 1;
+    const searchTerm = searchParams.get('q') || '';
+    const actionFilter = searchParams.get('action') || 'ALL';
 
-export async function AuditList({ searchParams }: AuditListProps) {
-    const page = Number(searchParams.page) || 1;
-    const searchTerm = searchParams.q?.toLowerCase() || '';
-    const actionFilter = searchParams.action || 'ALL';
-
-    // Fetch data on the server
-    const { logs, totalPages } = await getAuditLogs(page);
-
-    const filteredLogs = logs.filter(log => {
-        const matchesSearch = !searchTerm ||
-            log.user?.fullName.toLowerCase().includes(searchTerm) ||
-            log.user?.username.toLowerCase().includes(searchTerm) ||
-            log.target.toLowerCase().includes(searchTerm);
-
-        const matchesAction = actionFilter === 'ALL' || log.action === actionFilter;
-
-        return matchesSearch && matchesAction;
+    const { logs, total, isLoading } = useAudit({
+        query: searchTerm,
+        action: actionFilter,
+        limit: 20,
+        offset: (page - 1) * 20
     });
+
+    const totalPages = Math.ceil(total / 20);
 
     const getActionBadge = (action: string) => {
         switch (action) {
@@ -40,6 +32,14 @@ export async function AuditList({ searchParams }: AuditListProps) {
             default: return <Badge variant="outline">{action}</Badge>;
         }
     };
+
+    if (isLoading) {
+        return (
+            <div className="flex-1 flex items-center justify-center text-slate-400">
+                <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+        )
+    }
 
     return (
         <>
@@ -55,14 +55,14 @@ export async function AuditList({ searchParams }: AuditListProps) {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {filteredLogs.length === 0 ? (
+                        {logs.length === 0 ? (
                             <TableRow>
                                 <TableCell colSpan={5} className="h-48 text-center text-muted-foreground">
                                     Không tìm thấy dữ liệu nhật ký phù hợp.
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            filteredLogs.map((log) => (
+                            logs.map((log) => (
                                 <TableRow key={log.id} className="bg-white">
                                     <TableCell className="font-medium text-slate-600 tabular-nums">
                                         {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss')}

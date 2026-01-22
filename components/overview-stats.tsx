@@ -1,10 +1,29 @@
-import { getFileStats } from '@/lib/actions/files'
-import { getOverdueCount } from '@/lib/services/stats'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+'use client'
 
-export async function OverviewStats() {
-    const stats = await getFileStats()
-    const overdue = await getOverdueCount()
+import { useFileStats } from '@/lib/hooks/use-files'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+
+export function OverviewStats() {
+    const { stats, isLoading } = useFileStats()
+
+    if (isLoading) {
+        return (
+            <div className="grid gap-4 md:grid-cols-3">
+                {[1, 2, 3].map(i => (
+                    <Card key={i}>
+                        <CardContent className="p-6">
+                            <Skeleton className="h-4 w-1/3 mb-4" />
+                            <Skeleton className="h-8 w-1/2" />
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        )
+    }
+
+    const { total, borrowed } = stats
+    const overdue = 0 // Placeholder until I fix API
 
     return (
         <div className="grid gap-4 md:grid-cols-3">
@@ -13,7 +32,7 @@ export async function OverviewStats() {
                     <CardTitle className="text-sm font-medium">Tổng số hồ sơ</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">{stats.total}</div>
+                    <div className="text-2xl font-bold">{total}</div>
                 </CardContent>
             </Card>
             <Card>
@@ -21,7 +40,7 @@ export async function OverviewStats() {
                     <CardTitle className="text-sm font-medium">Đang cho mượn</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold text-amber-600">{stats.borrowed}</div>
+                    <div className="text-2xl font-bold text-amber-600">{borrowed}</div>
                 </CardContent>
             </Card>
             <Card className={overdue > 0 ? "border-red-500 bg-red-50 dark:bg-red-950/20" : ""}>

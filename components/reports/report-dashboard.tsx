@@ -1,6 +1,7 @@
-import { BarChart3, TrendingUp, AlertCircle, CheckCircle2, FileClock } from "lucide-react";
+'use client'
+
+import { BarChart3, TrendingUp, AlertCircle, CheckCircle2, FileClock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getReportStats } from "@/lib/actions/borrow-queries";
 import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,9 +12,21 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table";
+import { useReportStats } from "@/lib/hooks/use-reports";
 
-export async function ReportDashboard() {
-    const { totalBorrows, activeBorrows, overdueBorrows, returnedRate, recentBorrows } = await getReportStats();
+export function ReportDashboard() {
+    const { stats, isLoading } = useReportStats();
+
+    if (isLoading) {
+        return (
+            <div className="flex-1 flex items-center justify-center text-slate-400">
+                <Loader2 className="w-8 h-8 animate-spin" />
+                <span className="ml-2">Đang tải báo cáo...</span>
+            </div>
+        )
+    }
+
+    const { totalBorrows, activeBorrows, overdueBorrows, returnedRate, recentBorrows } = stats;
 
     return (
         <>

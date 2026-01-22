@@ -1,23 +1,31 @@
-import { searchFiles } from '@/lib/actions/files'
+'use client'
+
+import { useSearchParams } from 'next/navigation'
+import { useFiles } from '@/lib/hooks/use-files'
 import { FileTable } from '@/components/file-table'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import { Loader2 } from 'lucide-react'
 
-interface FileListSectionProps {
-    searchParams: Promise<{ [key: string]: string | undefined }>
-}
+export function FileListSection() {
+    const searchParams = useSearchParams()
+    const q = searchParams.get('q') || undefined
+    const type = searchParams.get('type') || undefined
+    const page = parseInt(searchParams.get('page') || '1')
 
-export async function FileListSection({ searchParams }: FileListSectionProps) {
-    const params = await searchParams
-    const q = params.q
-    const type = params.type
-    const page = parseInt(params.page || '1')
-
-    const { files, total } = await searchFiles({
+    const { files, total, isLoading } = useFiles({
         query: q,
-        type: type !== 'all' ? type : undefined,
+        type,
         limit: 10,
         offset: (page - 1) * 10
     })
+
+    if (isLoading) {
+        return (
+            <div className="flex-1 flex items-center justify-center text-slate-400">
+                <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+        )
+    }
 
     return (
         <>

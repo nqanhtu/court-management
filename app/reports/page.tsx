@@ -1,9 +1,8 @@
-import { Suspense } from 'react';
-import { Download, Loader2 } from "lucide-react";
+'use client'
+
+import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReportDashboard } from "@/components/reports/report-dashboard";
-
-export const dynamic = 'force-dynamic';
 
 export default function Reports() {
   return (
@@ -19,14 +18,7 @@ export default function Reports() {
         </Button>
       </div>
 
-      <Suspense fallback={
-        <div className="flex-1 flex items-center justify-center text-slate-400">
-          <Loader2 className="w-8 h-8 animate-spin" />
-          <span className="ml-2">Đang tải báo cáo...</span>
-        </div>
-      }>
-        <ReportDashboard />
-      </Suspense>
+      <ReportDashboard />
     </div>
   );
 }

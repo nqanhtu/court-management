@@ -1,30 +1,26 @@
-import { getFile } from '@/lib/actions/files'
+'use client'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Box, FileText, MapPin } from 'lucide-react'
+import { Box, FileText, MapPin, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
+import { useFile } from '@/lib/hooks/use-files'
 
-interface Document {
-    id: string;
-    code: string | null;
-    title: string;
-    order: number;
-    pageCount: number | null;
-}
+export function FileDetailContent({ id }: { id: string }) {
+    const { file, isLoading } = useFile(id)
 
-export async function FileDetailLoader({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = await params
-    return <FileDetailContent id={id} />
-}
-
-export async function FileDetailContent({ id }: { id: string }) {
-    const file = await getFile(id)
+    if (isLoading) {
+        return (
+            <div className="flex justify-center p-10">
+                <Loader2 className="w-8 h-8 animate-spin text-slate-400" />
+            </div>
+        )
+    }
 
     if (!file) {
-        notFound()
+        return <div className="text-center p-10 text-muted-foreground">Không tìm thấy hồ sơ</div>
     }
 
     return (
@@ -71,7 +67,7 @@ export async function FileDetailContent({ id }: { id: string }) {
                         {file.judgmentDate && (
                             <div>
                                 <dt className="text-muted-foreground">Ngày xét xử</dt>
-                                <dd className="font-medium">{new Date(file.judgmentDate).toLocaleDateString('vi-VN')}</dd>
+                                <dd className="font-medium">{new Date(file.judgmentDate as Date).toLocaleDateString('vi-VN')}</dd>
                             </div>
                         )}
                     </dl>
@@ -120,7 +116,7 @@ export async function FileDetailContent({ id }: { id: string }) {
             </Card>
 
             {/* Borrow Status if any */}
-            {file.borrowItems.length > 0 && (
+            {file.borrowItems && file.borrowItems.length > 0 && (
                 <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10">
                     <CardHeader>
                         <CardTitle className="flex items-center text-lg text-amber-700">
@@ -157,7 +153,7 @@ export async function FileDetailContent({ id }: { id: string }) {
                         </TableHeader>
                         <TableBody>
                             {file.documents.length > 0 ? (
-                                file.documents.map((doc: Document) => (
+                                file.documents.map((doc: any) => (
                                     <TableRow key={doc.id}>
                                         <TableCell>{doc.order}</TableCell>
                                         <TableCell className="font-medium">{doc.title}</TableCell>

@@ -24,8 +24,8 @@ export default async function FileDetailPage({ params }: { params: Promise<{ id:
     }
 
     return (
-        <div className="container mx-auto py-10 max-w-5xl">
-            <div className="mb-6">
+        <div className="flex flex-col h-full space-y-4 w-full">
+            <div className="shrink-0">
                 <Button variant="ghost" asChild>
                     <Link href="/">
                         <ArrowLeft className="mr-2 h-4 w-4" />
@@ -152,7 +152,7 @@ export default async function FileDetailPage({ params }: { params: Promise<{ id:
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <Table>
+                        <Table className="w-full">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[80px]">STT</TableHead>

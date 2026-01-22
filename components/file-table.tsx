@@ -28,13 +28,10 @@ export function FileTable({ files }: FileTableProps) {
         return <div className="text-center py-10 text-muted-foreground">Không tìm thấy hồ sơ nào.</div>
     }
 
-    // Basic role logic for demo: If not Admin/Viewer, hide some columns?
-    // Using simple display for now.
-
     return (
-        <div className="rounded-md border">
+        <div className="rounded-md border bg-white overflow-hidden shadow-sm">
             <Table>
-                <TableHeader>
+                <TableHeader className="bg-slate-50/50">
                     <TableRow>
                         <TableHead className="w-[100px]">Mã hồ sơ</TableHead>
                         <TableHead className="max-w-[150px]">Số bản án</TableHead>
@@ -88,7 +85,6 @@ export function FileTable({ files }: FileTableProps) {
                                 {file.box ? (
                                     <div className="flex flex-col">
                                         <span className="font-medium">{file.box.code}</span>
-                                        {/* <span className="text-xs text-muted-foreground">Hộp {file.box.boxNumber}</span> */}
                                     </div>
                                 ) : (
                                     '-'

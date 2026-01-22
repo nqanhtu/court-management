@@ -28,8 +28,8 @@ export default async function Home({
   const overdue = await getOverdueCount()
 
   return (
-    <div className="container mx-auto py-10">
-      <div className="grid gap-4 md:grid-cols-3 mb-8">
+    <div className="flex flex-col h-full space-y-4">
+      <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Tổng số hồ sơ</CardTitle>
@@ -56,16 +56,18 @@ export default async function Home({
         </Card>
       </div>
 
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Tra cứu Hồ sơ</h1>
         <CreateFileDialog />
       </div>
 
       <SearchFilters />
 
-      <FileTable files={files} />
+      <div className="flex-1 min-h-0 overflow-auto">
+         <FileTable files={files} />
+      </div>
 
-      <div className="mt-4 flex justify-between items-center">
+      <div className="flex justify-between items-center pt-2">
         <div className="text-sm text-muted-foreground">
           Hiển thị {files.length} / {total} kết quả
         </div>

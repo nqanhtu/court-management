@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { useState, useMemo } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -104,7 +105,7 @@ export default function BorrowTable({
   };
 
   return (
-    <div className='flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden'>
+    <Card className='flex flex-col h-full overflow-hidden border-slate-200 shadow-sm'>
       {/* Header / Filters */}
       <div className='p-4 border-b border-slate-200 flex flex-wrap items-center gap-3 bg-white shrink-0'>
         <div className='flex items-center gap-2'>
@@ -128,7 +129,7 @@ export default function BorrowTable({
         </div>
 
         <div className='flex-1 min-w-50 relative max-w-md ml-auto'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10' />
           <Input
             type='text'
             placeholder='Tìm kiếm phiếu mượn...'
@@ -139,10 +140,10 @@ export default function BorrowTable({
         </div>
       </div>
 
-      <div className='flex-1 overflow-auto bg-slate-50'>
-        <Table className='w-full text-sm text-left border-collapse'>
-          <TableHeader className='bg-white text-slate-600 sticky top-0 shadow-sm z-10'>
-            <TableRow className="hover:bg-transparent border-none">
+      <div className='flex-1 overflow-auto bg-slate-50/50'>
+        <Table>
+          <TableHeader className="bg-white sticky top-0 z-10">
+            <TableRow>
               {[
                 'Mã phiếu',
                 'Người mượn',
@@ -152,21 +153,18 @@ export default function BorrowTable({
                 'Trạng thái',
                 'Hành động',
               ].map((head) => (
-                <TableHead
-                  key={head}
-                  className='px-6 py-3 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm'
-                >
+                <TableHead key={head} className="whitespace-nowrap">
                   {head}
                 </TableHead>
               ))}
             </TableRow>
           </TableHeader>
-          <TableBody className='divide-y divide-slate-100 bg-white'>
+          <TableBody>
             {paginatedSlips.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={7}
-                  className='px-6 py-8 text-center text-slate-500'
+                  className='h-24 text-center text-muted-foreground'
                 >
                   {filteredSlips.length === 0 && borrowSlips.length > 0
                     ? 'Không tìm thấy kết quả phù hợp.'
@@ -181,46 +179,43 @@ export default function BorrowTable({
                   (new Date() > new Date(slip.dueDate) && !isReturned);
 
                 return (
-                  <TableRow
-                    key={slip.id}
-                    className='hover:bg-indigo-50/50 transition-colors group'
-                  >
-                    <TableCell className='px-6 py-3 font-mono text-slate-500'>
+                  <TableRow key={slip.id} className="bg-white">
+                    <TableCell className='font-mono text-muted-foreground'>
                       {slip.code}
                     </TableCell>
-                    <TableCell className='px-6 py-3'>
+                    <TableCell>
                       <div className='flex items-center gap-3'>
                         <div className='w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700'>
                           {slip.lender.fullName.charAt(0)}
                         </div>
-                        <span className='font-medium text-slate-800'>
+                        <span className='font-medium'>
                           {slip.lender.fullName}
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className='px-6 py-3 text-slate-600'>
+                    <TableCell>
                       {format(new Date(slip.borrowDate), 'dd/MM/yyyy')}
                     </TableCell>
                     <TableCell
                       className={cn(
-                        'px-6 py-3 font-medium',
+                        'font-medium',
                         isOverdue && !isReturned
                           ? 'text-red-600'
-                          : 'text-slate-600'
+                          : 'text-muted-foreground'
                       )}
                     >
                       {format(new Date(slip.dueDate), 'dd/MM/yyyy')}
                     </TableCell>
-                    <TableCell className='px-6 py-3 text-slate-600'>
+                    <TableCell>
                       {slip.items.length > 0 ? (
                         slip.items.map((item) => item.file.code).join(', ')
                       ) : (
-                        <span className='text-slate-400 italic'>
+                        <span className='text-muted-foreground italic'>
                           Không có hồ sơ
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className='px-6 py-3'>
+                    <TableCell>
                       {isReturned ? (
                         <span className='inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium border border-emerald-200'>
                           <span className='w-1.5 h-1.5 rounded-full bg-emerald-500'></span>{' '}
@@ -238,14 +233,14 @@ export default function BorrowTable({
                         </span>
                       )}
                     </TableCell>
-                    <TableCell className='px-6 py-3'>
+                    <TableCell>
                       <div className='flex items-center gap-2'>
                         {!isReturned && (
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => onReturn(slip.id)}
-                            className='p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors shadow-sm h-8 w-8'
+                            className='h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
                             title='Trả hồ sơ'
                           >
                             <RotateCcw className='w-4 h-4' />
@@ -255,7 +250,7 @@ export default function BorrowTable({
                           variant="ghost"
                           size="icon"
                           onClick={() => onEdit(slip.id)}
-                          className='p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm h-8 w-8'
+                          className='h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
                           title='Chỉnh sửa'
                         >
                           <Pencil className='w-4 h-4' />
@@ -264,7 +259,7 @@ export default function BorrowTable({
                           variant="ghost"
                           size="icon"
                           onClick={() => onDelete(slip.id)}
-                          className='p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm h-8 w-8'
+                          className='h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50'
                           title='Xóa'
                         >
                           <Trash2 className='w-4 h-4' />
@@ -281,7 +276,7 @@ export default function BorrowTable({
 
       {/* Pagination */}
       <div className='p-3 border-t border-slate-100 bg-white flex items-center justify-between shrink-0'>
-        <span className='text-xs text-slate-500'>
+        <span className='text-xs text-muted-foreground'>
           Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{' '}
           {Math.min(currentPage * ITEMS_PER_PAGE, filteredSlips.length)} trên{' '}
           {filteredSlips.length} phiếu mượn
@@ -292,7 +287,7 @@ export default function BorrowTable({
             size="sm"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed h-7'
+            className='h-8'
           >
             Trước
           </Button>
@@ -301,12 +296,12 @@ export default function BorrowTable({
             size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || totalPages === 0}
-            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed h-7'
+            className='h-8'
           >
             Sau
           </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

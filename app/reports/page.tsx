@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { getReportStats } from "@/lib/actions/borrow-queries";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -18,7 +19,7 @@ export default async function Reports() {
   const { totalBorrows, activeBorrows, overdueBorrows, returnedRate, recentBorrows } = await getReportStats();
 
   return (
-    <div className="flex flex-col h-full gap-6 max-w-7xl mx-auto w-full">
+    <div className="flex flex-col h-full space-y-4 w-full">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -38,7 +39,7 @@ export default async function Reports() {
           { label: "Quá hạn", value: overdueBorrows.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" },
           { label: "Đã trả đúng hạn", value: `${returnedRate}%`, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
         ].map((stat, i) => (
-          <div key={i} className="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 flex items-center gap-4 hover:shadow-md transition-shadow">
+          <Card key={i} className="flex items-center gap-4 p-5 hover:shadow-md transition-shadow">
             <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}>
               <stat.icon className="w-6 h-6" />
             </div>
@@ -46,33 +47,35 @@ export default async function Reports() {
               <p className="text-sm font-medium text-slate-500">{stat.label}</p>
               <h3 className="text-2xl font-bold text-slate-800">{stat.value}</h3>
             </div>
-          </div>
+          </Card>
         ))}
       </div>
 
       {/* Data Table Card */}
-      <div className="flex-1 bg-white rounded-2xl shadow-sm border border-slate-200 flex flex-col overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-slate-400" />
-          <h3 className="font-semibold text-slate-800">Chi tiết giao dịch gần đây</h3>
-        </div>
+      <Card className="flex-1 overflow-hidden flex flex-col">
+        <CardHeader className="border-b bg-slate-50/50 py-4">
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <BarChart3 className="w-5 h-5 text-slate-400" />
+            Chi tiết giao dịch gần đây
+          </CardTitle>
+        </CardHeader>
 
-        <div className="flex-1 overflow-auto">
-          <Table className="w-full text-sm text-left">
-            <TableHeader className="bg-slate-50 text-slate-600 sticky top-0 shadow-sm z-10">
-              <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Mã mượn</TableHead>
-                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Hồ sơ số</TableHead>
-                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Ngày mượn</TableHead>
-                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Hạn trả</TableHead>
-                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Thời gian trả</TableHead>
-                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Trạng thái</TableHead>
+        <CardContent className="flex-1 overflow-auto p-0">
+          <Table>
+            <TableHeader className="bg-white sticky top-0 z-10">
+              <TableRow>
+                <TableHead className="whitespace-nowrap">Mã mượn</TableHead>
+                <TableHead className="whitespace-nowrap">Hồ sơ số</TableHead>
+                <TableHead className="whitespace-nowrap">Ngày mượn</TableHead>
+                <TableHead className="whitespace-nowrap">Hạn trả</TableHead>
+                <TableHead className="whitespace-nowrap">Thời gian trả</TableHead>
+                <TableHead className="whitespace-nowrap">Trạng thái</TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody className="divide-y divide-slate-100">
+            <TableBody>
               {recentBorrows.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                  <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                     Chưa có dữ liệu giao dịch.
                   </TableCell>
                 </TableRow>
@@ -82,17 +85,17 @@ export default async function Reports() {
                   const isOverdue = slip.status === "OVERDUE" || (new Date() > new Date(slip.dueDate) && !isReturned);
 
                   return (
-                    <TableRow key={slip.id} className="hover:bg-slate-50/80 transition-colors group">
-                      <TableCell className="px-6 py-3.5 font-medium text-slate-800 group-hover:text-indigo-600 transition-colors">{slip.code}</TableCell>
-                      <TableCell className="px-6 py-3.5 text-slate-600">
+                    <TableRow key={slip.id}>
+                      <TableCell className="font-medium text-slate-800">{slip.code}</TableCell>
+                      <TableCell>
                         {slip.items.length > 0 ? slip.items.map(i => i.file.code).join(", ") : "-"}
                       </TableCell>
-                      <TableCell className="px-6 py-3.5 text-slate-600">{format(new Date(slip.borrowDate), "dd/MM/yyyy")}</TableCell>
-                      <TableCell className="px-6 py-3.5 text-slate-600">{format(new Date(slip.dueDate), "dd/MM/yyyy")}</TableCell>
-                      <TableCell className="px-6 py-3.5 text-slate-600">
+                      <TableCell>{format(new Date(slip.borrowDate), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>{format(new Date(slip.dueDate), "dd/MM/yyyy")}</TableCell>
+                      <TableCell>
                         {slip.returnedDate ? format(new Date(slip.returnedDate), "dd/MM/yyyy") : "-"}
                       </TableCell>
-                      <TableCell className="px-6 py-3.5">
+                      <TableCell>
                         {isReturned ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium border border-emerald-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Đã trả
@@ -113,13 +116,13 @@ export default async function Reports() {
               )}
             </TableBody>
           </Table>
-        </div>
+        </CardContent>
 
-        {/* Pagination Footer - Static for now since we only fetch 20 */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-between">
-          <span className="text-xs text-slate-500">Hiển thị {recentBorrows.length} giao dịch gần nhất</span>
+        {/* Pagination Footer */}
+        <div className="p-4 border-t bg-slate-50/50 flex items-center justify-between shrink-0">
+          <span className="text-xs text-muted-foreground">Hiển thị {recentBorrows.length} giao dịch gần nhất</span>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }

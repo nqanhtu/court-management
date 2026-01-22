@@ -5,6 +5,7 @@ import { UserModel } from '@/app/generated/prisma/models';
 import { useState, useMemo } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -59,7 +60,7 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
   };
 
   return (
-    <div className='flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden'>
+    <Card className='flex flex-col h-full overflow-hidden border-slate-200 shadow-sm'>
       {/* Header / Filters */}
       <div className='p-4 border-b border-slate-200 flex flex-wrap items-center gap-3 bg-white shrink-0'>
         <div className='flex items-center gap-2'>
@@ -80,10 +81,10 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
         </div>
       </div>
 
-      <div className='flex-1 overflow-auto bg-slate-50'>
-        <Table className='w-full text-sm text-left border-collapse'>
-          <TableHeader className='bg-white text-slate-600 sticky top-0 shadow-sm z-10'>
-            <TableRow className="hover:bg-transparent border-none">
+      <div className='flex-1 overflow-auto bg-slate-50/50'>
+        <Table>
+          <TableHeader className="bg-white sticky top-0 z-10">
+            <TableRow>
               {[
                 'Tên đăng nhập',
                 'Họ và Tên',
@@ -92,21 +93,18 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
                 'Trạng thái',
                 'Hành động',
               ].map((head) => (
-                <TableHead
-                  key={head}
-                  className='px-6 py-3 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm'
-                >
+                <TableHead key={head} className="whitespace-nowrap">
                   {head}
                 </TableHead>
               ))}
             </TableRow>
           </TableHeader>
-          <TableBody className='divide-y divide-slate-100 bg-white'>
+          <TableBody>
             {paginatedUsers.length === 0 ? (
               <TableRow>
                 <TableCell
                   colSpan={6}
-                  className='px-6 py-8 text-center text-slate-500'
+                  className='h-24 text-center text-muted-foreground'
                 >
                   {filteredUsers.length === 0 && users.length > 0
                     ? 'Không tìm thấy kết quả phù hợp.'
@@ -115,31 +113,28 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
               </TableRow>
             ) : (
               paginatedUsers.map((user) => (
-                <TableRow
-                  key={user.id}
-                  className='hover:bg-indigo-50/50 transition-colors group'
-                >
-                  <TableCell className='px-6 py-3 text-slate-500'>{user.username}</TableCell>
-                  <TableCell className='px-6 py-3 font-medium text-slate-800'>
+                <TableRow key={user.id} className="bg-white">
+                  <TableCell className='text-muted-foreground'>{user.username}</TableCell>
+                  <TableCell className='font-medium'>
                     {user.fullName}
                   </TableCell>
-                  <TableCell className='px-6 py-3 text-slate-600'>
+                  <TableCell>
                     {user.role}
                   </TableCell>
-                  <TableCell className='px-6 py-3 text-slate-600'>
+                  <TableCell>
                     {user.unit || '-'}
                   </TableCell>
-                  <TableCell className='px-6 py-3 text-slate-600'>
+                  <TableCell>
                     {user.status ? 'Hoạt động' : 'Khoá'}
                   </TableCell>
-                  <TableCell className='px-6 py-3'>
+                  <TableCell>
                     {isAdmin && (
                       <div className='flex items-center gap-2'>
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => onEdit(user.id)}
-                          className='p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm h-8 w-8'
+                          className='h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
                           title='Chỉnh sửa'
                         >
                           <Pencil className='w-4 h-4' />
@@ -148,7 +143,7 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
                           variant="ghost"
                           size="icon"
                           onClick={() => onDelete(user.id)}
-                          className='p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm h-8 w-8'
+                          className='h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50'
                           title='Xóa'
                         >
                           <Trash2 className='w-4 h-4' />
@@ -165,7 +160,7 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
 
       {/* Pagination */}
       <div className='p-3 border-t border-slate-100 bg-white flex items-center justify-between shrink-0'>
-        <span className='text-xs text-slate-500'>
+        <span className='text-xs text-muted-foreground'>
           Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{' '}
           {Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)} trên{' '}
           {filteredUsers.length} người dùng
@@ -176,7 +171,7 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
             size="sm"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed h-7'
+            className='h-8'
           >
             Trước
           </Button>
@@ -185,12 +180,12 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
             size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || totalPages === 0}
-            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed h-7'
+            className='h-8'
           >
             Sau
           </Button>
         </div>
       </div>
-    </div>
+    </Card>
   );
 }

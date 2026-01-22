@@ -36,7 +36,6 @@ export function FileTable({ files }: FileTableProps) {
                         <TableHead className="w-[100px]">Mã hồ sơ</TableHead>
                         <TableHead className="max-w-[150px]">Số bản án</TableHead>
                         <TableHead className="max-w-[200px]">Tiêu đề / Về việc</TableHead>
-                        <TableHead className="max-w-[150px]">Đương sự</TableHead>
                         <TableHead>Năm</TableHead>
                         <TableHead>Vị trí</TableHead>
                         <TableHead>Trạng thái</TableHead>
@@ -59,26 +58,6 @@ export function FileTable({ files }: FileTableProps) {
                             <TableCell className="max-w-[200px]">
                                 <div className="line-clamp-2" title={file.title}>{file.title}</div>
                                 <Badge variant="outline" className="mt-1 text-[10px] h-5">{file.type}</Badge>
-                            </TableCell>
-                            <TableCell className="max-w-[150px] text-sm">
-                                {file.defendants && file.defendants.length > 0 && (
-                                    <div className="mb-1">
-                                        <span className="font-semibold text-xs text-red-600">Bị: </span>
-                                        {file.defendants.join(', ')}
-                                    </div>
-                                )}
-                                {file.plaintiffs && file.plaintiffs.length > 0 && (
-                                    <div>
-                                        <span className="font-semibold text-xs text-blue-600">Nguyên: </span>
-                                        {file.plaintiffs.join(', ')}
-                                    </div>
-                                )}
-                                {file.civilDefendants && file.civilDefendants.length > 0 && (
-                                    <div>
-                                        <span className="font-semibold text-xs text-orange-600">Bị đơn: </span>
-                                        {file.civilDefendants.join(', ')}
-                                    </div>
-                                )}
                             </TableCell>
                             <TableCell>{file.year}</TableCell>
                             <TableCell>

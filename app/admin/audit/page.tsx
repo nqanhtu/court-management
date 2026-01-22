@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import { History } from 'lucide-react';
 import { AuditFilters } from '@/components/audit/audit-filters';
-import { AuditList } from '@/components/audit/audit-list';
+import { AuditListSection } from '@/components/audit/audit-list-section';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
     Table,
@@ -15,7 +15,7 @@ import {
 function AuditTableSkeleton() {
     return (
         <div className='flex-1 overflow-auto bg-slate-50'>
-             <Table className="w-full text-sm text-left border-collapse">
+            <Table className="w-full text-sm text-left border-collapse">
                 <TableHeader className="bg-white text-slate-600 sticky top-0 shadow-sm z-10">
                     <TableRow className="hover:bg-transparent border-none">
                         <TableHead className="px-6 py-3 w-[180px]">Thời gian</TableHead>
@@ -57,9 +57,7 @@ interface PageProps {
     }>;
 }
 
-export default async function AuditLogPage(props: PageProps) {
-    const searchParams = await props.searchParams;
-    
+export default function AuditLogPage(props: PageProps) {
     return (
         <div className="flex flex-col h-full space-y-4 w-full">
             <div className="flex items-center justify-between shrink-0">
@@ -74,9 +72,9 @@ export default async function AuditLogPage(props: PageProps) {
 
             <div className='flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden'>
                 <AuditFilters />
-                
+
                 <Suspense fallback={<AuditTableSkeleton />}>
-                    <AuditList searchParams={searchParams} />
+                    <AuditListSection searchParams={props.searchParams} />
                 </Suspense>
             </div>
         </div>

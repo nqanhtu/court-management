@@ -7,10 +7,6 @@ import {
   Users,
   FileText,
   BarChart3,
-  Settings,
-  Database,
-  Bot,
-  FolderArchive,
   Upload,
   History as HistoryIcon,
 } from 'lucide-react';
@@ -27,7 +23,6 @@ export default function Sidebar({ user }: SidebarProps) {
   if (pathname === '/login') return null;
 
   const role = user?.role;
-  console.log(role)
   // Define menu logic dynamically
   const menuItems = [
     {

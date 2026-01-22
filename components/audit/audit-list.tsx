@@ -1,7 +1,7 @@
 'use client'
 
 import { useSearchParams } from 'next/navigation';
-import { useAudit } from '@/lib/hooks/use-audit';
+import { AuditLogWithUser, useAudit } from '@/lib/hooks/use-audit';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
@@ -62,7 +62,7 @@ export function AuditList() {
                                 </TableCell>
                             </TableRow>
                         ) : (
-                            logs.map((log) => (
+                            logs.map((log: AuditLogWithUser) => (
                                 <TableRow key={log.id} className="bg-white">
                                     <TableCell className="font-medium text-slate-600 tabular-nums">
                                         {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss')}

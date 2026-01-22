@@ -41,13 +41,13 @@ export function useFile(id: string) {
 }
 
 export function useFileStats() {
-    const { data, error, isLoading } = useSWR<{ total: number, borrowed: number, byType: any[] }>(
+    const { data, error, isLoading } = useSWR<{ total: number, borrowed: number, overdue: number, byType: { type: string, _count: number }[] }>(
         '/api/files/stats',
         fetcher
     )
 
     return {
-        stats: data || { total: 0, borrowed: 0, byType: [] },
+        stats: data || { total: 0, borrowed: 0, overdue: 0, byType: [] },
         isLoading,
         isError: error
     }

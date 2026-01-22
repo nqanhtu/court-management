@@ -22,8 +22,7 @@ export function OverviewStats() {
         )
     }
 
-    const { total, borrowed } = stats
-    const overdue = 0 // Placeholder until I fix API
+    const { total, borrowed, overdue } = stats
 
     return (
         <div className="grid gap-4 md:grid-cols-3">

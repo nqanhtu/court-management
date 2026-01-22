@@ -3,7 +3,7 @@ import { AuditLogModel, UserModel } from '@/app/generated/prisma/models'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 
-type AuditLogWithUser = AuditLogModel & {
+export type AuditLogWithUser = AuditLogModel & {
     user: UserModel;
 }
 

@@ -27,7 +27,7 @@ export default function Sidebar({ user }: SidebarProps) {
   if (pathname === '/login') return null;
 
   const role = user?.role;
-
+  console.log(role)
   // Define menu logic dynamically
   const menuItems = [
     {
@@ -51,25 +51,11 @@ export default function Sidebar({ user }: SidebarProps) {
       category: 'Báo cáo',
       items: [{ name: 'Thống kê', href: '/reports', icon: BarChart3 }],
     },
-    {
-      category: 'Hệ thống',
-      items: [
-        { name: 'Cấu hình', href: '#', icon: Settings },
-        { name: 'Dữ liệu', href: '#', icon: Database },
-        { name: 'Trợ lý AI', href: '#', icon: Bot },
-      ],
-    },
+
   ];
 
   return (
     <aside className='w-64 bg-white border-r border-slate-200 flex flex-col h-full shrink-0 transition-all duration-300'>
-      <div className='h-16 flex items-center px-6 border-b border-slate-100'>
-        <div className='flex items-center gap-2 text-indigo-600 font-bold text-xl'>
-          <FolderArchive className='w-6 h-6' />
-          <span>Court Management</span>
-        </div>
-      </div>
-
       <div className='flex-1 overflow-y-auto py-4 px-3 space-y-6'>
         {menuItems.map((group, idx) => (
           <div key={idx}>

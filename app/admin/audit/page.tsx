@@ -1,13 +1,21 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { getAuditLogs } from '@/lib/actions/audit';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
-import { Loader2, History, User, Activity } from 'lucide-react';
+import { Loader2, History, User, Activity, Search, Filter } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
 
 interface AuditLog {
     id: string;
@@ -26,6 +34,8 @@ export default function AuditLogPage() {
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [actionFilter, setActionFilter] = useState('ALL');
 
     useEffect(() => {
         const fetchLogs = async () => {
@@ -45,116 +55,162 @@ export default function AuditLogPage() {
 
     const getActionBadge = (action: string) => {
         switch (action) {
-            case 'CREATE': return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">THÊM MỚI</Badge>;
-            case 'UPDATE': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100">CẬP NHẬT</Badge>;
-            case 'DELETE': return <Badge className="bg-red-100 text-red-700 hover:bg-red-100">XÓA</Badge>;
+            case 'CREATE': return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">THÊM MỚI</Badge>;
+            case 'UPDATE': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">CẬP NHẬT</Badge>;
+            case 'DELETE': return <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-red-200">XÓA</Badge>;
+            case 'LOGIN': return <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 border-indigo-200">ĐĂNG NHẬP</Badge>;
             default: return <Badge variant="outline">{action}</Badge>;
         }
     };
 
+    const filteredLogs = useMemo(() => {
+        return logs.filter(log => {
+            const matchesSearch = !searchTerm || 
+                log.user?.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.user?.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                log.target.toLowerCase().includes(searchTerm.toLowerCase());
+            
+            const matchesAction = actionFilter === 'ALL' || log.action === actionFilter;
+            
+            return matchesSearch && matchesAction;
+        });
+    }, [logs, searchTerm, actionFilter]);
+
     return (
-        <div className="container mx-auto py-6 space-y-6 max-w-6xl">
-            <div className="flex items-center justify-between">
+        <div className="flex flex-col h-full space-y-4 max-w-7xl mx-auto w-full">
+            <div className="flex items-center justify-between shrink-0">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
-                        <History className="w-8 h-8 text-indigo-600" />
+                    <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                        <History className="w-6 h-6 text-indigo-600" />
                         Nhật ký hệ thống
                     </h1>
-                    <p className="text-slate-500 mt-1">Lịch sử truy vết và thao tác dữ liệu (Security Log).</p>
-                </div>
-                <div className="bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-100">
-                    <p className="text-xs text-indigo-600 font-semibold uppercase tracking-wider">Tổng số thao tác</p>
-                    <p className="text-xl font-bold text-indigo-700">-</p>
+                    <p className="text-slate-500 text-sm mt-1">Lịch sử truy vết và thao tác dữ liệu (Security Log).</p>
                 </div>
             </div>
 
-            <Card className="shadow-sm border-slate-200">
-                <CardHeader className="bg-slate-50/50">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                        <Activity className="w-5 h-5 text-slate-400" />
-                        Danh sách thao tác
-                    </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-slate-50 hover:bg-slate-50">
-                                <TableHead className="w-[180px]">Thời gian</TableHead>
-                                <TableHead>Tài khoản</TableHead>
-                                <TableHead>Hành động</TableHead>
-                                <TableHead>Đối tượng</TableHead>
-                                <TableHead>Chi tiết</TableHead>
+            <div className='flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden'>
+                {/* Filters Header */}
+                <div className='p-4 border-b border-slate-200 flex flex-wrap items-center gap-3 bg-white shrink-0'>
+                    <div className='flex items-center gap-2'>
+                        <Filter className='w-5 h-5 text-indigo-600' />
+                        <h3 className='font-bold text-slate-700'>Bộ lọc</h3>
+                    </div>
+                    <div className='h-6 w-px bg-slate-200 mx-2 hidden md:block'></div>
+
+                    <div className='flex items-center gap-2'>
+                        <Select value={actionFilter} onValueChange={setActionFilter}>
+                            <SelectTrigger className="w-[160px] bg-slate-50 border-slate-200 h-9">
+                                <SelectValue placeholder="Hành động" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="ALL">Tất cả hành động</SelectItem>
+                                <SelectItem value="CREATE">Thêm mới</SelectItem>
+                                <SelectItem value="UPDATE">Cập nhật</SelectItem>
+                                <SelectItem value="DELETE">Xóa</SelectItem>
+                                <SelectItem value="LOGIN">Đăng nhập</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+
+                    <div className='flex-1 min-w-50 relative max-w-md ml-auto'>
+                        <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10' />
+                        <Input
+                            type='text'
+                            placeholder='Tìm kiếm người dùng, đối tượng...'
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className='w-full pl-9 pr-4 py-1.5 bg-slate-50 border-slate-200 rounded-lg text-sm outline-none focus-visible:ring-indigo-500 transition-all h-9'
+                        />
+                    </div>
+                </div>
+
+                <div className='flex-1 overflow-auto bg-slate-50'>
+                    <Table className="w-full text-sm text-left border-collapse">
+                        <TableHeader className="bg-white text-slate-600 sticky top-0 shadow-sm z-10">
+                            <TableRow className="hover:bg-transparent border-none">
+                                <TableHead className="px-6 py-3 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm">Thời gian</TableHead>
+                                <TableHead className="px-6 py-3 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm">Tài khoản</TableHead>
+                                <TableHead className="px-6 py-3 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm">Hành động</TableHead>
+                                <TableHead className="px-6 py-3 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm">Đối tượng</TableHead>
+                                <TableHead className="px-6 py-3 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm">Chi tiết</TableHead>
                             </TableRow>
                         </TableHeader>
-                        <TableBody>
+                        <TableBody className="divide-y divide-slate-100 bg-white">
                             {loading ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="h-48 text-center">
-                                        <Loader2 className="w-8 h-8 animate-spin mx-auto text-slate-300" />
-                                        <p className="text-slate-400 mt-2">Đang tải dữ liệu...</p>
+                                        <div className="flex flex-col items-center justify-center">
+                                            <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+                                            <p className="text-slate-400 mt-2">Đang tải dữ liệu...</p>
+                                        </div>
                                     </TableCell>
                                 </TableRow>
-                            ) : logs.length === 0 ? (
+                            ) : filteredLogs.length === 0 ? (
                                 <TableRow>
                                     <TableCell colSpan={5} className="h-48 text-center text-slate-400">
-                                        Chưa có nhật ký ghi lại.
+                                        Không tìm thấy dữ liệu nhật ký phù hợp.
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                logs.map((log) => (
-                                    <TableRow key={log.id} className="hover:bg-slate-50/80 transition-colors">
-                                        <TableCell className="font-medium text-slate-600 tabular-nums">
+                                filteredLogs.map((log) => (
+                                    <TableRow key={log.id} className="hover:bg-indigo-50/50 transition-colors group">
+                                        <TableCell className="px-6 py-3.5 font-medium text-slate-600 tabular-nums">
                                             {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss')}
                                         </TableCell>
-                                        <TableCell>
+                                        <TableCell className="px-6 py-3.5">
                                             <div className="flex items-center gap-2">
-                                                <div className="w-7 h-7 bg-slate-100 rounded-full flex items-center justify-center">
-                                                    <User className="w-4 h-4 text-slate-500" />
+                                                <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs border border-indigo-100">
+                                                    {log.user?.fullName.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-semibold">{log.user?.fullName}</p>
+                                                    <p className="text-sm font-semibold text-slate-800">{log.user?.fullName}</p>
                                                     <p className="text-xs text-slate-400">@{log.user?.username}</p>
                                                 </div>
                                             </div>
                                         </TableCell>
-                                        <TableCell>{getActionBadge(log.action)}</TableCell>
-                                        <TableCell>
-                                            <Badge variant="secondary" className="font-mono text-[10px] uppercase">
+                                        <TableCell className="px-6 py-3.5">{getActionBadge(log.action)}</TableCell>
+                                        <TableCell className="px-6 py-3.5">
+                                            <Badge variant="secondary" className="font-mono text-[10px] uppercase bg-slate-100 text-slate-600 border-slate-200">
                                                 {log.target}
                                             </Badge>
                                         </TableCell>
-                                        <TableCell className="text-slate-500 text-xs">
-                                            <pre className="font-sans whitespace-pre-wrap truncate max-w-xs">
+                                        <TableCell className="px-6 py-3.5 text-slate-500 text-xs">
+                                            <div className="max-w-xs truncate bg-slate-50 p-2 rounded border border-slate-100 font-mono" title={JSON.stringify(log.detail, null, 2)}>
                                                 {JSON.stringify(log.detail)}
-                                            </pre>
+                                            </div>
                                         </TableCell>
                                     </TableRow>
                                 ))
                             )}
                         </TableBody>
                     </Table>
-                </CardContent>
-            </Card>
+                </div>
 
-            <div className="flex items-center justify-between pt-4">
-                <p className="text-sm text-slate-500">Trang {page} / {totalPages}</p>
-                <div className="flex gap-2">
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === 1 || loading}
-                        onClick={() => setPage(p => p - 1)}
-                    >
-                        Trước
-                    </Button>
-                    <Button
-                        variant="outline"
-                        size="sm"
-                        disabled={page === totalPages || loading}
-                        onClick={() => setPage(p => p + 1)}
-                    >
-                        Sau
-                    </Button>
+                {/* Pagination Footer */}
+                <div className='p-3 border-t border-slate-100 bg-white flex items-center justify-between shrink-0'>
+                    <span className='text-xs text-slate-500'>
+                        Trang {page} trên {totalPages}
+                    </span>
+                    <div className='flex gap-2'>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page === 1 || loading}
+                            onClick={() => setPage(p => p - 1)}
+                            className="h-8"
+                        >
+                            Trước
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={page === totalPages || loading}
+                            onClick={() => setPage(p => p + 1)}
+                            className="h-8"
+                        >
+                            Sau
+                        </Button>
+                    </div>
                 </div>
             </div>
         </div>

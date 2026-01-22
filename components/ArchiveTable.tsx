@@ -4,6 +4,23 @@ import { Filter, Search, Pencil, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { useState, useMemo } from 'react';
 import { FileModel } from '@/app/generated/prisma/models';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface ArchiveTableProps {
   files: FileModel[];
@@ -41,7 +58,7 @@ export default function ArchiveTable({
 
       // 3. Year Filter
       if (selectedYear) {
-        const fileYear = file.year.toString();
+        const fileYear = file.year?.toString() || '';
         if (fileYear !== selectedYear) {
           return false;
         }
@@ -64,8 +81,8 @@ export default function ArchiveTable({
     }
   };
 
-  const handleTypeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedType(e.target.value);
+  const handleTypeChange = (value: string) => {
+    setSelectedType(value);
     setCurrentPage(1);
   };
 
@@ -97,48 +114,49 @@ export default function ArchiveTable({
         </div>
 
         <div className='flex items-center gap-2'>
-          <select
-            value={selectedType}
-            onChange={handleTypeChange}
-            className='border border-slate-200 rounded-lg px-3 py-1.5 text-sm outline-none focus:border-indigo-500 transition-colors'
-          >
-            <option value='all'>Tất cả loại án</option>
-            <option value='Hình sự'>Hình sự</option>
-            <option value='Dân sự'>Dân sự</option>
-          </select>
+          <Select value={selectedType} onValueChange={handleTypeChange}>
+            <SelectTrigger className="w-[140px] border-slate-200 h-9">
+              <SelectValue placeholder="Tất cả loại án" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả loại án</SelectItem>
+              <SelectItem value="Hình sự">Hình sự</SelectItem>
+              <SelectItem value="Dân sự">Dân sự</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className='flex items-center gap-2'>
-          <input
+          <Input
             type='text'
             placeholder='Năm'
             value={selectedYear}
             onChange={handleYearChange}
-            className='border border-slate-200 rounded-lg px-3 py-1.5 w-20 text-center text-sm outline-none focus:border-indigo-500 transition-colors'
+            className='border-slate-200 rounded-lg px-3 py-1.5 w-20 text-center text-sm outline-none focus-visible:ring-indigo-500 transition-colors h-9'
           />
         </div>
 
         <div className='flex-1 min-w-50 relative'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
-          <input
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10' />
+          <Input
             type='text'
             placeholder='Nhập mã hồ sơ, tiêu đề...'
             value={searchTerm}
             onChange={handleSearchChange}
-            className='w-full pl-9 pr-4 py-1.5 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 bg-slate-50 focus:bg-white transition-all'
+            className='w-full pl-9 pr-4 py-1.5 border-slate-200 rounded-lg text-sm outline-none focus-visible:ring-indigo-500 bg-slate-50 focus:bg-white transition-all h-9'
           />
         </div>
 
-        <button className='bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm shadow-indigo-200'>
+        <Button className='bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-1.5 rounded-lg text-sm font-medium transition-colors shadow-sm shadow-indigo-200 h-9'>
           Tìm kiếm
-        </button>
+        </Button>
       </div>
 
       {/* Table Content */}
       <div className='flex-1 overflow-auto bg-slate-50 relative'>
-        <table className='w-full text-sm text-left border-collapse'>
-          <thead className='bg-white text-slate-600 sticky top-0 shadow-sm z-10'>
-            <tr>
+        <Table className='w-full text-sm text-left border-collapse'>
+          <TableHeader className='bg-white text-slate-600 sticky top-0 shadow-sm z-10'>
+            <TableRow className="hover:bg-transparent border-none">
               {[
                 'Hồ sơ số',
                 'Số tờ',
@@ -150,56 +168,56 @@ export default function ArchiveTable({
                 'Trạng thái',
                 'Hành động',
               ].map((head) => (
-                <th
+                <TableHead
                   key={head}
                   className='px-4 py-3 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm first:pl-6 last:pr-6'
                 >
                   {head}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody className='divide-y divide-slate-200 bg-white'>
+            </TableRow>
+          </TableHeader>
+          <TableBody className='divide-y divide-slate-200 bg-white'>
             {paginatedFiles.length === 0 ? (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={9}
                   className='px-6 py-8 text-center text-slate-500'
                 >
                   {filteredFiles.length === 0 && files.length > 0
                     ? 'Không tìm thấy kết quả phù hợp.'
                     : 'Chưa có hồ sơ nào.'}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               paginatedFiles.map((file) => (
-                <tr
+                <TableRow
                   key={file.id}
                   className='hover:bg-indigo-50/50 transition-colors group'
                 >
-                  <td className='px-4 py-2.5 pl-6 font-medium text-slate-900 group-hover:text-indigo-700'>
+                  <TableCell className='px-4 py-2.5 pl-6 font-medium text-slate-900 group-hover:text-indigo-700'>
                     {file.code}
-                  </td>
-                  <td className='px-4 py-2.5 text-slate-600'>
+                  </TableCell>
+                  <TableCell className='px-4 py-2.5 text-slate-600'>
                     {file.pageCount || '-'}
-                  </td>
-                  <td className='px-4 py-2.5 text-slate-600'>
+                  </TableCell>
+                  <TableCell className='px-4 py-2.5 text-slate-600'>
                     {file.year}
-                  </td>
-                  <td className='px-4 py-2.5 text-slate-600'>{file.type}</td>
-                  <td
+                  </TableCell>
+                  <TableCell className='px-4 py-2.5 text-slate-600'>{file.type}</TableCell>
+                  <TableCell
                     className='px-4 py-2.5 text-slate-600 max-w-xs truncate'
                     title={file.title}
                   >
                     {file.title}
-                  </td>
-                  <td className='px-4 py-2.5 text-slate-600'>
+                  </TableCell>
+                  <TableCell className='px-4 py-2.5 text-slate-600'>
                     {file.retention || '-'}
-                  </td>
-                  <td className='px-4 py-2.5 text-slate-600'>
+                  </TableCell>
+                  <TableCell className='px-4 py-2.5 text-slate-600'>
                     {file.judgmentDate ? format(new Date(file.judgmentDate), 'dd/MM/yyyy') : '-'}
-                  </td>
-                  <td className='px-4 py-2.5'>
+                  </TableCell>
+                  <TableCell className='px-4 py-2.5'>
                     {file.status === 'IN_STOCK' && (
                       <span className='inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800'>
                         Lưu kho
@@ -222,30 +240,34 @@ export default function ArchiveTable({
                           {file.status}
                         </span>
                       )}
-                  </td>
-                  <td className='px-4 py-2.5 pr-6'>
+                  </TableCell>
+                  <TableCell className='px-4 py-2.5 pr-6'>
                     <div className='flex items-center gap-2'>
-                      <button
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => onEdit(file.id)}
-                        className='p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm'
+                        className='p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm h-8 w-8'
                         title='Chỉnh sửa'
                       >
                         <Pencil className='w-4 h-4' />
-                      </button>
-                      <button
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => onDelete?.(file.id)}
-                        className='p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm'
+                        className='p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm h-8 w-8'
                         title='Xóa'
                       >
                         <Trash2 className='w-4 h-4' />
-                      </button>
+                      </Button>
                     </div>
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}
@@ -256,20 +278,24 @@ export default function ArchiveTable({
           {filteredFiles.length} bản ghi
         </span>
         <div className='flex gap-2'>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed h-7'
           >
             Trước
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || totalPages === 0}
-            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed h-7'
           >
             Sau
-          </button>
+          </Button>
         </div>
       </div>
     </div>

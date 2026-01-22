@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import BorrowTable from "@/components/BorrowTable";
 import Modal from "@/components/Modal";
 import BorrowForm from "@/components/BorrowForm";
+import { Button } from "@/components/ui/button";
 import {
   BorrowSlipModel as BorrowSlip,
   UserModel as User,
@@ -51,12 +52,12 @@ export default function BorrowClient({ initialBorrowSlips }: BorrowClientProps) 
           <h1 className="text-2xl font-bold text-slate-800">Quản lý mượn trả</h1>
           <p className="text-slate-500 text-sm mt-1">Theo dõi quá trình luân chuyển hồ sơ.</p>
         </div>
-        <button
+        <Button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm shadow-indigo-200 transition-all"
+          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm shadow-indigo-200 transition-all h-auto"
         >
           <Plus className="w-4 h-4" /> Tạo phiếu mượn
-        </button>
+        </Button>
       </div>
 
       {/* Main Table */}

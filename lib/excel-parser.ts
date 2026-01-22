@@ -11,71 +11,82 @@ export const parseExcelFile = async (buffer: ArrayBuffer): Promise<ImportData> =
     // Sheet 3: Vị trí lưu kho
 
     const sheetNames = workbook.SheetNames
-    if (sheetNames.length < 3) {
-        throw new Error('File Excel phải có ít nhất 3 Sheets theo cấu trúc quy định.')
+    if (sheetNames.length < 1) {
+        throw new Error('File Excel phải có ít nhất 1 Sheet dữ liệu.')
     }
 
     const filesSheet = workbook.Sheets[sheetNames[0]]
-    const docsSheet = workbook.Sheets[sheetNames[1]]
-    const locSheet = workbook.Sheets[sheetNames[2]]
 
     // Parse Sheet 1: Files
     const rawFiles = XLSX.utils.sheet_to_json<Record<string, unknown>>(filesSheet)
     const files: ExtractedFile[] = rawFiles.map((row: Record<string, unknown>) => ({
-        code: row['Mã hồ sơ'] as string,
-        title: (row['Tiêu đề'] || row['Tên hồ sơ']) as string,
+        code: row['Hồ sơ số'] as string,
+        // Title will be extracted from the complex text column if not present?
+        // Or if 'Tiêu đề' column exists, use it. In HS628 there isn't a clear "Tiêu đề" column, 
+        // it seems to be inside the column ":" (which is row[':'])
+        title: '', // Will populate from details parsing
         type: row['Loại án'] as string,
         year: parseYear(row['Thời gian']),
-        pageCount: parseInt((row['Số tờ'] as string) || '0'),
-        retention: row['Thời hạn bảo quản'] as string,
-        boxCode: row['Hộp số'] as string, // Need to ensure this maps to Location Sheet
-        details: {
-            summary: row['Về việc'],
-            defendants: row['Bị cáo'] ? (row['Bị cáo'] as string).split(',').map((s: string) => s.trim()) : [],
-            plaintiffs: row['Nguyên đơn'] ? (row['Nguyên đơn'] as string).split(',').map((s: string) => s.trim()) : [],
-            judgmentDate: row['Ngày'] ? new Date(row['Ngày'] as string | number) : null
-        },
-        startDate: row['Ngày'] ? new Date(row['Ngày'] as string | number) : undefined,
+        pageCount: typeof row['Số tờ'] === 'number' ? row['Số tờ'] : parseInt((row['Số tờ'] as string) || '0'),
+        retention: row['THBQ'] as string, // HS628 uses 'THBQ'
+        boxCode: (row['Dữ liệu ( Hộp)'] || row['Hộp số']) as string,
+        indexCode: row['MLHS'] as string,
+        note: row['Ghi chú'] as string,
+
+        details: parseDetails(row[':'] as string), // The column with header ":"
+
+        startDate: undefined, // Will be set from details
     }))
 
-    // Parse Sheet 2: Documents
-    const rawDocs = XLSX.utils.sheet_to_json<Record<string, unknown>>(docsSheet)
-    const documents: ExtractedDocument[] = rawDocs.map((row: Record<string, unknown>, index: number) => ({
-        fileCode: row['Mã hồ sơ'] as string,
-        code: row['Mã hồ sơ con'] as string,
-        title: row['Tiêu đề'] as string,
-        pageCount: parseInt((row['Số tờ'] as string) || '0'),
-        year: parseInt((row['Thời gian'] as string) || '0'),
-        order: index + 1
-    }))
-
-    // Parse Sheet 3: Locations/Boxes
-    const rawLocs = XLSX.utils.sheet_to_json<Record<string, unknown>>(locSheet)
-    // Expected columns: Mã kho, Dãy, Giá, Ngăn, Hộp (or constructed code)
-    // The user prompt example: K01-D02-G05-N03-H012
-    const boxes: ExtractedLocation[] = rawLocs.map((row: Record<string, unknown>) => {
-        // Assuming the Excel has these columns or we construct from components
-        // Map raw columns to our structure
-        // Adjust these keys based on actual Excel headers if known, otherwise assume standard
-        const warehouse = (row['Kho'] || row['Mã kho'] || 'K01') as string
-        const line = (row['Dãy'] || 'D01') as string
-        const shelf = (row['Giá'] || 'G01') as string
-        const slot = (row['Ngăn'] || 'N01') as string
-        const boxNumber = (row['Hộp'] || row['Hộp số'] || 'H01') as string
-
-        const fullCode = `${warehouse}-${line}-${shelf}-${slot}-${boxNumber}`
-
-        return {
-            warehouse,
-            line,
-            shelf,
-            slot,
-            boxNumber,
-            fullCode
+    // Post-process to set title and startDate from details
+    files.forEach(f => {
+        if (f.details) {
+            const d = f.details as any; // Cast to access dynamic properties from parseDetails
+            if (d.summary) f.title = d.summary;
+            if (d.judgmentDate) f.startDate = d.judgmentDate;
+            f.judgmentNumber = d.judgmentNumber;
+            f.defendants = d.defendants;
+            f.plaintiffs = d.plaintiffs;
+            f.civilDefendants = d.civilDefendants;
         }
     })
 
+    // Skip parsing Sheet 2 and 3 as requested
+    const documents: ExtractedDocument[] = []
+    const boxes: ExtractedLocation[] = []
+
     return { files, documents, boxes }
+}
+
+function parseDetails(text: string): any {
+    if (!text) return {};
+    const lines = text.split('\r\n').map(l => l.trim());
+    const details: any = {};
+
+    // Example format:
+    // Hình sự sơ thẩm năm 2016
+    // Về việc: Trộm cắp tài sản
+    // Bị cáo: Nhang Hồng Thọ, Đỗ Phú Quí
+    // QDTHS: 01/2016/HSST-QĐ
+    // Ngày: 15/01/2016
+
+    lines.forEach(line => {
+        if (line.startsWith('Về việc:')) details.summary = line.replace('Về việc:', '').trim();
+        if (line.startsWith('Bị cáo:')) details.defendants = line.replace('Bị cáo:', '').trim().split(',').map(s => s.trim());
+        if (line.startsWith('Nguyên đơn:')) details.plaintiffs = line.replace('Nguyên đơn:', '').trim().split(',').map(s => s.trim());
+        if (line.startsWith('Bị đơn:')) details.civilDefendants = line.replace('Bị đơn:', '').trim().split(',').map(s => s.trim());
+        if (line.startsWith('QDTHS:') || line.startsWith('Số:')) details.judgmentNumber = (line.replace('QDTHS:', '').replace('Số:', '')).trim();
+        if (line.startsWith('Ngày:')) {
+            const dateStr = line.replace('Ngày:', '').trim();
+            // Parse DD/MM/YYYY
+            const parts = dateStr.split('/');
+            if (parts.length === 3) {
+                details.judgmentDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+            }
+        }
+    });
+
+    return details;
 }
 
 function parseYear(dateStr: unknown): number {

@@ -95,11 +95,18 @@ export async function uploadExcel(formData: FormData) {
                         title: fileData.title,
                         type: fileData.type,
                         year: fileData.year,
+                        datetime: fileData.startDate || new Date(fileData.year, 0, 1), // Fallback to Jan 1st of year if no specific date
                         pageCount: fileData.pageCount,
                         retention: fileData.retention,
                         judgmentDate: fileData.startDate,
                         details: fileData.details as Prisma.InputJsonValue,
                         isLocked: true, // Lock immediately upon import per requirement
+                        note: fileData.note,
+                        indexCode: fileData.indexCode, // MLHS
+                        judgmentNumber: fileData.judgmentNumber,
+                        defendants: fileData.defendants,
+                        plaintiffs: fileData.plaintiffs,
+                        civilDefendants: fileData.civilDefendants,
                         box: boxConnect,
                         documents: {
                             create: documents

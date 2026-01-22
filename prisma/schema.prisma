@@ -104,33 +104,21 @@ model File {
   pageCount Int? // Số tờ
 
   // Chi tiết (Lưu JSON để linh động theo loại án: Bị cáo, Nguyên đơn, Về việc...)
-  /**
-   * /**
-   * /**
-   * /**
-   * /**
-   * /**
-   * /**
-   * /**
-   * /**
-   * /**
-   * /**
-   * /**
-   * /*
-   * Ví dụ Shape:
-   * {
-   * "summary": "Về việc tranh chấp đất đai",
-   * "defendants": ["Nguyen Van A", "Tran Van B"],
-   * "plaintiffs": ["Le Thi C"],
-   * "judgmentNumber": "12/2024/HS-ST",
-   * "judgmentDate": "2024-01-01"
-   * }
-   */
+
   details Json?
 
   // Thời gian & Bảo quản
   judgmentDate DateTime? // Ngày xét xử
   retention    String? // Thời hạn bảo quản (Vĩnh viễn, 10 năm...)
+
+  // New fields from Excel analysis
+  note      String? // Ghi chú
+  indexCode String? // MLHS (Mục lục hồ sơ)
+
+  judgmentNumber  String? // Số bản án
+  defendants      String[] // Bị cáo
+  plaintiffs      String[] // Nguyên đơn
+  civilDefendants String[] // Bị đơn
 
   // Trạng thái & Khóa
   isLocked Boolean @default(false) // Đã khóa (chỉ Admin sửa)
@@ -140,7 +128,7 @@ model File {
   boxId       String?
   box         StorageBox?  @relation(fields: [boxId], references: [id])
   fileIndex   FileIndex?
-  // documents   Document[]   // Văn bản con (Sheet 2)
+  documents   Document[] // Văn bản con (Sheet 2)
   borrowItems BorrowItem[]
 
   createdAt DateTime @default(now())
@@ -168,8 +156,8 @@ model Document {
   pageCount Int?
   order     Int // Số thứ tự trong hồ sơ
 
-  // fileId      String
-  // file        File     @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  fileId String
+  file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
 }
 
 // ==========================================

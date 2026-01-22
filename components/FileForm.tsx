@@ -15,6 +15,16 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function FileForm() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -40,15 +50,15 @@ export default function FileForm() {
             Tải lên bản scan hoặc hình ảnh bìa hồ sơ. AI sẽ tự động điền các trường dữ liệu.
           </p>
           <div className="flex gap-3">
-            <button 
+            <Button 
               onClick={handleAnalyze}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition-all"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition-all h-auto"
             >
               {isAnalyzing ? "Đang phân tích..." : <><UploadCloud className="w-4 h-4" /> Tải tài liệu lên</>}
-            </button>
-            <button className="bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 text-sm font-medium py-2 px-4 rounded-lg transition-colors">
+            </Button>
+            <Button variant="outline" className="bg-white text-indigo-700 border border-indigo-200 hover:bg-indigo-50 text-sm font-medium py-2 px-4 rounded-lg transition-colors h-auto">
               Quét từ máy Scan
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -67,17 +77,17 @@ export default function FileForm() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-slate-500 uppercase">Mã hồ sơ (System)</label>
-                    <input type="text" disabled value="HS-2025-0842" className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm font-mono text-slate-600 select-all" />
+                    <Input type="text" disabled value="HS-2025-0842" className="w-full px-3 py-2 bg-slate-50 border-slate-200 rounded-lg text-sm font-mono text-slate-600 select-all" />
                   </div>
                    <div className="space-y-1">
                     <label className="text-xs font-medium text-slate-500 uppercase">Mã tham chiếu (Ref)</label>
-                    <input type="text" placeholder="VD: HS-GOC-01" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors" />
+                    <Input type="text" placeholder="VD: HS-GOC-01" className="w-full px-3 py-2 bg-white border-slate-200 rounded-lg text-sm focus-visible:ring-indigo-500 outline-none transition-colors" />
                   </div>
                 </div>
 
                 <div className="space-y-1">
                   <label className="text-xs font-medium text-slate-500 uppercase">Tiêu đề hồ sơ <span className="text-red-500">*</span></label>
-                  <textarea className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors h-24 resize-none font-medium" placeholder="Nhập tiêu đề hồ sơ đầy đủ..."></textarea>
+                  <Textarea className="w-full px-3 py-2 bg-white border-slate-200 rounded-lg text-sm focus-visible:ring-indigo-500 outline-none transition-colors h-24 resize-none font-medium" placeholder="Nhập tiêu đề hồ sơ đầy đủ..." />
                 </div>
               </div>
             </div>
@@ -93,19 +103,29 @@ export default function FileForm() {
                  <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-slate-500 uppercase">Loại án/Hồ sơ</label>
-                    <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors">
-                      <option>Hình sự</option>
-                      <option>Dân sự</option>
-                      <option>Hành chính</option>
-                    </select>
+                    <Select>
+                      <SelectTrigger className="w-full bg-white border-slate-200 h-10">
+                        <SelectValue placeholder="Chọn loại án" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="HS">Hình sự</SelectItem>
+                        <SelectItem value="DS">Dân sự</SelectItem>
+                        <SelectItem value="HC">Hành chính</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-1">
                     <label className="text-xs font-medium text-slate-500 uppercase">Thời hạn bảo quản</label>
-                    <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors">
-                      <option>Vĩnh viễn</option>
-                      <option>70 năm</option>
-                      <option>20 năm</option>
-                    </select>
+                    <Select>
+                      <SelectTrigger className="w-full bg-white border-slate-200 h-10">
+                        <SelectValue placeholder="Chọn thời hạn" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="VV">Vĩnh viễn</SelectItem>
+                        <SelectItem value="70">70 năm</SelectItem>
+                        <SelectItem value="20">20 năm</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
@@ -113,15 +133,15 @@ export default function FileForm() {
                    <div className="space-y-1">
                     <label className="text-xs font-medium text-slate-500 uppercase">Thời gian bắt đầu</label>
                     <div className="relative">
-                      <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                      <input type="date" className="w-full pl-8 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors" />
+                      <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 z-10" />
+                      <Input type="date" className="w-full pl-8 pr-3 py-2 bg-white border-slate-200 rounded-lg text-sm focus-visible:ring-indigo-500 outline-none transition-colors" />
                     </div>
                   </div>
                    <div className="space-y-1">
                     <label className="text-xs font-medium text-slate-500 uppercase">Thời gian kết thúc</label>
                     <div className="relative">
-                      <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                      <input type="date" className="w-full pl-8 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors" />
+                      <Calendar className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400 z-10" />
+                      <Input type="date" className="w-full pl-8 pr-3 py-2 bg-white border-slate-200 rounded-lg text-sm focus-visible:ring-indigo-500 outline-none transition-colors" />
                     </div>
                   </div>
                 </div>
@@ -129,11 +149,11 @@ export default function FileForm() {
                 <div className="grid grid-cols-3 gap-4">
                    <div className="space-y-1">
                      <label className="text-xs font-medium text-slate-500 uppercase">Số tờ</label>
-                     <input type="number" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm text-center" placeholder="0" />
+                     <Input type="number" className="w-full px-3 py-2 bg-white border-slate-200 rounded-lg text-sm text-center" placeholder="0" />
                    </div>
                     <div className="space-y-1 col-span-2">
                      <label className="text-xs font-medium text-slate-500 uppercase">Mục lục văn bản (MLVB)</label>
-                     <input type="text" className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm" placeholder="Nhập mã..." />
+                     <Input type="text" className="w-full px-3 py-2 bg-white border-slate-200 rounded-lg text-sm" placeholder="Nhập mã..." />
                    </div>
                 </div>
               </div>
@@ -149,24 +169,39 @@ export default function FileForm() {
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-1">
                    <label className="text-xs font-medium text-slate-500 uppercase">Kho (Room)</label>
-                   <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm">
-                      <option>Kho A - Tầng 1</option>
-                      <option>Kho B - Tầng 2</option>
-                   </select>
+                   <Select>
+                      <SelectTrigger className="w-full bg-white border-slate-200 h-10">
+                        <SelectValue placeholder="Chọn kho" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="KHO_A">Kho A - Tầng 1</SelectItem>
+                        <SelectItem value="KHO_B">Kho B - Tầng 2</SelectItem>
+                      </SelectContent>
+                   </Select>
                 </div>
                 <div className="space-y-1">
                    <label className="text-xs font-medium text-slate-500 uppercase">Kệ (Shelf)</label>
-                   <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm">
-                      <option>Kệ A-01</option>
-                      <option>Kệ A-02</option>
-                   </select>
+                   <Select>
+                      <SelectTrigger className="w-full bg-white border-slate-200 h-10">
+                        <SelectValue placeholder="Chọn kệ" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="A01">Kệ A-01</SelectItem>
+                        <SelectItem value="A02">Kệ A-02</SelectItem>
+                      </SelectContent>
+                   </Select>
                 </div>
                 <div className="space-y-1">
                    <label className="text-xs font-medium text-slate-500 uppercase">Hộp/Cặp (Box)</label>
-                   <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm">
-                      <option>Hộp số 05</option>
-                      <option>Hộp số 06</option>
-                   </select>
+                   <Select>
+                      <SelectTrigger className="w-full bg-white border-slate-200 h-10">
+                        <SelectValue placeholder="Chọn hộp" />
+                      </SelectTrigger>
+                      <SelectContent>
+                         <SelectItem value="BOX05">Hộp số 05</SelectItem>
+                         <SelectItem value="BOX06">Hộp số 06</SelectItem>
+                      </SelectContent>
+                   </Select>
                 </div>
               </div>
               
@@ -224,13 +259,13 @@ export default function FileForm() {
       
       {/* Footer Actions */}
       <div className="flex justify-end pt-4 border-t border-slate-200 gap-3">
-         <button className="px-6 py-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-lg transition-colors">
+         <Button variant="outline" className="px-6 py-2 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 font-medium rounded-lg transition-colors h-auto">
             Hủy bỏ
-         </button>
-         <button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow-lg shadow-indigo-200 transition-all">
+         </Button>
+         <Button className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-6 rounded-lg shadow-lg shadow-indigo-200 transition-all h-auto">
             <Save className="w-4 h-4" />
             Lưu hồ sơ
-          </button>
+          </Button>
       </div>
     </div>
   );

@@ -5,6 +5,7 @@ import { Plus } from "lucide-react";
 import ArchiveTable from "@/components/ArchiveTable";
 import Modal from "@/components/Modal";
 import FileForm from "@/components/FileForm";
+import { Button } from "@/components/ui/button";
 import { FileModel as File } from "@/app/generated/prisma/models";
 
 interface HomeClientProps {
@@ -38,12 +39,12 @@ export default function HomeClient({ initialFiles }: HomeClientProps) {
           <p className="text-slate-500 text-sm mt-1">Danh sách hồ sơ lưu trữ và tra cứu nhanh.</p>
         </div>
         <div className="flex items-center gap-3">
-           <button 
+           <Button 
              onClick={() => setIsAddModalOpen(true)}
-             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm shadow-indigo-200 transition-all"
+             className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm shadow-indigo-200 transition-all h-auto"
            >
              <Plus className="w-4 h-4" /> Thêm mới
-           </button>
+           </Button>
         </div>
       </div>
 

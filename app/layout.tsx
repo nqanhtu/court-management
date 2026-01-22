@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
+import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
   title: "Phần mềm chỉnh lý hồ sơ",
@@ -20,16 +21,17 @@ export default async function RootLayout({
 
   return (
     <html lang="vi">
-      <body className="h-screen flex flex-col overflow-hidden bg-white text-slate-800">
+      <body className="h-screen flex flex-col overflow-hidden bg-background text-foreground antialiased">
         <Header user={session ?? undefined} />
         <div className="flex flex-1 overflow-hidden">
           <Sidebar user={session ?? undefined} />
-          <main className="flex-1 flex flex-col min-w-0 bg-slate-50">
+          <main className="flex-1 flex flex-col min-w-0 bg-muted/30">
             <div className="flex-1 overflow-hidden p-6 flex flex-col">
               {children}
             </div>
           </main>
         </div>
+        <Toaster />
       </body>
     </html>
   );

@@ -3,6 +3,8 @@ import { FileTable } from '@/components/file-table'
 import { SearchFilters } from '@/components/search-filters'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { getOverdueCount } from '@/lib/services/stats'
+import { CreateFileDialog } from '@/components/create-file-dialog'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 
 export default async function Home({
   searchParams,
@@ -56,14 +58,24 @@ export default async function Home({
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Tra cứu Hồ sơ</h1>
+        <CreateFileDialog />
       </div>
 
       <SearchFilters />
 
       <FileTable files={files} />
 
-      <div className="mt-4 text-sm text-muted-foreground">
-        Hiển thị {files.length} / {total} kết quả
+      <div className="mt-4 flex justify-between items-center">
+        <div className="text-sm text-muted-foreground">
+          Hiển thị {files.length} / {total} kết quả
+        </div>
+
+        <PaginationControls
+          hasNextPage={(page * 10) < total}
+          hasPrevPage={page > 1}
+          totalPages={Math.ceil(total / 10)}
+          currentPage={page}
+        />
       </div>
     </div>
   )

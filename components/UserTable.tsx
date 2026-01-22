@@ -3,6 +3,16 @@
 import { Search, Pencil, Trash2, Filter } from 'lucide-react';
 import { UserModel } from '@/app/generated/prisma/models';
 import { useState, useMemo } from 'react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 interface UserTableProps {
   users: UserModel[];
@@ -59,21 +69,21 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
         <div className='h-6 w-px bg-slate-200 mx-2 hidden md:block'></div>
 
         <div className='flex-1 min-w-50 relative max-w-md'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
-          <input
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10' />
+          <Input
             type='text'
             placeholder='Tìm kiếm theo tên, đơn vị...'
             value={searchTerm}
             onChange={handleSearchChange}
-            className='w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 transition-all'
+            className='w-full pl-9 pr-4 py-1.5 bg-slate-50 border-slate-200 rounded-lg text-sm outline-none focus-visible:ring-indigo-500 transition-all h-9'
           />
         </div>
       </div>
 
       <div className='flex-1 overflow-auto bg-slate-50'>
-        <table className='w-full text-sm text-left border-collapse'>
-          <thead className='bg-white text-slate-600 sticky top-0 shadow-sm z-10'>
-            <tr>
+        <Table className='w-full text-sm text-left border-collapse'>
+          <TableHeader className='bg-white text-slate-600 sticky top-0 shadow-sm z-10'>
+            <TableRow className="hover:bg-transparent border-none">
               {[
                 'Tên đăng nhập',
                 'Họ và Tên',
@@ -82,71 +92,75 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
                 'Trạng thái',
                 'Hành động',
               ].map((head) => (
-                <th
+                <TableHead
                   key={head}
                   className='px-6 py-3 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm'
                 >
                   {head}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody className='divide-y divide-slate-100 bg-white'>
+            </TableRow>
+          </TableHeader>
+          <TableBody className='divide-y divide-slate-100 bg-white'>
             {paginatedUsers.length === 0 ? (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={6}
                   className='px-6 py-8 text-center text-slate-500'
                 >
                   {filteredUsers.length === 0 && users.length > 0
                     ? 'Không tìm thấy kết quả phù hợp.'
                     : 'Chưa có dữ liệu người dùng.'}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               paginatedUsers.map((user) => (
-                <tr
+                <TableRow
                   key={user.id}
                   className='hover:bg-indigo-50/50 transition-colors group'
                 >
-                  <td className='px-6 py-3 text-slate-500'>{user.username}</td>
-                  <td className='px-6 py-3 font-medium text-slate-800'>
+                  <TableCell className='px-6 py-3 text-slate-500'>{user.username}</TableCell>
+                  <TableCell className='px-6 py-3 font-medium text-slate-800'>
                     {user.fullName}
-                  </td>
-                  <td className='px-6 py-3 text-slate-600'>
+                  </TableCell>
+                  <TableCell className='px-6 py-3 text-slate-600'>
                     {user.role}
-                  </td>
-                  <td className='px-6 py-3 text-slate-600'>
+                  </TableCell>
+                  <TableCell className='px-6 py-3 text-slate-600'>
                     {user.unit || '-'}
-                  </td>
-                  <td className='px-6 py-3 text-slate-600'>
+                  </TableCell>
+                  <TableCell className='px-6 py-3 text-slate-600'>
                     {user.status ? 'Hoạt động' : 'Khoá'}
-                  </td>
-                  <td className='px-6 py-3'>
+                  </TableCell>
+                  <TableCell className='px-6 py-3'>
                     {isAdmin && (
                       <div className='flex items-center gap-2'>
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => onEdit(user.id)}
-                          className='p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm'
+                          className='p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm h-8 w-8'
                           title='Chỉnh sửa'
                         >
                           <Pencil className='w-4 h-4' />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => onDelete(user.id)}
-                          className='p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm'
+                          className='p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm h-8 w-8'
                           title='Xóa'
                         >
                           <Trash2 className='w-4 h-4' />
-                        </button>
+                        </Button>
                       </div>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ))
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}
@@ -157,20 +171,24 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
           {filteredUsers.length} người dùng
         </span>
         <div className='flex gap-2'>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed h-7'
           >
             Trước
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || totalPages === 0}
-            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed h-7'
           >
             Sau
-          </button>
+          </Button>
         </div>
       </div>
     </div>

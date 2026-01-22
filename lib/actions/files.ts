@@ -11,6 +11,22 @@ export interface SearchParams {
   offset?: number
 }
 
+export async function createFile(data: Prisma.FileCreateInput) {
+  try {
+    const file = await db.file.create({
+      data: {
+        ...data,
+        isLocked: false,
+        status: 'IN_STOCK'
+      }
+    })
+    return { success: true, file }
+  } catch (error) {
+    console.error('Error creating file:', error)
+    return { success: false, error: 'Failed to create file' }
+  }
+}
+
 export async function searchFiles(params: SearchParams) {
   const { query, type, year, limit = 20, offset = 0 } = params
 
@@ -20,6 +36,8 @@ export async function searchFiles(params: SearchParams) {
         OR: [
           { code: { contains: query, mode: 'insensitive' } },
           { title: { contains: query, mode: 'insensitive' } },
+          { judgmentNumber: { contains: query, mode: 'insensitive' } },
+          { indexCode: { contains: query, mode: 'insensitive' } },
         ]
       } : {},
       type ? { type: { equals: type } } : {},
@@ -51,6 +69,9 @@ export async function getFile(id: string) {
       borrowItems: {
         where: { status: 'BORROWING' },
         include: { borrowSlip: true }
+      },
+      documents: {
+        orderBy: { order: 'asc' }
       }
     }
   })

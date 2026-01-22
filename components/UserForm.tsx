@@ -1,4 +1,7 @@
 import { User, Building2, Phone, Mail, CreditCard, MapPin } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 export default function UserForm() {
   return (
@@ -8,16 +11,16 @@ export default function UserForm() {
          <div className="aspect-square rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex flex-col items-center justify-center text-slate-400 hover:bg-slate-50 transition-colors cursor-pointer group relative overflow-hidden">
             <User className="w-16 h-16 group-hover:scale-110 transition-transform" />
             <span className="text-xs font-medium mt-2">Tải ảnh đại diện</span>
-            <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" />
+            <Input type="file" className="absolute inset-0 opacity-0 cursor-pointer p-0 h-full" />
          </div>
          <div className="p-4 bg-indigo-50 border border-indigo-100 rounded-xl">
            <h4 className="text-sm font-bold text-indigo-900 mb-1">Mẹo</h4>
            <p className="text-xs text-indigo-700 leading-relaxed">
              Bạn có thể dùng CCCD gắn chip để tự động điền thông tin cá nhân.
            </p>
-           <button className="mt-2 text-xs font-bold text-indigo-600 bg-white border border-indigo-200 py-1.5 px-3 rounded w-full hover:bg-indigo-50 transition-colors">
+           <Button variant="outline" className="mt-2 text-xs font-bold text-indigo-600 bg-white border border-indigo-200 py-1.5 px-3 rounded w-full hover:bg-indigo-50 transition-colors h-auto">
              Quét CCCD
-           </button>
+           </Button>
          </div>
       </div>
 
@@ -27,15 +30,15 @@ export default function UserForm() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Họ và tên <span className="text-red-500">*</span></label>
             <div className="relative">
-              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors" placeholder="Nhập họ và tên..." />
+              <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
+              <Input type="text" className="w-full pl-9 pr-3 py-2 bg-white border-slate-200 rounded-lg text-sm focus-visible:ring-indigo-500 outline-none transition-colors" placeholder="Nhập họ và tên..." />
             </div>
           </div>
            <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Đơn vị công tác</label>
             <div className="relative">
-              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors" placeholder="Phòng ban..." />
+              <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
+              <Input type="text" className="w-full pl-9 pr-3 py-2 bg-white border-slate-200 rounded-lg text-sm focus-visible:ring-indigo-500 outline-none transition-colors" placeholder="Phòng ban..." />
             </div>
           </div>
         </div>
@@ -44,15 +47,15 @@ export default function UserForm() {
           <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Số điện thoại</label>
             <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors" placeholder="09..." />
+              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
+              <Input type="text" className="w-full pl-9 pr-3 py-2 bg-white border-slate-200 rounded-lg text-sm focus-visible:ring-indigo-500 outline-none transition-colors" placeholder="09..." />
             </div>
           </div>
            <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Email</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="email" className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors" placeholder="example@mail.com" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
+              <Input type="email" className="w-full pl-9 pr-3 py-2 bg-white border-slate-200 rounded-lg text-sm focus-visible:ring-indigo-500 outline-none transition-colors" placeholder="example@mail.com" />
             </div>
           </div>
         </div>
@@ -60,22 +63,22 @@ export default function UserForm() {
         <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Số CCCD / CMND</label>
             <div className="relative">
-              <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors" placeholder="0123..." />
+              <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
+              <Input type="text" className="w-full pl-9 pr-3 py-2 bg-white border-slate-200 rounded-lg text-sm focus-visible:ring-indigo-500 outline-none transition-colors" placeholder="0123..." />
             </div>
         </div>
 
         <div className="space-y-1.5">
             <label className="text-sm font-medium text-slate-700">Địa chỉ liên hệ</label>
             <div className="relative">
-              <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400" />
-              <textarea className="w-full pl-9 pr-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:border-indigo-500 outline-none transition-colors h-24 resize-none" placeholder="Nhập địa chỉ..."></textarea>
+              <MapPin className="absolute left-3 top-3 w-4 h-4 text-slate-400 z-10" />
+              <Textarea className="w-full pl-9 pr-3 py-2 bg-white border-slate-200 rounded-lg text-sm focus-visible:ring-indigo-500 outline-none transition-colors h-24 resize-none" placeholder="Nhập địa chỉ..." />
             </div>
         </div>
 
         <div className="flex justify-end pt-4 border-t border-slate-100 gap-3">
-             <button className="px-5 py-2 bg-white border border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors">Hủy</button>
-             <button className="px-5 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors">Lưu thông tin</button>
+             <Button variant="outline" className="px-5 py-2 bg-white border-slate-200 text-slate-700 font-medium rounded-lg hover:bg-slate-50 transition-colors h-auto">Hủy</Button>
+             <Button className="px-5 py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 shadow-sm shadow-indigo-200 transition-colors h-auto">Lưu thông tin</Button>
         </div>
       </div>
     </div>

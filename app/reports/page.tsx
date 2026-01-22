@@ -1,7 +1,16 @@
 import { BarChart3, TrendingUp, AlertCircle, CheckCircle2, FileClock, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getReportStats } from "@/lib/actions/borrows";
+import { getReportStats } from "@/lib/actions/borrow-queries";
 import { format } from "date-fns";
+import { Button } from "@/components/ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export const dynamic = 'force-dynamic';
 
@@ -16,9 +25,9 @@ export default async function Reports() {
           <h1 className="text-2xl font-bold text-slate-800">Báo cáo thống kê</h1>
           <p className="text-slate-500 text-sm mt-1">Tổng hợp tình hình mượn trả hồ sơ.</p>
         </div>
-        <button className="flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors">
+        <Button variant="outline" className="flex items-center gap-2 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors h-auto">
           <Download className="w-4 h-4" /> Xuất Excel
-        </button>
+        </Button>
       </div>
 
       {/* Stats Cards */}
@@ -49,41 +58,41 @@ export default async function Reports() {
         </div>
 
         <div className="flex-1 overflow-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-600 sticky top-0 shadow-sm z-10">
-              <tr>
-                <th className="px-6 py-4 font-semibold whitespace-nowrap">Mã mượn</th>
-                <th className="px-6 py-4 font-semibold whitespace-nowrap">Hồ sơ số</th>
-                <th className="px-6 py-4 font-semibold whitespace-nowrap">Ngày mượn</th>
-                <th className="px-6 py-4 font-semibold whitespace-nowrap">Hạn trả</th>
-                <th className="px-6 py-4 font-semibold whitespace-nowrap">Thời gian trả</th>
-                <th className="px-6 py-4 font-semibold whitespace-nowrap">Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
+          <Table className="w-full text-sm text-left">
+            <TableHeader className="bg-slate-50 text-slate-600 sticky top-0 shadow-sm z-10">
+              <TableRow className="hover:bg-transparent border-none">
+                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Mã mượn</TableHead>
+                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Hồ sơ số</TableHead>
+                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Ngày mượn</TableHead>
+                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Hạn trả</TableHead>
+                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Thời gian trả</TableHead>
+                <TableHead className="px-6 py-4 font-semibold whitespace-nowrap">Trạng thái</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-slate-100">
               {recentBorrows.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-slate-500">
+                <TableRow>
+                  <TableCell colSpan={6} className="px-6 py-8 text-center text-slate-500">
                     Chưa có dữ liệu giao dịch.
-                  </td>
-                </tr>
+                  </TableCell>
+                </TableRow>
               ) : (
                 recentBorrows.map((slip) => {
                   const isReturned = slip.status === "RETURNED";
                   const isOverdue = slip.status === "OVERDUE" || (new Date() > new Date(slip.dueDate) && !isReturned);
 
                   return (
-                    <tr key={slip.id} className="hover:bg-slate-50/80 transition-colors group">
-                      <td className="px-6 py-3.5 font-medium text-slate-800 group-hover:text-indigo-600 transition-colors">{slip.code}</td>
-                      <td className="px-6 py-3.5 text-slate-600">
+                    <TableRow key={slip.id} className="hover:bg-slate-50/80 transition-colors group">
+                      <TableCell className="px-6 py-3.5 font-medium text-slate-800 group-hover:text-indigo-600 transition-colors">{slip.code}</TableCell>
+                      <TableCell className="px-6 py-3.5 text-slate-600">
                         {slip.items.length > 0 ? slip.items.map(i => i.file.code).join(", ") : "-"}
-                      </td>
-                      <td className="px-6 py-3.5 text-slate-600">{format(new Date(slip.borrowDate), "dd/MM/yyyy")}</td>
-                      <td className="px-6 py-3.5 text-slate-600">{format(new Date(slip.dueDate), "dd/MM/yyyy")}</td>
-                      <td className="px-6 py-3.5 text-slate-600">
+                      </TableCell>
+                      <TableCell className="px-6 py-3.5 text-slate-600">{format(new Date(slip.borrowDate), "dd/MM/yyyy")}</TableCell>
+                      <TableCell className="px-6 py-3.5 text-slate-600">{format(new Date(slip.dueDate), "dd/MM/yyyy")}</TableCell>
+                      <TableCell className="px-6 py-3.5 text-slate-600">
                         {slip.returnedDate ? format(new Date(slip.returnedDate), "dd/MM/yyyy") : "-"}
-                      </td>
-                      <td className="px-6 py-3.5">
+                      </TableCell>
+                      <TableCell className="px-6 py-3.5">
                         {isReturned ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium border border-emerald-200">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Đã trả
@@ -97,13 +106,13 @@ export default async function Reports() {
                             <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Đang mượn
                           </span>
                         )}
-                      </td>
-                    </tr>
+                      </TableCell>
+                    </TableRow>
                   );
                 })
               )}
-            </tbody>
-          </table>
+            </TableBody>
+          </Table>
         </div>
 
         {/* Pagination Footer - Static for now since we only fetch 20 */}

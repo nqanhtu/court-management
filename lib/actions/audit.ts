@@ -6,7 +6,7 @@ import type { User } from '@/lib/types/user';
 
 export async function getAuditLogs(page: number = 1, limit: number = 20) {
     const session = await getSession();
-    if (!session || (session as User).role !== 'ADMIN') {
+    if (!session || (session as User).role !== 'SUPER_ADMIN') {
         throw new Error('Unauthorized');
     }
 

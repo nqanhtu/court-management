@@ -10,6 +10,23 @@ import {
 } from '@/app/generated/prisma/models';
 import { format } from 'date-fns';
 import { useState, useMemo } from 'react';
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 type BorrowSlipWithDetails = BorrowSlipModel & {
   lender: UserModel;
@@ -76,8 +93,8 @@ export default function BorrowTable({
     }
   };
 
-  const handleStatusChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedStatus(e.target.value);
+  const handleStatusChange = (value: string) => {
+    setSelectedStatus(value);
     setCurrentPage(1);
   };
 
@@ -97,77 +114,65 @@ export default function BorrowTable({
         <div className='h-6 w-px bg-slate-200 mx-2 hidden md:block'></div>
 
         <div className='flex items-center gap-2'>
-          <select
-            value={selectedStatus}
-            onChange={handleStatusChange}
-            className='bg-slate-50 border border-slate-200 rounded-lg text-sm px-3 py-1.5 outline-none cursor-pointer focus:border-indigo-500 transition-colors'
-          >
-            <option value='all'>Tất cả trạng thái</option>
-            <option value='BORROWING'>Đang mượn</option>
-            <option value='OVERDUE'>Quá hạn</option>
-            <option value='RETURNED'>Đã trả</option>
-          </select>
+          <Select value={selectedStatus} onValueChange={handleStatusChange}>
+            <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 h-9">
+              <SelectValue placeholder="Tất cả trạng thái" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">Tất cả trạng thái</SelectItem>
+              <SelectItem value="BORROWING">Đang mượn</SelectItem>
+              <SelectItem value="OVERDUE">Quá hạn</SelectItem>
+              <SelectItem value="RETURNED">Đã trả</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         <div className='flex-1 min-w-50 relative max-w-md ml-auto'>
           <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400' />
-          <input
+          <Input
             type='text'
             placeholder='Tìm kiếm phiếu mượn...'
             value={searchTerm}
             onChange={handleSearchChange}
-            className='w-full pl-9 pr-4 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:border-indigo-500 transition-all'
+            className='w-full pl-9 pr-4 py-1.5 bg-slate-50 border-slate-200 rounded-lg text-sm outline-none focus-visible:ring-indigo-500 transition-all h-9'
           />
         </div>
       </div>
 
       <div className='flex-1 overflow-auto bg-slate-50'>
-        <table className='w-full text-sm text-left border-collapse'>
-          <thead className='bg-white text-slate-600 sticky top-0 shadow-sm z-10'>
-            <tr>
+        <Table className='w-full text-sm text-left border-collapse'>
+          <TableHeader className='bg-white text-slate-600 sticky top-0 shadow-sm z-10'>
+            <TableRow className="hover:bg-transparent border-none">
               {[
                 'Mã phiếu',
-                'Người mượn', // Technically lender is internal user, borrower is external. Wait. 
-                // The BorrowSlip has "borrowerName" (text) AND lender (user). 
-                // The UI was displaying "slip.user.fullName". This implies it was showing LENDER.
-                // But column says "Người mượn".
-                // If "Người mượn" means the external person, we should use slip.borrowerName.
-                // If it means who created the slip (lender), then slip.lender.fullName.
-                // Given standard flows, "Người mượn" usually refers to the person borrowing the file.
-                // BorrowSlip has `borrowerName`.
-                // BUT previous code used `slip.user.fullName`.
-                // Let's check `borrows.ts` include. It included `user` (now `lender`).
-                // I will assume for now we want LENDER (User) because that was the code. 
-                // WRONG? If I search for `borrowerName` I see `borrowerName` in `createBorrowSlip`.
-                // Let's stick to replacing `user` with `lender` to fix the BUILD first.
-                // Logic correction (Borrower vs Lender) is a separate concern.
+                'Người mượn',
                 'Ngày mượn',
                 'Hạn trả',
                 'Hồ sơ',
                 'Trạng thái',
                 'Hành động',
               ].map((head) => (
-                <th
+                <TableHead
                   key={head}
                   className='px-6 py-3 font-semibold whitespace-nowrap border-b border-slate-200 bg-slate-50/90 backdrop-blur-sm'
                 >
                   {head}
-                </th>
+                </TableHead>
               ))}
-            </tr>
-          </thead>
-          <tbody className='divide-y divide-slate-100 bg-white'>
+            </TableRow>
+          </TableHeader>
+          <TableBody className='divide-y divide-slate-100 bg-white'>
             {paginatedSlips.length === 0 ? (
-              <tr>
-                <td
+              <TableRow>
+                <TableCell
                   colSpan={7}
                   className='px-6 py-8 text-center text-slate-500'
                 >
                   {filteredSlips.length === 0 && borrowSlips.length > 0
                     ? 'Không tìm thấy kết quả phù hợp.'
                     : 'Chưa có phiếu mượn nào.'}
-                </td>
-              </tr>
+                </TableCell>
+              </TableRow>
             ) : (
               paginatedSlips.map((slip) => {
                 const isReturned = slip.status === 'RETURNED';
@@ -176,14 +181,14 @@ export default function BorrowTable({
                   (new Date() > new Date(slip.dueDate) && !isReturned);
 
                 return (
-                  <tr
+                  <TableRow
                     key={slip.id}
                     className='hover:bg-indigo-50/50 transition-colors group'
                   >
-                    <td className='px-6 py-3 font-mono text-slate-500'>
+                    <TableCell className='px-6 py-3 font-mono text-slate-500'>
                       {slip.code}
-                    </td>
-                    <td className='px-6 py-3'>
+                    </TableCell>
+                    <TableCell className='px-6 py-3'>
                       <div className='flex items-center gap-3'>
                         <div className='w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700'>
                           {slip.lender.fullName.charAt(0)}
@@ -192,11 +197,11 @@ export default function BorrowTable({
                           {slip.lender.fullName}
                         </span>
                       </div>
-                    </td>
-                    <td className='px-6 py-3 text-slate-600'>
+                    </TableCell>
+                    <TableCell className='px-6 py-3 text-slate-600'>
                       {format(new Date(slip.borrowDate), 'dd/MM/yyyy')}
-                    </td>
-                    <td
+                    </TableCell>
+                    <TableCell
                       className={cn(
                         'px-6 py-3 font-medium',
                         isOverdue && !isReturned
@@ -205,8 +210,8 @@ export default function BorrowTable({
                       )}
                     >
                       {format(new Date(slip.dueDate), 'dd/MM/yyyy')}
-                    </td>
-                    <td className='px-6 py-3 text-slate-600'>
+                    </TableCell>
+                    <TableCell className='px-6 py-3 text-slate-600'>
                       {slip.items.length > 0 ? (
                         slip.items.map((item) => item.file.code).join(', ')
                       ) : (
@@ -214,8 +219,8 @@ export default function BorrowTable({
                           Không có hồ sơ
                         </span>
                       )}
-                    </td>
-                    <td className='px-6 py-3'>
+                    </TableCell>
+                    <TableCell className='px-6 py-3'>
                       {isReturned ? (
                         <span className='inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium border border-emerald-200'>
                           <span className='w-1.5 h-1.5 rounded-full bg-emerald-500'></span>{' '}
@@ -232,40 +237,46 @@ export default function BorrowTable({
                           Đang mượn
                         </span>
                       )}
-                    </td>
-                    <td className='px-6 py-3'>
+                    </TableCell>
+                    <TableCell className='px-6 py-3'>
                       <div className='flex items-center gap-2'>
                         {!isReturned && (
-                          <button
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => onReturn(slip.id)}
-                            className='p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors shadow-sm'
+                            className='p-2 text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors shadow-sm h-8 w-8'
                             title='Trả hồ sơ'
                           >
                             <RotateCcw className='w-4 h-4' />
-                          </button>
+                          </Button>
                         )}
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => onEdit(slip.id)}
-                          className='p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm'
+                          className='p-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm h-8 w-8'
                           title='Chỉnh sửa'
                         >
                           <Pencil className='w-4 h-4' />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => onDelete(slip.id)}
-                          className='p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm'
+                          className='p-2 text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors shadow-sm h-8 w-8'
                           title='Xóa'
                         >
                           <Trash2 className='w-4 h-4' />
-                        </button>
+                        </Button>
                       </div>
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {/* Pagination */}
@@ -276,20 +287,24 @@ export default function BorrowTable({
           {filteredSlips.length} phiếu mượn
         </span>
         <div className='flex gap-2'>
-          <button
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => handlePageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed h-7'
           >
             Trước
-          </button>
-          <button
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => handlePageChange(currentPage + 1)}
             disabled={currentPage === totalPages || totalPages === 0}
-            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed'
+            className='px-3 py-1 bg-white border border-slate-200 rounded text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed h-7'
           >
             Sau
-          </button>
+          </Button>
         </div>
       </div>
     </div>

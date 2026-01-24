@@ -36,8 +36,8 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
                     toast.warning(`Có ${result.stats.failure} hồ sơ lỗi. Xem chi tiết trong console.`)
                     console.error(result.errors)
                 }
-                router.refresh()
                 onSuccess()
+                window.location.reload()
             } else {
                 toast.error(result.message || 'Import thất bại')
             }
@@ -73,8 +73,14 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
             )}
             <DialogFooter>
                 <Button type="submit" disabled={isLoading || !file}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Upload & Import
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Đang xử lý...
+                        </>
+                    ) : (
+                        'Upload & Import'
+                    )}
                 </Button>
             </DialogFooter>
         </form>

@@ -43,7 +43,7 @@ export const parseExcelFile = async (buffer: ArrayBuffer): Promise<ImportData> =
         if (f.details) {
             const d = f.details as any; // Cast to access dynamic properties from parseDetails
             if (d.summary) f.title = d.summary;
-            if (d.judgmentDate) f.startDate = d.judgmentDate;
+            if (d.judgmentDate) f.startDate = new Date(d.judgmentDate);
             f.judgmentNumber = d.judgmentNumber;
             f.defendants = d.defendants;
             f.plaintiffs = d.plaintiffs;
@@ -81,7 +81,12 @@ function parseDetails(text: string): any {
             // Parse DD/MM/YYYY
             const parts = dateStr.split('/');
             if (parts.length === 3) {
-                details.judgmentDate = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                // Store as format YYYY-MM-DD or ISO string for JSON compatibility
+                // Using new Date() directly in JSON object causes Prisma Error
+                const d = new Date(`${parts[2]}-${parts[1]}-${parts[0]}`);
+                if (!isNaN(d.getTime())) {
+                    details.judgmentDate = d.toISOString();
+                }
             }
         }
     });

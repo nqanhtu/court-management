@@ -25,12 +25,36 @@ export async function uploadExcel(formData: FormData) {
         const buffer = await file.arrayBuffer()
         const { files, documents, boxes } = await parseExcelFile(buffer)
 
-        // 1. Upsert Boxes
-        // In a real scenario, we might want to check if they exist or just overwrite.
-        // Given the prompt "Cơ chế khóa dữ liệu", we should be careful. 
-        // But this is "Upload", so we assume creating new records.
+        // Check for duplicate codes within the Excel file itself
+        const incomingCodes = files.map(f => f.code);
+        const uniqueIncomingCodes = new Set(incomingCodes);
+        if (uniqueIncomingCodes.size !== incomingCodes.length) {
+            const duplicates = incomingCodes.filter((item, index) => incomingCodes.indexOf(item) !== index);
+            return {
+                success: false,
+                message: `File Excel chứa các mã hồ sơ trùng lặp: ${Array.from(new Set(duplicates)).join(', ')}`
+            };
+        }
 
-        // Efficiently create/update boxes
+        // Check for duplicate codes existing in the Database
+        const existingFiles = await db.file.findMany({
+            where: {
+                code: { in: incomingCodes }
+            },
+            select: { code: true }
+        });
+
+        if (existingFiles.length > 0) {
+            const existingCodes = existingFiles.map(f => f.code);
+            return {
+                success: false,
+                message: `Hệ thống đã tồn tại các mã hồ sơ sau: ${existingCodes.join(', ')}. Vui lòng kiểm tra lại và không đè dữ liệu.`
+            };
+        }
+
+        // 1. Upsert Boxes
+        // Proceed only if no duplicates found
+        // Upsert Boxes and determine Agency
         // 1. Upsert Boxes and determine Agency
         for (const box of boxes) {
             // Find a representing year for this box from the files in it

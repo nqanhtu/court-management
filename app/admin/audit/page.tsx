@@ -1,5 +1,3 @@
-'use client'
-
 import { History } from 'lucide-react';
 import { AuditFilters } from '@/components/audit/audit-filters';
 import { AuditList } from '@/components/audit/audit-list';

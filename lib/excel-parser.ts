@@ -94,6 +94,41 @@ function parseDetails(text: string): any {
     return details;
 }
 
+// ... (existing imports)
+
+export const parseChildDocumentsExcel = async (buffer: ArrayBuffer): Promise<ExtractedDocument[]> => {
+    const workbook = XLSX.read(buffer, { type: 'array' })
+    const sheetName = workbook.SheetNames[0]
+    const sheet = workbook.Sheets[sheetName]
+
+    const rawData = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet)
+
+    return rawData.map((row: any, index: number) => ({
+        // Assuming "Hồ sơ số" maps to fileCode (to link to parent). Default to '' if missing.
+        fileCode: row['Hồ sơ số'] ? String(row['Hồ sơ số']) : '',
+
+        // "Mục lục văn bản" might be the Document Code or ID
+        code: row['Mục lục văn bản'] ? String(row['Mục lục văn bản']) : '',
+
+        title: row['Tiêu đề'] ? String(row['Tiêu đề']) : 'Bản kê văn bản',
+
+        type: row['Loại án'] ? String(row['Loại án']) : undefined,
+
+        year: parseYear(row['Thời gian']),
+
+        pageCount: typeof row['Số tờ'] === 'number' ? row['Số tờ'] : parseInt(row['Số tờ'] || '0'),
+
+        // New fields
+        note: row['Ghi chú'] ? String(row['Ghi chú']) : undefined,
+        preservationTime: row['Thời hạn bảo quản'] ? String(row['Thời hạn bảo quản']) : undefined,
+        contentIndex: row['Mục lục văn bản'] ? String(row['Mục lục văn bản']) : undefined,
+
+        order: index + 1
+    }))
+}
+
+// ... (keep existing functions)
+
 function parseYear(dateStr: unknown): number {
     if (typeof dateStr === 'number') return dateStr
     if (!dateStr) return new Date().getFullYear()

@@ -1,7 +1,90 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { parseExcelFile } from '@/lib/excel-parser'
+// ... existing imports
+import { parseExcelFile, parseChildDocumentsExcel } from '@/lib/excel-parser'
+// ... (rest of imports)
+
+// ... (existing uploadExcel function)
+
+export async function uploadChildDocuments(fileId: string, formData: FormData) {
+    try {
+        const session = await getSession();
+        if (!session) {
+            return { success: false, message: 'Unauthorized' };
+        }
+        const userId = (session as User).id;
+
+        const file = formData.get('file') as File
+        if (!file) {
+            return { success: false, message: 'No file uploaded' }
+        }
+
+        const buffer = await file.arrayBuffer()
+        const documents = await parseChildDocumentsExcel(buffer)
+
+        if (documents.length === 0) {
+            return { success: false, message: 'File Excel không có dữ liệu' }
+        }
+
+        // Validate target file exists
+        const targetFile = await db.file.findUnique({
+            where: { id: fileId }
+        })
+
+        if (!targetFile) {
+            return { success: false, message: 'Hồ sơ không tồn tại' }
+        }
+
+        let successCount = 0
+        let failureCount = 0
+        const errors: string[] = []
+
+        for (const doc of documents) {
+            try {
+                await db.document.create({
+                    data: {
+                        fileId: fileId,
+                        code: doc.code,
+                        title: doc.title || 'Văn bản',
+                        year: doc.year,
+                        pageCount: doc.pageCount,
+                        order: doc.order,
+                        note: doc.note,
+                        preservationTime: doc.preservationTime,
+                        contentIndex: doc.contentIndex
+                    }
+                })
+                successCount++
+            } catch (e: unknown) {
+                failureCount++
+                const errorMessage = e instanceof Error ? e.message : 'Unknown error'
+                errors.push(`Row ${doc.order}: ${errorMessage}`)
+            }
+        }
+
+        if (successCount > 0) {
+            await createAuditLog({
+                action: 'UPDATE',
+                target: 'File',
+                targetId: fileId,
+                detail: { action: 'Import Child Documents', count: successCount },
+                userId: userId as string
+            })
+        }
+
+        return {
+            success: true,
+            stats: { success: successCount, failure: failureCount },
+            errors
+        }
+
+    } catch (error) {
+        console.error('Upload documents error:', error)
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        return { success: false, message: errorMessage }
+    }
+}
 import { createAuditLog } from '@/lib/services/audit-log'
 import { getAgencyForYear } from '@/lib/services/agency-history'
 import type { Prisma } from '@/app/generated/prisma/client'

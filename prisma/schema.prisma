@@ -38,39 +38,39 @@ model User {
 }
 
 // ==========================================
-// 2. Quản lý Hồ sơ & Lưu trữ
+// 2. File Management & Storage
 // ==========================================
 
-// Lịch sử tên cơ quan (Phông lưu trữ)
+// Agency Name History (Storage Font)
 model AgencyHistory {
   id        String    @id @default(uuid())
-  name      String // Tên cơ quan (VD: TAND tỉnh Sông Bé)
-  startDate DateTime // Bắt đầu giai đoạn
-  endDate   DateTime? // Kết thúc giai đoạn (null = đến nay)
+  name      String // Agency Name (e.g., TAND Binh Duong)
+  startDate DateTime // Start period
+  endDate   DateTime? // End period (null = present)
 
   boxes StorageBox[]
 }
 
-// Quản lý Vị trí & Hộp
+// Location & Box Management
 model StorageBox {
   id   String @id @default(uuid())
-  code String @unique // Mã hộp (generated or QR code content)
+  code String @unique // Box code (generated or QR code content)
 
-  // Vị trí vật lý (Kho -> Dãy -> Giá -> Ngăn -> Hộp)
-  warehouse String // Kho
-  line      String // Dãy
-  shelf     String // Giá/Kệ
-  slot      String // Ngăn
-  boxNumber String // Hộp số (số thứ tự hộp)
+  // Physical Location (Warehouse -> Line -> Shelf -> Slot -> Box)
+  warehouse String // Warehouse
+  line      String // Line
+  shelf     String // Shelf
+  slot      String // Slot/Compartment
+  boxNumber String // Box Number (sequential)
 
-  // Thông tin nhãn hộp
+  // Box Label Info
   agencyId     String?
   agency       AgencyHistory? @relation(fields: [agencyId], references: [id])
-  caseType     String? // Loại án (Hình sự, Dân sự, ...)
-  year         Int? // Năm
-  fromFileCode String? // Từ hồ sơ (mã hồ sơ bắt đầu)
-  toFileCode   String? // Đến hồ sơ (mã hồ sơ kết thúc)
-  retention    String? // Thời hạn bảo quản (Vĩnh viễn, 10 năm...)
+  caseType     String? // Case Type (Criminal, Civil...)
+  year         Int? // Year
+  fromFileCode String? // From File Code
+  toFileCode   String? // To File Code
+  retention    String? // Retention Period (Permanent, 10 years...)
 
   files File[]
 
@@ -91,44 +91,43 @@ model StorageBoxLabel {
   storageBox   StorageBox? @relation(fields: [storageBoxId], references: [id])
 }
 
-// Hồ sơ Vụ án (Vỏ hồ sơ)
+// Case File (File Jacket)
 model File {
   id   String @id @default(uuid())
-  code String @unique // Quy ước: HS - loại án - năm - STT
+  code String @unique // Convention: Code - Type - Year - #
 
-  // Thông tin chung (Sheet 1)
-  title     String // Tiêu đề
-  type      String // Loại án (Hình sự, Dân sự, ...)
-  datetime  DateTime // Năm hồ sơ
-  year      Int? // Năm (Filter)
-  pageCount Int? // Số tờ
+  // General Info (Sheet 1)
+  title     String // Title
+  type      String // Case Type (Criminal, Civil...)
+  datetime  DateTime // File Date
+  year      Int? // Year (Filter)
+  pageCount Int? // Page Count
 
-  // Chi tiết (Lưu JSON để linh động theo loại án: Bị cáo, Nguyên đơn, Về việc...)
-
+  // Details (JSON for flexibility: Defendant, Plaintiff, Summary...)
   details Json?
 
-  // Thời gian & Bảo quản
-  judgmentDate DateTime? // Ngày xét xử
-  retention    String? // Thời hạn bảo quản (Vĩnh viễn, 10 năm...)
+  // Time & Retention
+  judgmentDate DateTime? // Judgment Date
+  retention    String? // Retention Period (Permanent, 10 years...)
 
   // New fields from Excel analysis
-  note      String? // Ghi chú
-  indexCode String? // MLHS (Mục lục hồ sơ)
+  note      String? // Note
+  indexCode String? // File Index Code (MLHS)
 
-  judgmentNumber  String? // Số bản án
-  defendants      String[] // Bị cáo
-  plaintiffs      String[] // Nguyên đơn
-  civilDefendants String[] // Bị đơn
+  judgmentNumber  String? // Judgment Number
+  defendants      String[] // Defendants
+  plaintiffs      String[] // Plaintiffs
+  civilDefendants String[] // Civil Defendants
 
-  // Trạng thái & Khóa
-  isLocked Boolean @default(false) // Đã khóa (chỉ Admin sửa)
+  // Status & Lock
+  isLocked Boolean @default(false) // Locked (Admin only edit)
   status   String  @default("IN_STOCK") // IN_STOCK, BORROWED, LOST
 
-  // Quan hệ
+  // Relations
   boxId       String?
   box         StorageBox?  @relation(fields: [boxId], references: [id])
   fileIndex   FileIndex?
-  documents   Document[] // Văn bản con (Sheet 2)
+  documents   Document[] // Child Documents (Sheet 2)
   borrowItems BorrowItem[]
 
   createdAt DateTime @default(now())
@@ -147,14 +146,19 @@ model FileIndex {
   judgmentTime DateTime
 }
 
-// Văn bản trong hồ sơ (Sheet 2 - Mục lục văn bản)
+// Documents within File (Sheet 2 - Document List)
 model Document {
   id        String  @id @default(uuid())
-  code      String? // Mã văn bản con (nếu có)
-  title     String // Trích yếu / Tên văn bản
+  code      String? // Child Document Code (if any - corresponds to File No in Excel)
+  title     String // Title / Abstract
   year      Int?
-  pageCount Int?
-  order     Int // Số thứ tự trong hồ sơ
+  pageCount Int? // Page Count
+  order     Int? // Order Number
+
+  // New fields form Excel
+  contentIndex     String? // Document Index
+  preservationTime String? // Preservation Period
+  note             String? // Note
 
   fileId String
   file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)

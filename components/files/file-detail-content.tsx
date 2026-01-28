@@ -8,6 +8,10 @@ import { Box, FileText, MapPin, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useFile } from '@/lib/hooks/use-files'
 
+import { ChildDocumentUploadModal } from './child-document-upload-modal'
+
+// ... existing imports
+
 export function FileDetailContent({ id }: { id: string }) {
     const { file, isLoading } = useFile(id)
 
@@ -70,6 +74,12 @@ export function FileDetailContent({ id }: { id: string }) {
                                 <dd className="font-medium">{new Date(file.judgmentDate as Date).toLocaleDateString('vi-VN')}</dd>
                             </div>
                         )}
+                        {file.note && (
+                            <div className="md:col-span-3">
+                                <dt className="text-muted-foreground">Ghi chú</dt>
+                                <dd className="font-medium text-amber-700">{file.note}</dd>
+                            </div>
+                        )}
                     </dl>
                 </CardContent>
             </Card>
@@ -84,33 +94,37 @@ export function FileDetailContent({ id }: { id: string }) {
                 </CardHeader>
                 <CardContent>
                     {file.box ? (
-                        <div className="space-y-2">
-                            <div className="flex justify-between border-b pb-2">
-                                <span className="text-muted-foreground">Kho</span>
-                                <span className="font-medium">{file.box.warehouse}</span>
+                        <div className="space-y-3">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="space-y-1">
+                                    <span className="text-xs text-muted-foreground uppercase">Kho</span>
+                                    <div className="font-medium p-2 bg-slate-50 rounded border">{file.box.warehouse}</div>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="text-xs text-muted-foreground uppercase">Dãy</span>
+                                    <div className="font-medium p-2 bg-slate-50 rounded border">{file.box.line}</div>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="text-xs text-muted-foreground uppercase">Giá (Kệ)</span>
+                                    <div className="font-medium p-2 bg-slate-50 rounded border">{file.box.shelf}</div>
+                                </div>
+                                <div className="space-y-1">
+                                    <span className="text-xs text-muted-foreground uppercase">Ngăn</span>
+                                    <div className="font-medium p-2 bg-slate-50 rounded border">{file.box.slot}</div>
+                                </div>
                             </div>
-                            <div className="flex justify-between border-b pb-2">
-                                <span className="text-muted-foreground">Dãy</span>
-                                <span className="font-medium">{file.box.line}</span>
-                            </div>
-                            <div className="flex justify-between border-b pb-2">
-                                <span className="text-muted-foreground">Giá (Kệ)</span>
-                                <span className="font-medium">{file.box.shelf}</span>
-                            </div>
-                            <div className="flex justify-between border-b pb-2">
-                                <span className="text-muted-foreground">Ngăn</span>
-                                <span className="font-medium">{file.box.slot}</span>
-                            </div>
-                            <div className="flex justify-between pt-2">
-                                <span className="text-muted-foreground">Hộp số</span>
-                                <span className="font-bold text-primary">{file.box.boxNumber}</span>
-                            </div>
-                            <div className="mt-4 pt-4 border-t text-xs text-center text-muted-foreground">
-                                Mã hộp: {file.box.code}
+                            <div className="pt-4 border-t mt-2">
+                                <span className="text-sm text-muted-foreground block mb-1">Hộp Hồ Sơ</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-2xl font-bold text-primary">{file.box.boxNumber}</span>
+                                    <span className="text-sm text-muted-foreground">({file.box.code})</span>
+                                </div>
                             </div>
                         </div>
                     ) : (
-                        <div className="text-muted-foreground italic">Chưa cập nhật vị trí</div>
+                        <div className="text-muted-foreground italic p-4 text-center border-2 border-dashed rounded-lg">
+                            Chưa cập nhật vị trí
+                        </div>
                     )}
                 </CardContent>
             </Card>
@@ -136,34 +150,50 @@ export function FileDetailContent({ id }: { id: string }) {
             {/* Documents List */}
             <Card className="md:col-span-2">
                 <CardHeader>
-                    <CardTitle className="flex items-center text-lg">
-                        <FileText className="mr-2 h-5 w-5" />
-                        Mục lục văn bản ({file.documents.length})
-                    </CardTitle>
+                    <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center text-lg">
+                            <FileText className="mr-2 h-5 w-5" />
+                            Mục lục văn bản ({file.documents.length})
+                        </CardTitle>
+                        <ChildDocumentUploadModal fileId={file.id} />
+                    </div>
                 </CardHeader>
                 <CardContent>
                     <Table className="w-full">
                         <TableHeader>
                             <TableRow>
-                                <TableHead className="w-[80px]">STT</TableHead>
+                                <TableHead className="w-[80px]">Order</TableHead>
                                 <TableHead>Trích yếu / Tên văn bản</TableHead>
-                                <TableHead>Mã VB</TableHead>
+                                <TableHead>Mã VB / MLHS</TableHead>
+                                <TableHead>Thời gian</TableHead>
                                 <TableHead className="text-right">Số tờ</TableHead>
+                                <TableHead>Ghi chú</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {file.documents.length > 0 ? (
-                                file.documents.map((doc: any) => (
+                                file.documents.map((doc: any, index: number) => (
                                     <TableRow key={doc.id}>
-                                        <TableCell>{doc.order}</TableCell>
-                                        <TableCell className="font-medium">{doc.title}</TableCell>
-                                        <TableCell>{doc.code || '-'}</TableCell>
+                                        <TableCell>{doc.order || index + 1}</TableCell>
+                                        <TableCell className="font-medium max-w-[400px]">
+                                            {doc.title}
+                                            {doc.contentIndex && <div className="text-xs text-muted-foreground mt-1">MLVB: {doc.contentIndex}</div>}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col text-xs gap-1">
+                                                <span>{doc.code || '-'}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{doc.year || '-'}</TableCell>
                                         <TableCell className="text-right">{doc.pageCount}</TableCell>
+                                        <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note}>{doc.note}</TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={4} className="text-center text-muted-foreground">Không có văn bản con</TableCell>
+                                    <TableCell colSpan={6} className="text-center text-muted-foreground p-8">
+                                        Chưa có văn bản con
+                                    </TableCell>
                                 </TableRow>
                             )}
                         </TableBody>

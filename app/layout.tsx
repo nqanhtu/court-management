@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { Toaster } from "@/components/ui/sonner";
 
 export const metadata: Metadata = {
@@ -17,20 +18,29 @@ export default async function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const session = await getSession() as User | null;
+  const session = (await getSession()) as User | null;
 
   return (
     <html lang="vi">
       <body className="h-screen flex flex-col overflow-hidden bg-background text-foreground antialiased">
-        <Header user={session ?? undefined} />
-        <div className="flex flex-1 overflow-hidden">
-          <Sidebar user={session ?? undefined} />
-          <main className="flex-1 flex flex-col min-w-0 bg-muted/30">
-            <div className="flex-1 overflow-hidden p-6 flex flex-col">
-              {children}
+        <SidebarProvider
+          style={
+            {
+              "--sidebar-width": "calc(var(--spacing) * 72)",
+              "--header-height": "calc(var(--spacing) * 12)",
+            } as React.CSSProperties
+          }
+        >
+          <AppSidebar user={session ?? undefined} />
+          <SidebarInset>
+            <Header user={session ?? undefined} />
+            <div className="flex flex-1 flex-col">
+              <div className="@container/main flex flex-1 flex-col gap-2 px-4 lg:px-6 py-4 md:py-6">
+                {children}
+              </div>
             </div>
-          </main>
-        </div>
+          </SidebarInset>
+        </SidebarProvider>
         <Toaster />
       </body>
     </html>

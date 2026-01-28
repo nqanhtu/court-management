@@ -20,9 +20,10 @@ type BorrowSlipWithDetails = BorrowSlip & {
 
 interface BorrowClientProps {
   initialBorrowSlips: BorrowSlipWithDetails[];
+  onDataChange?: () => void;
 }
 
-export default function BorrowClient({ initialBorrowSlips }: BorrowClientProps) {
+export default function BorrowClient({ initialBorrowSlips, onDataChange }: BorrowClientProps) {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingSlipId, setEditingSlipId] = useState<string | null>(null);
@@ -45,7 +46,7 @@ export default function BorrowClient({ initialBorrowSlips }: BorrowClientProps) 
   };
 
   return (
-    <div className="flex flex-col h-full space-y-4">
+    <div className="flex flex-col h-full w-full space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between shrink-0">
         <div>
@@ -54,7 +55,6 @@ export default function BorrowClient({ initialBorrowSlips }: BorrowClientProps) 
         </div>
         <Button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm shadow-indigo-200 transition-all h-auto"
         >
           <Plus className="w-4 h-4" /> Tạo phiếu mượn
         </Button>
@@ -77,7 +77,10 @@ export default function BorrowClient({ initialBorrowSlips }: BorrowClientProps) 
         title="Tạo phiếu mượn hồ sơ"
         className="max-w-5xl"
       >
-        <BorrowForm />
+        <BorrowForm onSuccess={() => {
+          setIsAddModalOpen(false);
+          onDataChange?.();
+        }} />
       </Modal>
 
       <Modal

@@ -5,7 +5,7 @@ import BorrowClient from "@/app/borrow/BorrowClient";
 import { Loader2 } from 'lucide-react';
 
 export function BorrowListSection() {
-    const { borrowSlips, isLoading } = useBorrowSlips();
+    const { borrowSlips, isLoading, mutate } = useBorrowSlips();
 
     if (isLoading) {
         return (
@@ -15,5 +15,5 @@ export function BorrowListSection() {
         )
     }
 
-    return <BorrowClient initialBorrowSlips={borrowSlips} />;
+    return <BorrowClient initialBorrowSlips={borrowSlips} onDataChange={mutate} />;
 }

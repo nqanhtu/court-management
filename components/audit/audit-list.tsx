@@ -25,17 +25,17 @@ export function AuditList() {
 
     const getActionBadge = (action: string) => {
         switch (action) {
-            case 'CREATE': return <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200">THÊM MỚI</Badge>;
-            case 'UPDATE': return <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-100 border-blue-200">CẬP NHẬT</Badge>;
-            case 'DELETE': return <Badge className="bg-red-100 text-red-700 hover:bg-red-100 border-red-200">XÓA</Badge>;
-            case 'LOGIN': return <Badge className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 border-indigo-200">ĐĂNG NHẬP</Badge>;
+            case 'CREATE': return <Badge variant="outline" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200">THÊM MỚI</Badge>;
+            case 'UPDATE': return <Badge variant="outline" className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-sky-200">CẬP NHẬT</Badge>;
+            case 'DELETE': return <Badge variant="destructive">XÓA</Badge>;
+            case 'LOGIN': return <Badge variant="outline" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 border-indigo-200">ĐĂNG NHẬP</Badge>;
             default: return <Badge variant="outline">{action}</Badge>;
         }
     };
 
     if (isLoading) {
         return (
-            <div className="flex-1 flex items-center justify-center text-slate-400">
+            <div className="flex-1 flex items-center justify-center text-muted-foreground">
                 <Loader2 className="w-8 h-8 animate-spin" />
             </div>
         )
@@ -43,15 +43,15 @@ export function AuditList() {
 
     return (
         <>
-            <div className='flex-1 overflow-auto bg-slate-50/50'>
+            <div className='flex-1 overflow-auto bg-muted/10'>
                 <Table>
-                    <TableHeader className="bg-white sticky top-0 z-10 shadow-sm">
+                    <TableHeader className="bg-card sticky top-0 z-10 shadow-sm">
                         <TableRow>
-                            <TableHead className="w-[180px]">Thời gian</TableHead>
-                            <TableHead>Tài khoản</TableHead>
-                            <TableHead>Hành động</TableHead>
-                            <TableHead>Đối tượng</TableHead>
-                            <TableHead>Chi tiết</TableHead>
+                            <TableHead className="w-[180px] font-semibold text-muted-foreground">Thời gian</TableHead>
+                            <TableHead className="font-semibold text-muted-foreground">Tài khoản</TableHead>
+                            <TableHead className="font-semibold text-muted-foreground">Hành động</TableHead>
+                            <TableHead className="font-semibold text-muted-foreground">Đối tượng</TableHead>
+                            <TableHead className="font-semibold text-muted-foreground">Chi tiết</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -63,29 +63,29 @@ export function AuditList() {
                             </TableRow>
                         ) : (
                             logs.map((log: AuditLogWithUser) => (
-                                <TableRow key={log.id} className="bg-white">
-                                    <TableCell className="font-medium text-slate-600 tabular-nums">
+                                <TableRow key={log.id} className="bg-card hover:bg-muted/50 transition-colors">
+                                    <TableCell className="font-medium text-foreground tabular-nums">
                                         {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss')}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-indigo-50 rounded-full flex items-center justify-center text-indigo-600 font-bold text-xs border border-indigo-100">
+                                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-xs border border-primary/20">
                                                 {log.user?.fullName.charAt(0)}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-semibold text-slate-800">{log.user?.fullName}</p>
-                                                <p className="text-xs text-slate-400">@{log.user?.username}</p>
+                                                <p className="text-sm font-semibold text-foreground">{log.user?.fullName}</p>
+                                                <p className="text-xs text-muted-foreground">@{log.user?.username}</p>
                                             </div>
                                         </div>
                                     </TableCell>
                                     <TableCell>{getActionBadge(log.action)}</TableCell>
                                     <TableCell>
-                                        <Badge variant="secondary" className="font-mono text-[10px] uppercase bg-slate-100 text-slate-600 border-slate-200">
+                                        <Badge variant="secondary" className="font-mono text-[10px] uppercase">
                                             {log.target}
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="text-slate-500 text-xs">
-                                        <div className="max-w-xs truncate bg-slate-50 p-2 rounded border border-slate-100 font-mono" title={JSON.stringify(log.detail, null, 2)}>
+                                    <TableCell className="text-muted-foreground text-xs">
+                                        <div className="max-w-xs truncate bg-muted p-2 rounded border border-border font-mono" title={JSON.stringify(log.detail, null, 2)}>
                                             {JSON.stringify(log.detail)}
                                         </div>
                                     </TableCell>
@@ -96,7 +96,7 @@ export function AuditList() {
                 </Table>
             </div>
 
-            <div className='p-3 border-t border-slate-100 bg-white flex items-center justify-between shrink-0'>
+            <div className='p-3 border-t border-border bg-card flex items-center justify-between shrink-0'>
                 <PaginationControls
                     hasNextPage={page < totalPages}
                     hasPrevPage={page > 1}

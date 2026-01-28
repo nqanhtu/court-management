@@ -48,8 +48,7 @@ function CreateBorrowContent() {
                 borrowerTitle: formData.get('borrowerTitle') as string,
                 reason: formData.get('reason') as string,
                 dueDate: date,
-                fileIds,
-                lenderId: 'admin-id-placeholder'
+                fileIds
             })
 
             if (res.success) {

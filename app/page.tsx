@@ -7,7 +7,7 @@ import { FileListSection } from '@/components/file-list-section'
 
 export default function Home() {
   return (
-    <div className="flex flex-col h-full space-y-4">
+    <div className="flex flex-col gap-4 md:gap-6">
       <OverviewStats />
 
       <div className="flex justify-between items-center">

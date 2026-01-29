@@ -4,6 +4,8 @@ import { db } from '@/lib/db'
 import { createAuditLog } from '@/lib/services/audit-log'
 import { revalidatePath } from 'next/cache'
 
+import { getSession } from '@/lib/actions/auth'
+
 interface CreateSlipParams {
     borrowerName: string
     borrowerUnit: string
@@ -11,12 +13,17 @@ interface CreateSlipParams {
     reason: string
     dueDate: Date
     fileIds: string[]
-    lenderId: string // The logged in user
 }
 
 export async function createBorrowSlip(params: CreateSlipParams) {
     try {
-        const { borrowerName, borrowerUnit, borrowerTitle, reason, dueDate, fileIds, lenderId } = params
+        const session = await getSession()
+        if (!session?.id) {
+            return { success: false, message: 'Unauthorized' }
+        }
+        const lenderId = session.id
+
+        const { borrowerName, borrowerUnit, borrowerTitle, reason, dueDate, fileIds } = params
 
         // 1. Validate files availability
         const files = await db.file.findMany({
@@ -34,6 +41,32 @@ export async function createBorrowSlip(params: CreateSlipParams) {
 
         // Transaction
         const slip = await db.$transaction(async (tx) => {
+            // 1. Atomic Check & Lock: Try to update status to BORROWED for available files
+            // This prevents race conditions where someone else borrows the file between read and write
+            const updatedBatch = await tx.file.updateMany({
+                where: { 
+                    id: { in: fileIds },
+                    status: 'IN_STOCK' // Critical: Only update if still available
+                },
+                data: { status: 'BORROWED' }
+            })
+
+            if (updatedBatch.count !== fileIds.length) {
+                // Determine which files failed (optional, for better error message)
+                // Since updateMany doesn't return IDs, we re-query to find the culprits if needed
+                // or just throw a generic error.
+                // For better UX, let's find out which ones are unavailable.
+                const confusedFiles = await tx.file.findMany({
+                   where: { id: { in: fileIds } }
+                });
+                const unavailable = confusedFiles.filter(f => f.status !== 'BORROWED' && f.status !== 'IN_STOCK' || (f.status === 'BORROWED' && !fileIds.includes(f.id))); 
+                // Note: The logic above is tricky because we just updated them. 
+                // Simplest robust way: 
+                // If count mismatch, it means some were NOT 'IN_STOCK' at the moment of update.
+                throw new Error("Một hoặc nhiều hồ sơ đã được mượn bởi người khác hoặc không tồn tại.");
+            }
+
+            // 2. Create Slip
             const newSlip = await tx.borrowSlip.create({
                 data: {
                     code: slipCode,
@@ -51,12 +84,6 @@ export async function createBorrowSlip(params: CreateSlipParams) {
                         }))
                     }
                 }
-            })
-
-            // Update File Status
-            await tx.file.updateMany({
-                where: { id: { in: fileIds } },
-                data: { status: 'BORROWED' }
             })
 
             return newSlip

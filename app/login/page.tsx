@@ -92,17 +92,17 @@ export default function LoginPage() {
                                 />
                             </div>
                         </div>
-
-                        <Button type="submit" className="w-full h-10 bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-md shadow-indigo-200" disabled={isLoading}>
-                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            <span>Đăng nhập</span>
-                        </Button>
+                        <div className="flex justify-center">
+                            <Button type="submit" disabled={isLoading}>
+                                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                <span>Đăng nhập</span>
+                            </Button>
+                        </div>
                     </form>
                 </CardContent>
                 <CardFooter className="flex justify-center pb-8 pt-2">
                     <p className="text-xs text-slate-400 text-center">
                         Hệ thống lưu trữ & quản lý hồ sơ nội bộ <br />
-                        © 2025 TAND Tỉnh
                     </p>
                 </CardFooter>
             </Card>

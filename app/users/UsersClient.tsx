@@ -44,7 +44,6 @@ export default function UsersClient({ initialUsers, currentUserRole }: UsersClie
         {isSuperAdmin && (
           <Button
             onClick={() => setIsAddModalOpen(true)}
-            className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg shadow-sm shadow-indigo-200 transition-all h-auto"
           >
             <Plus className="w-4 h-4" /> Thêm người dùng
           </Button>

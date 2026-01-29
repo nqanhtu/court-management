@@ -1,6 +1,10 @@
 import { SignJWT, jwtVerify } from 'jose';
 
-const key = new TextEncoder().encode(process.env.JWT_SECRET || 'default_secret_key_change_me');
+const secret = process.env.JWT_SECRET;
+if (!secret) {
+    throw new Error('JWT_SECRET is not defined in environment variables');
+}
+const key = new TextEncoder().encode(secret);
 
 export async function encrypt(payload: Record<string, unknown>) {
     return await new SignJWT(payload)

@@ -59,11 +59,19 @@ export async function logout() {
     (await cookies()).delete('session');
 }
 
-export async function getSession(): Promise<SessionUser | null> {
+export interface SessionPayload {
+    id: string;
+    username: string;
+    role: string;
+    fullName: string;
+    [key: string]: unknown;
+}
+
+export async function getSession(): Promise<SessionPayload | null> {
     const session = (await cookies()).get('session')?.value;
     if (!session) return null;
     try {
-        return (await decrypt(session)) as SessionUser;
+        return await decrypt(session) as SessionPayload;
     } catch {
         return null;
     }

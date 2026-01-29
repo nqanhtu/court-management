@@ -6,6 +6,7 @@ import { useState, useMemo } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -60,30 +61,30 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
   };
 
   return (
-    <Card className='flex flex-col h-full overflow-hidden border-slate-200 shadow-sm'>
+    <Card className='flex flex-col h-full overflow-hidden border-border shadow-sm'>
       {/* Header / Filters */}
-      <div className='p-4 border-b border-slate-200 flex flex-wrap items-center gap-3 bg-white shrink-0'>
+      <div className='p-4 border-b border-border flex flex-wrap items-center gap-3 bg-card shrink-0'>
         <div className='flex items-center gap-2'>
-          <Filter className='w-5 h-5 text-indigo-600' />
-          <h3 className='font-bold text-slate-700'>Danh sách người dùng</h3>
+          <Filter className='w-5 h-5 text-primary' />
+          <h3 className='font-bold text-card-foreground'>Danh sách người dùng</h3>
         </div>
-        <div className='h-6 w-px bg-slate-200 mx-2 hidden md:block'></div>
+        <div className='h-6 w-px bg-border mx-2 hidden md:block'></div>
 
         <div className='flex-1 min-w-50 relative max-w-md'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10' />
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10' />
           <Input
             type='text'
             placeholder='Tìm kiếm theo tên, đơn vị...'
             value={searchTerm}
             onChange={handleSearchChange}
-            className='w-full pl-9 pr-4 py-1.5 bg-slate-50 border-slate-200 rounded-lg text-sm outline-none focus-visible:ring-indigo-500 transition-all h-9'
+            className='w-full pl-9 pr-4 py-1.5 bg-muted/50 border-input rounded-lg text-sm outline-none focus-visible:ring-primary transition-all h-9'
           />
         </div>
       </div>
 
-      <div className='flex-1 overflow-auto bg-slate-50/50'>
+      <div className='flex-1 overflow-auto bg-muted/10'>
         <Table>
-          <TableHeader className="bg-white sticky top-0 z-10">
+          <TableHeader className="bg-card sticky top-0 z-10">
             <TableRow>
               {[
                 'Tên đăng nhập',
@@ -93,7 +94,7 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
                 'Trạng thái',
                 'Hành động',
               ].map((head) => (
-                <TableHead key={head} className="whitespace-nowrap">
+                <TableHead key={head} className="whitespace-nowrap font-semibold text-muted-foreground">
                   {head}
                 </TableHead>
               ))}
@@ -113,19 +114,25 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
               </TableRow>
             ) : (
               paginatedUsers.map((user) => (
-                <TableRow key={user.id} className="bg-white">
+                <TableRow key={user.id} className="bg-card hover:bg-muted/50 transition-colors">
                   <TableCell className='text-muted-foreground'>{user.username}</TableCell>
-                  <TableCell className='font-medium'>
+                  <TableCell className='font-medium text-foreground'>
                     {user.fullName}
                   </TableCell>
                   <TableCell>
-                    {user.role}
+                    <Badge variant="outline" className="text-muted-foreground">
+                        {user.role}
+                    </Badge>
                   </TableCell>
                   <TableCell>
                     {user.unit || '-'}
                   </TableCell>
                   <TableCell>
-                    {user.status ? 'Hoạt động' : 'Khoá'}
+                    {user.status ? (
+                        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200">Hoạt động</Badge>
+                    ) : ( 
+                        <Badge variant="destructive">Khoá</Badge>
+                    )}
                   </TableCell>
                   <TableCell>
                     {isAdmin && (
@@ -134,7 +141,7 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
                           variant="ghost"
                           size="icon"
                           onClick={() => onEdit(user.id)}
-                          className='h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
+                          className='h-8 w-8 text-primary hover:text-primary hover:bg-primary/10'
                           title='Chỉnh sửa'
                         >
                           <Pencil className='w-4 h-4' />
@@ -143,7 +150,7 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
                           variant="ghost"
                           size="icon"
                           onClick={() => onDelete(user.id)}
-                          className='h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50'
+                          className='h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10'
                           title='Xóa'
                         >
                           <Trash2 className='w-4 h-4' />
@@ -159,7 +166,7 @@ export default function UserTable({ users, onEdit, onDelete, currentUserRole }: 
       </div>
 
       {/* Pagination */}
-      <div className='p-3 border-t border-slate-100 bg-white flex items-center justify-between shrink-0'>
+      <div className='p-3 border-t border-border bg-card flex items-center justify-between shrink-0'>
         <span className='text-xs text-muted-foreground'>
           Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{' '}
           {Math.min(currentPage * ITEMS_PER_PAGE, filteredUsers.length)} trên{' '}

@@ -3,7 +3,8 @@ import type { NextRequest } from 'next/server';
 import { decrypt } from '@/lib/auth-jwt';
 import type { User } from '@/lib/types/user';
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
+    console.log('Middleware (proxy.ts) is executing for:', request.nextUrl.pathname);
     const sessionCookie = request.cookies.get('session');
     let user = null;
 

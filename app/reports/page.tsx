@@ -13,7 +13,7 @@ export default function Reports() {
           <h1 className="text-2xl font-bold text-slate-800">Báo cáo thống kê</h1>
           <p className="text-slate-500 text-sm mt-1">Tổng hợp tình hình mượn trả hồ sơ.</p>
         </div>
-        <Button variant="outline" className="flex items-center gap-2 bg-white border-slate-200 hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-lg text-sm font-medium transition-colors h-auto">
+        <Button variant="outline">
           <Download className="w-4 h-4" /> Xuất Excel
         </Button>
       </div>

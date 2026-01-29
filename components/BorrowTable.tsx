@@ -13,6 +13,7 @@ import { useState, useMemo } from 'react';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -105,18 +106,18 @@ export default function BorrowTable({
   };
 
   return (
-    <Card className='flex flex-col h-full overflow-hidden border-slate-200 shadow-sm'>
+    <Card className='flex flex-col h-full overflow-hidden border-border shadow-sm p-0 gap-0'>
       {/* Header / Filters */}
-      <div className='p-4 border-b border-slate-200 flex flex-wrap items-center gap-3 bg-white shrink-0'>
+      <div className='p-4 border-b border-border flex flex-wrap items-center gap-3 bg-card shrink-0'>
         <div className='flex items-center gap-2'>
-          <Filter className='w-5 h-5 text-indigo-600' />
-          <h3 className='font-bold text-slate-700'>Phiếu mượn hồ sơ</h3>
+          <Filter className='w-5 h-5 text-primary' />
+          <h3 className='font-bold text-card-foreground'>Phiếu mượn hồ sơ</h3>
         </div>
-        <div className='h-6 w-px bg-slate-200 mx-2 hidden md:block'></div>
+        <div className='h-6 w-px bg-border mx-2 hidden md:block'></div>
 
         <div className='flex items-center gap-2'>
           <Select value={selectedStatus} onValueChange={handleStatusChange}>
-            <SelectTrigger className="w-[180px] bg-slate-50 border-slate-200 h-9">
+            <SelectTrigger className="w-[180px] bg-muted/50 border-input h-9">
               <SelectValue placeholder="Tất cả trạng thái" />
             </SelectTrigger>
             <SelectContent>
@@ -129,20 +130,20 @@ export default function BorrowTable({
         </div>
 
         <div className='flex-1 min-w-50 relative max-w-md ml-auto'>
-          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10' />
+          <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10' />
           <Input
             type='text'
             placeholder='Tìm kiếm phiếu mượn...'
             value={searchTerm}
             onChange={handleSearchChange}
-            className='w-full pl-9 pr-4 py-1.5 bg-slate-50 border-slate-200 rounded-lg text-sm outline-none focus-visible:ring-indigo-500 transition-all h-9'
+            className='w-full pl-9 pr-4 py-1.5 bg-muted/50 border-input rounded-lg text-sm outline-none focus-visible:ring-primary transition-all h-9'
           />
         </div>
       </div>
 
-      <div className='flex-1 overflow-auto bg-slate-50/50'>
+      <div className='flex-1 overflow-auto bg-muted/10'>
         <Table>
-          <TableHeader className="bg-white sticky top-0 z-10">
+          <TableHeader className="bg-card sticky top-0 z-10">
             <TableRow>
               {[
                 'Mã phiếu',
@@ -153,7 +154,7 @@ export default function BorrowTable({
                 'Trạng thái',
                 'Hành động',
               ].map((head) => (
-                <TableHead key={head} className="whitespace-nowrap">
+                <TableHead key={head} className="whitespace-nowrap font-semibold text-muted-foreground">
                   {head}
                 </TableHead>
               ))}
@@ -179,16 +180,16 @@ export default function BorrowTable({
                   (new Date() > new Date(slip.dueDate) && !isReturned);
 
                 return (
-                  <TableRow key={slip.id} className="bg-white">
+                  <TableRow key={slip.id} className="bg-card hover:bg-muted/50 transition-colors">
                     <TableCell className='font-mono text-muted-foreground'>
                       {slip.code}
                     </TableCell>
                     <TableCell>
                       <div className='flex items-center gap-3'>
-                        <div className='w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-xs font-bold text-indigo-700'>
+                        <div className='w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary'>
                           {slip.lender.fullName.charAt(0)}
                         </div>
-                        <span className='font-medium'>
+                        <span className='font-medium text-foreground'>
                           {slip.lender.fullName}
                         </span>
                       </div>
@@ -200,7 +201,7 @@ export default function BorrowTable({
                       className={cn(
                         'font-medium',
                         isOverdue && !isReturned
-                          ? 'text-red-600'
+                          ? 'text-destructive'
                           : 'text-muted-foreground'
                       )}
                     >
@@ -217,24 +218,21 @@ export default function BorrowTable({
                     </TableCell>
                     <TableCell>
                       {isReturned ? (
-                        <span className='inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium border border-emerald-200'>
-                          <span className='w-1.5 h-1.5 rounded-full bg-emerald-500'></span>{' '}
-                          Đã trả
-                        </span>
+                        <Badge variant="outline" className="border-emerald-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+                           Đã trả
+                        </Badge>
                       ) : isOverdue ? (
-                        <span className='inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium border border-red-200'>
-                          <span className='w-1.5 h-1.5 rounded-full bg-red-500'></span>{' '}
-                          Quá hạn
-                        </span>
+                        <Badge variant="destructive">
+                           Quá hạn
+                        </Badge>
                       ) : (
-                        <span className='inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-medium border border-amber-200'>
-                          <span className='w-1.5 h-1.5 rounded-full bg-amber-500'></span>{' '}
-                          Đang mượn
-                        </span>
+                        <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+                           Đang mượn
+                        </Badge>
                       )}
                     </TableCell>
                     <TableCell>
-                      <div className='flex items-center gap-2'>
+                      <div className='flex items-center gap-1'>
                         {!isReturned && (
                           <Button
                             variant="ghost"
@@ -250,7 +248,7 @@ export default function BorrowTable({
                           variant="ghost"
                           size="icon"
                           onClick={() => onEdit(slip.id)}
-                          className='h-8 w-8 text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50'
+                          className='h-8 w-8 text-primary hover:text-primary hover:bg-primary/10'
                           title='Chỉnh sửa'
                         >
                           <Pencil className='w-4 h-4' />
@@ -259,7 +257,7 @@ export default function BorrowTable({
                           variant="ghost"
                           size="icon"
                           onClick={() => onDelete(slip.id)}
-                          className='h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50'
+                          className='h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10'
                           title='Xóa'
                         >
                           <Trash2 className='w-4 h-4' />
@@ -275,7 +273,7 @@ export default function BorrowTable({
       </div>
 
       {/* Pagination */}
-      <div className='p-3 border-t border-slate-100 bg-white flex items-center justify-between shrink-0'>
+      <div className='p-3 border-t border-border bg-card flex items-center justify-between shrink-0'>
         <span className='text-xs text-muted-foreground'>
           Hiển thị {(currentPage - 1) * ITEMS_PER_PAGE + 1} -{' '}
           {Math.min(currentPage * ITEMS_PER_PAGE, filteredSlips.length)} trên{' '}

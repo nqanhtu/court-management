@@ -105,3 +105,42 @@ export async function PUT(request: NextRequest) {
         )
     }
 }
+
+export async function DELETE(request: NextRequest) {
+    try {
+        const session = await getSession()
+        const { searchParams } = new URL(request.url)
+        const id = searchParams.get('id')
+
+        if (!id) {
+            return NextResponse.json(
+                { error: 'Missing document id' },
+                { status: 400 }
+            )
+        }
+
+        const deletedDoc = await db.document.delete({
+            where: { id }
+        })
+
+        await createAuditLog({
+            action: 'DELETE',
+            target: 'Document',
+            targetId: deletedDoc.id,
+            userId: session?.id,
+            detail: {
+                title: deletedDoc.title,
+                code: deletedDoc.code,
+                fileId: deletedDoc.fileId
+            }
+        })
+
+        return NextResponse.json({ success: true, document: deletedDoc }, { status: 200 })
+    } catch (error) {
+        console.error('Error deleting child document:', error)
+        return NextResponse.json(
+            { error: 'Internal Server Error' },
+            { status: 500 }
+        )
+    }
+}

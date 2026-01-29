@@ -279,7 +279,6 @@ export default function BorrowForm({ onSuccess }: BorrowFormProps) {
             size="icon"
             onClick={handleAddFile}
             disabled={isSearchingFile || !fileQuery}
-            className="p-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors h-9 w-9"
           >
             {isSearchingFile ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -317,7 +316,6 @@ export default function BorrowForm({ onSuccess }: BorrowFormProps) {
                 </div>
                 <button
                   onClick={() => handleRemoveFile(file.id)}
-                  className="text-slate-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

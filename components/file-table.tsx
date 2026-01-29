@@ -11,8 +11,9 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { File } from '@/app/generated/prisma/client'
-import { Eye, Lock } from 'lucide-react'
+import { Eye, Lock, FileSpreadsheet } from 'lucide-react'
 import Link from 'next/link'
+import { ChildDocumentUploadModal } from './files/child-document-upload-modal'
 
 interface FileWithBox extends File {
     box?: { code: string } | null
@@ -75,12 +76,22 @@ export function FileTable({ files }: FileTableProps) {
                                 </Badge>
                             </TableCell>
                             <TableCell className="text-right">
-                                <Button variant="ghost" size="sm" asChild className="text-primary hover:text-primary hover:bg-primary/10">
-                                    <Link href={`/files/${file.id}`}>
-                                        <Eye className="w-4 h-4 mr-1" />
-                                        Xem
-                                    </Link>
-                                </Button>
+                                <div className="flex justify-end gap-2">
+                                    <Button variant="ghost" size="sm" asChild>
+                                        <Link href={`/files/${file.id}`}>
+                                            <Eye className="w-4 h-4 mr-1" />
+                                            Xem
+                                        </Link>
+                                    </Button>
+                                    <ChildDocumentUploadModal
+                                        fileId={file.id}
+                                        trigger={
+                                            <Button variant="ghost" size="icon" title="Upload bản kê văn bản">
+                                                <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+                                            </Button>
+                                        }
+                                    />
+                                </div>
                             </TableCell>
                         </TableRow>
                     ))}

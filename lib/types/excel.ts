@@ -24,6 +24,10 @@ export interface ExtractedDocument {
     pageCount: number
     year: number
     order: number
+    note?: string
+    preservationTime?: string
+    contentIndex?: string
+    type?: string
 }
 
 export interface ExtractedLocation {

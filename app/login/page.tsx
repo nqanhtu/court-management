@@ -95,7 +95,7 @@ export default function LoginPage() {
 
                         <Button type="submit" disabled={isLoading}>
                             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Đăng nhập
+                            <span>Đăng nhập</span>
                         </Button>
                     </form>
                 </CardContent>

@@ -102,7 +102,6 @@ export default function LoginPage() {
                 <CardFooter className="flex justify-center pb-8 pt-2">
                     <p className="text-xs text-slate-400 text-center">
                         Hệ thống lưu trữ & quản lý hồ sơ nội bộ <br />
-                        © 2025 TAND Tỉnh
                     </p>
                 </CardFooter>
             </Card>

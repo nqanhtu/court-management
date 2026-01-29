@@ -4,16 +4,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Box, FileText, MapPin, Loader2 } from 'lucide-react'
+import { Box, FileText, MapPin, Loader2, Pencil, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useFile } from '@/lib/hooks/use-files'
 
 import { ChildDocumentUploadModal } from './child-document-upload-modal'
+import { ChildDocumentFormModal } from './child-document-form-modal'
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from 'sonner'
 // ... existing imports
 
 export function FileDetailContent({ id }: { id: string }) {
-    const { file, isLoading } = useFile(id)
+    const { file, isLoading, mutate } = useFile(id)
 
     if (isLoading) {
         return (
@@ -155,7 +168,10 @@ export function FileDetailContent({ id }: { id: string }) {
                             <FileText className="mr-2 h-5 w-5" />
                             Mục lục văn bản ({file.documents.length})
                         </CardTitle>
-                        <ChildDocumentUploadModal fileId={file.id} />
+                        <div className="flex gap-2">
+                            <ChildDocumentFormModal fileId={file.id} onSuccess={() => mutate()} />
+                            <ChildDocumentUploadModal fileId={file.id} onSuccess={() => mutate()} />
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -167,7 +183,9 @@ export function FileDetailContent({ id }: { id: string }) {
                                 <TableHead>Mã VB / MLHS</TableHead>
                                 <TableHead>Thời gian</TableHead>
                                 <TableHead className="text-right">Số tờ</TableHead>
+
                                 <TableHead>Ghi chú</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -186,12 +204,86 @@ export function FileDetailContent({ id }: { id: string }) {
                                         </TableCell>
                                         <TableCell>{doc.year || '-'}</TableCell>
                                         <TableCell className="text-right">{doc.pageCount}</TableCell>
+
                                         <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note}>{doc.note}</TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center">
+                                                <ChildDocumentFormModal
+                                                    fileId={file.id}
+                                                    document={doc}
+                                                    trigger={
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                    }
+                                                    onSuccess={() => mutate()}
+                                                />
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="outline"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-red-600"><Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action cannot be undone. This will permanently delete this document from our servers.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
+                                                                try {
+                                                                    const res = await fetch(`/api/files/child-document?id=${doc.id}`, {
+                                                                        method: 'DELETE'
+                                                                    })
+                                                                    if (res.ok) {
+                                                                        toast.success('Delete successful')
+                                                                        mutate()
+                                                                    } else {
+                                                                        toast.error('Delete failed')
+                                                                    }
+                                                                } catch (e) {
+                                                                    toast.error('Delete failed')
+                                                                }
+                                                            }}>Continue</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                                {/* <Button
+                                                    variant="outline"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                                                    onClick={async () => {
+                                                        if (confirm('Are you sure you want to delete this document?')) {
+                                                            try {
+                                                                const res = await fetch(`/api/files/child-document?id=${doc.id}`, {
+                                                                    method: 'DELETE'
+                                                                })
+                                                                if (res.ok) {
+                                                                    mutate()
+                                                                } else {
+                                                                    alert('Delete failed')
+                                                                }
+                                                            } catch (e) {
+                                                                alert('Delete failed')
+                                                            }
+                                                        }
+                                                    }}
+
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button> */}
+                                            </div>
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center text-muted-foreground p-8">
+
+                                    <TableCell colSpan={7} className="text-center text-muted-foreground p-8">
                                         Chưa có văn bản con
                                     </TableCell>
                                 </TableRow>
@@ -200,6 +292,6 @@ export function FileDetailContent({ id }: { id: string }) {
                     </Table>
                 </CardContent>
             </Card>
-        </div>
+        </div >
     )
 }

@@ -4,16 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Box, FileText, MapPin, Loader2 } from 'lucide-react'
+import { Box, FileText, MapPin, Loader2, Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { useFile } from '@/lib/hooks/use-files'
 
 import { ChildDocumentUploadModal } from './child-document-upload-modal'
+import { ChildDocumentFormModal } from './child-document-form-modal'
 
 // ... existing imports
 
 export function FileDetailContent({ id }: { id: string }) {
-    const { file, isLoading } = useFile(id)
+    const { file, isLoading, mutate } = useFile(id)
 
     if (isLoading) {
         return (
@@ -155,7 +156,10 @@ export function FileDetailContent({ id }: { id: string }) {
                             <FileText className="mr-2 h-5 w-5" />
                             Mục lục văn bản ({file.documents.length})
                         </CardTitle>
-                        <ChildDocumentUploadModal fileId={file.id} />
+                        <div className="flex gap-2">
+                            <ChildDocumentFormModal fileId={file.id} onSuccess={() => mutate()} />
+                            <ChildDocumentUploadModal fileId={file.id} onSuccess={() => mutate()} />
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
@@ -167,7 +171,9 @@ export function FileDetailContent({ id }: { id: string }) {
                                 <TableHead>Mã VB / MLHS</TableHead>
                                 <TableHead>Thời gian</TableHead>
                                 <TableHead className="text-right">Số tờ</TableHead>
+
                                 <TableHead>Ghi chú</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -186,12 +192,26 @@ export function FileDetailContent({ id }: { id: string }) {
                                         </TableCell>
                                         <TableCell>{doc.year || '-'}</TableCell>
                                         <TableCell className="text-right">{doc.pageCount}</TableCell>
+
                                         <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note}>{doc.note}</TableCell>
+                                        <TableCell>
+                                            <ChildDocumentFormModal
+                                                fileId={file.id}
+                                                document={doc}
+                                                trigger={
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                }
+                                                onSuccess={() => mutate()}
+                                            />
+                                        </TableCell>
                                     </TableRow>
                                 ))
                             ) : (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="text-center text-muted-foreground p-8">
+
+                                    <TableCell colSpan={7} className="text-center text-muted-foreground p-8">
                                         Chưa có văn bản con
                                     </TableCell>
                                 </TableRow>

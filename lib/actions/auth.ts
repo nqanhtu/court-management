@@ -6,7 +6,7 @@ import { db } from '@/lib/db';
 import bcrypt from 'bcryptjs';
 import { encrypt, decrypt } from '@/lib/auth-jwt';
 
-export async function login(formData: FormData) {
+export async function login(formData: FormData): Promise<{ success: boolean; message?: string }> {
     const username = formData.get('username') as string;
     const password = formData.get('password') as string;
 
@@ -48,15 +48,22 @@ export async function login(formData: FormData) {
     return { success: true };
 }
 
+export interface SessionUser {
+    id: string;
+    username: string;
+    role: string;
+    fullName: string;
+}
+
 export async function logout() {
     (await cookies()).delete('session');
 }
 
-export async function getSession() {
+export async function getSession(): Promise<SessionUser | null> {
     const session = (await cookies()).get('session')?.value;
     if (!session) return null;
     try {
-        return await decrypt(session);
+        return (await decrypt(session)) as SessionUser;
     } catch {
         return null;
     }

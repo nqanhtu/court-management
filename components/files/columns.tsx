@@ -16,7 +16,14 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { toast } from 'sonner'
+import { Badge } from "@/components/ui/badge"
 
+
+import { File, StorageBox } from "@/app/generated/prisma/client"
+
+export type FileWithBox = File & {
+  box: StorageBox | null
+}
 
 export type FileDocument = {
   id: string
@@ -28,6 +35,7 @@ export type FileDocument = {
   year?: number | null
   pageCount?: number | null
   note?: string | null
+  status?: string | null
 }
 
 export const getColumns = (fileId: string | undefined, mutate: () => void): ColumnDef<FileDocument>[] => {
@@ -61,6 +69,21 @@ export const getColumns = (fileId: string | undefined, mutate: () => void): Colu
           )}
         </div>
       ),
+    },
+    {
+      accessorKey: "status",
+      header: "Trạng thái",
+      cell: ({ row }) => {
+        const status = row.original.status || "IN_STOCK"
+        const variant = status === "BORROWED" ? "destructive" : status === "LOST" ? "secondary" : "default"
+        const label = status === "BORROWED" ? "Đang mượn" : status === "LOST" ? "Thất lạc" : "Trong kho"
+        
+        return (
+          <Badge variant={variant} className="whitespace-nowrap">
+            {label}
+          </Badge>
+        )
+      },
     },
     {
       accessorKey: "code",

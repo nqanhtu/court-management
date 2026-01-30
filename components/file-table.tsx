@@ -24,13 +24,9 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-import { columns } from "@/components/files/file-list-columns"
+import { getColumns, FileWithBox, FileDocument } from "@/components/files/columns"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
 import { FileTableToolbar } from '@/components/files/file-table-toolbar'
-
-interface FileWithBox extends File {
-    box?: { code: string } | null
-}
 
 interface FileTableProps {
     files: FileWithBox[]
@@ -58,6 +54,10 @@ export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onP
     pageIndex: page - 1,
     pageSize: pageSize,
   }
+
+  // Use getColumns. We pass undefined for fileId (so no child actions) and a no-op for mutate.
+  // We cast to any to satisfy TS constraint differences between FileDocument and FileWithBox
+  const columns = React.useMemo(() => getColumns(undefined, () => {}) as any, [])
 
   const table = useReactTable({
     data: files,

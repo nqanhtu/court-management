@@ -1,5 +1,7 @@
 'use client'
 
+import { useMemo } from 'react'
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
@@ -10,12 +12,16 @@ import { useFile } from '@/lib/hooks/use-files'
 
 import { ChildDocumentUploadModal } from './child-document-upload-modal'
 import { DataTable } from '@/components/ui/data-table'
-import { columns } from './columns'
+import { getColumns } from './columns'
+import { ChildDocumentFormModal } from './child-document-form-modal'
+
 
 // ... existing imports
 
 export function FileDetailContent({ id }: { id: string }) {
-    const { file, isLoading } = useFile(id)
+    const { file, isLoading, mutate } = useFile(id)
+
+    const columns = useMemo(() => getColumns(file?.id || '', mutate), [file?.id, mutate])
 
     if (isLoading) {
         return (
@@ -157,13 +163,16 @@ export function FileDetailContent({ id }: { id: string }) {
                             <FileText className="mr-2 h-5 w-5" />
                             Mục lục văn bản ({file.documents.length})
                         </CardTitle>
-                        <ChildDocumentUploadModal fileId={file.id} />
+                        <div className="flex gap-2">
+                            <ChildDocumentFormModal fileId={file.id} onSuccess={() => mutate()} />
+                            <ChildDocumentUploadModal fileId={file.id} onSuccess={() => mutate()} />
+                        </div>
                     </div>
                 </CardHeader>
                 <CardContent>
                     <DataTable columns={columns} data={file.documents} />
                 </CardContent>
             </Card>
-        </div>
+        </div >
     )
 }

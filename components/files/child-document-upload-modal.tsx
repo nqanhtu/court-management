@@ -19,9 +19,10 @@ import { UploadCloud, Loader2, FileSpreadsheet } from 'lucide-react'
 interface ChildDocumentUploadModalProps {
     fileId: string
     trigger?: React.ReactNode
+    onSuccess?: () => void
 }
 
-export function ChildDocumentUploadModal({ fileId, trigger }: ChildDocumentUploadModalProps) {
+export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDocumentUploadModalProps) {
     const [open, setOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [file, setFile] = useState<File | null>(null)
@@ -30,7 +31,7 @@ export function ChildDocumentUploadModal({ fileId, trigger }: ChildDocumentUploa
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!file) {
-            toast.error('Vui lòng chọn file Excel')
+            toast.error('Please select a file')
             return
         }
 
@@ -48,16 +49,17 @@ export function ChildDocumentUploadModal({ fileId, trigger }: ChildDocumentUploa
             const result = await response.json()
 
             if (result.success) {
-                toast.success(`Đã thêm ${result.successCount} văn bản`)
+                toast.success(`Add successfuly! ${result.successCount} documents`)
                 if (result.failureCount > 0) {
                     toast.warning(`${result.failureCount}`)
                     console.error(result.errors)
                 }
                 setOpen(false)
                 setFile(null)
-                router.refresh()
+                // router.refresh()
+                if (onSuccess) onSuccess()
             } else {
-                toast.error(result.error || 'Upload thất bại')
+                toast.error(result.error || 'Upload failed!')
             }
         } catch (error) {
             toast.error('Có lỗi xảy ra')

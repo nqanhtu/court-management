@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { Prisma } from '@/app/generated/prisma/client'
+import { createAuditLog } from '@/lib/services/audit-log'
+import { getSession } from '@/lib/actions/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -50,6 +52,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
     try {
+        const session = await getSession()
         const data = await request.json()
         // TODO: Validate data with zod if possible, for now trusting inputs or basic checks
 
@@ -60,6 +63,18 @@ export async function POST(request: NextRequest) {
                 status: 'IN_STOCK'
             }
         })
+
+        await createAuditLog({
+            action: 'CREATE',
+            target: 'File',
+            targetId: file.id,
+            userId: session?.id,
+            detail: {
+                title: file.title,
+                code: file.code
+            }
+        })
+
         return NextResponse.json({ success: true, file })
     } catch (error) {
         console.error('Error creating file:', error)

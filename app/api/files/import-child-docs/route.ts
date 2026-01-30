@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { parseChildDocumentsExcel } from '@/lib/excel-parser'
+import { createAuditLog } from '@/lib/services/audit-log'
+import { getSession } from '@/lib/actions/auth'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
     try {
+        const session = await getSession()
         const formData = await request.formData()
         const file = formData.get('file') as File
         const fileId = formData.get('fileId') as string
@@ -64,6 +67,20 @@ export async function POST(request: Request) {
                 errors.push(`Row ${document.order}: ${errorMessage}`)
             }
         }
+
+        await createAuditLog({
+            action: 'UPLOAD',
+            target: 'Document',
+            targetId: fileId, // Using fileId as target since we created multiple docs under this file
+            userId: session?.id,
+            detail: {
+                filename: file.name,
+                total: documents.length,
+                success: successCount,
+                failed: failureCount,
+                errors: errors.length > 0 ? errors : undefined
+            }
+        })
 
         return NextResponse.json({
             success: true,

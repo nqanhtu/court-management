@@ -101,6 +101,33 @@ async function main() {
   })
   console.log(`Created Coordinator: coordinator`)
 
+  console.log(`Created Coordinator: coordinator`)
+
+  // 3. Seed StorageBoxes
+  console.log('Seeding Storage Boxes...')
+  // Get an agency to link (optional)
+  const agency = await prisma.agencyHistory.findFirst()
+
+  for (let i = 1; i <= 10; i++) {
+    const boxCode = `BOX-${i.toString().padStart(3, '0')}`
+    
+    await prisma.storageBox.upsert({
+      where: { code: boxCode },
+      update: {},
+      create: {
+        code: boxCode,
+        warehouse: 'Kho A',
+        line: `Line ${Math.ceil(i / 5)}`,
+        shelf: `Shelf ${i % 5 + 1}`,
+        slot: `Slot ${i}`,
+        boxNumber: i.toString(),
+        agencyId: agency?.id,
+        year: 2024,
+      }
+    })
+    console.log(`Created StorageBox: ${boxCode}`)
+  }
+
   console.log('Seeding finished.')
 }
 

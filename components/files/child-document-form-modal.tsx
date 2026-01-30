@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -16,8 +15,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
-import { Loader2, Plus, Pencil } from 'lucide-react'
-import { createDocument, updateDocument, type DocumentFormData } from '@/lib/actions/document'
+import { Loader2, Plus } from 'lucide-react'
+import { type DocumentFormData } from '@/lib/actions/document'
 
 interface ChildDocumentFormModalProps {
     fileId: string
@@ -29,7 +28,6 @@ interface ChildDocumentFormModalProps {
 export function ChildDocumentFormModal({ fileId, document, trigger, onSuccess }: ChildDocumentFormModalProps) {
     const [open, setOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
-    const router = useRouter()
     const isEdit = !!document
 
     const [formData, setFormData] = useState<DocumentFormData>({

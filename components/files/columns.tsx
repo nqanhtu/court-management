@@ -1,5 +1,6 @@
 "use client"
 
+import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
 import { ArrowUpDown, Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -60,7 +61,16 @@ export const getColumns = (fileId: string | undefined, mutate: () => void): Colu
       header: "Trích yếu / Tên văn bản",
       cell: ({ row }) => (
         <div className="font-medium max-w-100">
-          {row.original.title}
+          {!fileId ? (
+            <Link 
+              href={`/files/${row.original.id}`}
+              className="hover:underline hover:text-primary transition-colors cursor-pointer"
+            >
+              {row.original.title}
+            </Link>
+          ) : (
+             <span>{row.original.title}</span>
+          )}
           {/* Support both contentIndex (Child) and indexCode (Parent) */}
           {(row.original.contentIndex || row.original.indexCode) && (
             <div className="text-xs text-muted-foreground mt-1">
@@ -116,12 +126,7 @@ export const getColumns = (fileId: string | undefined, mutate: () => void): Colu
         </div>
       ),
     },
-  ]
-
-  // Only add actions column if we are in Child Document mode (fileId is present)
-  // Or we could implement Parent Actions here too if needed, but for now specific to user request
-  if (fileId) {
-    cols.push({
+    {
       id: "actions",
       cell: ({ row }) => {
         const doc = row.original
@@ -175,8 +180,8 @@ export const getColumns = (fileId: string | undefined, mutate: () => void): Colu
           </div>
         )
       },
-    })
-  }
+    }
+  ]
 
   return cols
 }

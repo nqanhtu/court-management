@@ -215,8 +215,8 @@ model BorrowItem {
 // ==========================================
 
 model AuditLog {
-  id        String  @id @default(uuid())
-  action    String // LOGIN, VIEW, CREATE, UPDATE, DELETE, EXPORT
+  id        String      @id @default(uuid())
+  action    AuditAction // LOGIN, VIEW, CREATE, UPDATE, DELETE, EXPORT
   target    String // Tên bảng/đối tượng bị tác động (File/User...)
   targetId  String? // ID đối tượng
   detail    Json? // Chi tiết thay đổi (Old value -> New value)
@@ -226,4 +226,14 @@ model AuditLog {
   user   User?   @relation(fields: [userId], references: [id])
 
   createdAt DateTime @default(now())
+}
+
+enum AuditAction {
+  LOGIN
+  VIEW
+  CREATE
+  UPDATE
+  DELETE
+  EXPORT
+  UPLOAD
 }

@@ -1,3 +1,12 @@
+export interface FileDetails {
+    summary?: string;
+    judgmentDate?: string;
+    judgmentNumber?: string;
+    defendants?: string[];
+    plaintiffs?: string[];
+    civilDefendants?: string[];
+}
+
 export interface ExtractedFile {
     code: string
     title: string
@@ -7,7 +16,7 @@ export interface ExtractedFile {
     retention: string
     startDate?: Date
     endDate?: Date
-    details: Record<string, unknown>
+    details: FileDetails
     boxCode: string // Links to Location
     indexCode: string // MLHS
     note: string // Ghi chú

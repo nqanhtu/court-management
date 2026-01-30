@@ -2,13 +2,15 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+
 import { Button } from '@/components/ui/button'
 import { Box, FileText, MapPin, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useFile } from '@/lib/hooks/use-files'
 
 import { ChildDocumentUploadModal } from './child-document-upload-modal'
+import { DataTable } from '@/components/ui/data-table'
+import { columns } from './columns'
 
 // ... existing imports
 
@@ -159,45 +161,7 @@ export function FileDetailContent({ id }: { id: string }) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <Table className="w-full">
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead className="w-[80px]">Order</TableHead>
-                                <TableHead>Trích yếu / Tên văn bản</TableHead>
-                                <TableHead>Mã VB / MLHS</TableHead>
-                                <TableHead>Thời gian</TableHead>
-                                <TableHead className="text-right">Số tờ</TableHead>
-                                <TableHead>Ghi chú</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {file.documents.length > 0 ? (
-                                file.documents.map((doc: any, index: number) => (
-                                    <TableRow key={doc.id}>
-                                        <TableCell>{doc.order || index + 1}</TableCell>
-                                        <TableCell className="font-medium max-w-[400px]">
-                                            {doc.title}
-                                            {doc.contentIndex && <div className="text-xs text-muted-foreground mt-1">MLVB: {doc.contentIndex}</div>}
-                                        </TableCell>
-                                        <TableCell>
-                                            <div className="flex flex-col text-xs gap-1">
-                                                <span>{doc.code || '-'}</span>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell>{doc.year || '-'}</TableCell>
-                                        <TableCell className="text-right">{doc.pageCount}</TableCell>
-                                        <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note}>{doc.note}</TableCell>
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={6} className="text-center text-muted-foreground p-8">
-                                        Chưa có văn bản con
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                    <DataTable columns={columns} data={file.documents} />
                 </CardContent>
             </Card>
         </div>

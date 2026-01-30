@@ -20,18 +20,34 @@ import { FilePlus } from 'lucide-react'
 import { ManualFileForm } from '@/components/forms/manual-file-form'
 import { ExcelUploadForm } from '@/components/forms/excel-upload-form'
 
-export function CreateFileDialog() {
-    const [open, setOpen] = useState(false)
+interface CreateFileDialogProps {
+    open?: boolean
+    onOpenChange?: (open: boolean) => void
+    trigger?: React.ReactNode
+}
+
+export function CreateFileDialog({ open: controlledOpen, onOpenChange: setControlledOpen, trigger }: CreateFileDialogProps = {}) {
+    const [internalOpen, setInternalOpen] = useState(false)
+    const isControlled = controlledOpen !== undefined
+
+    const open = isControlled ? controlledOpen : internalOpen
+    const setOpen = isControlled ? setControlledOpen : setInternalOpen
+
+    if (!setOpen) return null 
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button>
-                    <FilePlus className="mr-2 h-4 w-4" />
-                    Thêm mới / Import
-                </Button>
+                {trigger ? (
+                    trigger
+                ) : (
+                    <Button>
+                        <FilePlus />
+                        Thêm mới / Import
+                    </Button>
+                )}
             </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
+            <DialogContent className="sm:max-w-150">
                 <DialogHeader>
                     <DialogTitle>Thêm mới Hồ sơ</DialogTitle>
                     <DialogDescription>

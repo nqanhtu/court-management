@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { Prisma } from '@/app/generated/prisma/client'
+import { Prisma, AuditAction } from '@/app/generated/prisma/client'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +18,7 @@ export async function GET(request: NextRequest) {
                     { detail: { path: ['code'], string_contains: q } },
                 ]
             } : {},
-            action ? { action: { equals: action as any } } : {},
+            action ? { action: { equals: action as AuditAction } } : {},
         ]
     }
 

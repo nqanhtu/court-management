@@ -53,11 +53,6 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
           <h1 className="text-2xl font-bold text-slate-800">Quản lý mượn trả</h1>
           <p className="text-slate-500 text-sm mt-1">Theo dõi quá trình luân chuyển hồ sơ.</p>
         </div>
-        <Button
-          onClick={() => setIsAddModalOpen(true)}
-        >
-          <Plus className="w-4 h-4" /> Tạo phiếu mượn
-        </Button>
       </div>
 
       {/* Main Table */}
@@ -67,6 +62,7 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
           onReturn={handleReturn}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onCreate={() => setIsAddModalOpen(true)}
         />
       </div>
 

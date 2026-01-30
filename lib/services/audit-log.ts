@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { headers } from 'next/headers'
 
-export type AuditAction = 'LOGIN' | 'VIEW' | 'CREATE' | 'UPDATE' | 'DELETE' | 'EXPORT' | 'UPLOAD'
+import { AuditAction } from '@/app/generated/prisma/enums'
 
 interface CreateAuditLogParams {
     action: AuditAction

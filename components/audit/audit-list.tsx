@@ -1,109 +1,164 @@
-'use client'
+"use client";
+"use no memo";
 
-import { useSearchParams } from 'next/navigation';
-import { AuditLogWithUser, useAudit } from '@/lib/hooks/use-audit';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { format } from 'date-fns';
-import { PaginationControls } from '@/components/ui/pagination-controls';
-import { Loader2 } from 'lucide-react';
+import React from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useAudit } from "@/lib/hooks/use-audit";
+import {
+  flexRender,
+  getCoreRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Loader2 } from "lucide-react";
+
+import { columns } from "@/components/audit/columns";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { AuditTableToolbar } from "@/components/audit/audit-table-toolbar";
 
 export function AuditList() {
-    const searchParams = useSearchParams();
-    const page = Number(searchParams.get('page')) || 1;
-    const searchTerm = searchParams.get('q') || '';
-    const actionFilter = searchParams.get('action') || 'ALL';
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const page = Number(searchParams.get("page")) || 1;
+  const searchTerm = searchParams.get("q") || "";
+  const actionFilter = searchParams.get("action") || "ALL";
+  const pageSize = Number(searchParams.get("limit")) || 20;
 
-    const { logs, total, isLoading } = useAudit({
-        query: searchTerm,
-        action: actionFilter,
-        limit: 20,
-        offset: (page - 1) * 20
-    });
+  const { logs, total, isLoading } = useAudit({
+    query: searchTerm,
+    action: actionFilter,
+    limit: pageSize,
+    offset: (page - 1) * pageSize,
+  });
 
-    const totalPages = Math.ceil(total / 20);
-
-    const getActionBadge = (action: string) => {
-        switch (action) {
-            case 'CREATE': return <Badge variant="outline" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200">THÊM MỚI</Badge>;
-            case 'UPDATE': return <Badge variant="outline" className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-sky-200">CẬP NHẬT</Badge>;
-            case 'DELETE': return <Badge variant="destructive">XÓA</Badge>;
-            case 'LOGIN': return <Badge variant="outline" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 border-indigo-200">ĐĂNG NHẬP</Badge>;
-            default: return <Badge variant="outline">{action}</Badge>;
-        }
-    };
-
-    if (isLoading) {
-        return (
-            <div className="flex-1 flex items-center justify-center text-muted-foreground">
-                <Loader2 className="w-8 h-8 animate-spin" />
-            </div>
-        )
+  // Server-side state handlers
+  const handleSearchChange = (term: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (term) {
+      params.set("q", term);
+    } else {
+      params.delete("q");
     }
+    params.set("page", "1");
+    router.replace(`?${params.toString()}`);
+  };
 
+  const handleActionChange = (value: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (value && value !== "ALL") {
+      params.set("action", value);
+    } else {
+      params.delete("action");
+    }
+    params.set("page", "1");
+    router.replace(`?${params.toString()}`);
+  };
+
+  // Helper for DataTablePagination to control URL state
+  // We map the "manual" pagination of TanStack to our URL-based logic
+  // DataTablePagination uses table.setPageIndex etc.
+  const paginationState = {
+    pageIndex: page - 1,
+    pageSize: pageSize,
+  };
+
+  const table = useReactTable({
+    data: logs,
+    columns,
+    pageCount: Math.ceil(total / pageSize),
+    state: {
+      pagination: paginationState,
+    },
+    manualPagination: true,
+    // We override onPaginationChange to update URL
+    onPaginationChange: (updater) => {
+      // updater can be functional or value
+      const nextState =
+        typeof updater === "function" ? updater(paginationState) : updater;
+      const params = new URLSearchParams(searchParams);
+      params.set("page", (nextState.pageIndex + 1).toString());
+      params.set("limit", nextState.pageSize.toString());
+      router.replace(`?${params.toString()}`);
+    },
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  if (isLoading) {
     return (
-        <>
-            <div className='flex-1 overflow-auto bg-muted/10'>
-                <Table>
-                    <TableHeader className="bg-card sticky top-0 z-10 shadow-sm">
-                        <TableRow>
-                            <TableHead className="w-[180px] font-semibold text-muted-foreground">Thời gian</TableHead>
-                            <TableHead className="font-semibold text-muted-foreground">Tài khoản</TableHead>
-                            <TableHead className="font-semibold text-muted-foreground">Hành động</TableHead>
-                            <TableHead className="font-semibold text-muted-foreground">Đối tượng</TableHead>
-                            <TableHead className="font-semibold text-muted-foreground">Chi tiết</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {logs.length === 0 ? (
-                            <TableRow>
-                                <TableCell colSpan={5} className="h-48 text-center text-muted-foreground">
-                                    Không tìm thấy dữ liệu nhật ký phù hợp.
-                                </TableCell>
-                            </TableRow>
-                        ) : (
-                            logs.map((log: AuditLogWithUser) => (
-                                <TableRow key={log.id} className="bg-card hover:bg-muted/50 transition-colors">
-                                    <TableCell className="font-medium text-foreground tabular-nums">
-                                        {format(new Date(log.createdAt), 'dd/MM/yyyy HH:mm:ss')}
-                                    </TableCell>
-                                    <TableCell>
-                                        <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center text-primary font-bold text-xs border border-primary/20">
-                                                {log.user?.fullName.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <p className="text-sm font-semibold text-foreground">{log.user?.fullName}</p>
-                                                <p className="text-xs text-muted-foreground">@{log.user?.username}</p>
-                                            </div>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell>{getActionBadge(log.action)}</TableCell>
-                                    <TableCell>
-                                        <Badge variant="secondary" className="font-mono text-[10px] uppercase">
-                                            {log.target}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="text-muted-foreground text-xs">
-                                        <div className="max-w-xs truncate bg-muted p-2 rounded border border-border font-mono" title={JSON.stringify(log.detail, null, 2)}>
-                                            {JSON.stringify(log.detail)}
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ))
-                        )}
-                    </TableBody>
-                </Table>
-            </div>
-
-            <div className='p-3 border-t border-border bg-card flex items-center justify-between shrink-0'>
-                <PaginationControls
-                    hasNextPage={page < totalPages}
-                    hasPrevPage={page > 1}
-                    totalPages={totalPages}
-                    currentPage={page}
-                />
-            </div>
-        </>
+      <div className="flex-1 flex items-center justify-center text-muted-foreground">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
     );
+  }
+
+  return (
+    <>
+      <AuditTableToolbar
+        table={table}
+        searchTerm={searchTerm}
+        onSearchChange={handleSearchChange}
+        actionFilter={actionFilter}
+        onActionChange={handleActionChange}
+      />
+      <div className="rounded-md border bg-white flex-1 overflow-auto min-h-0">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => {
+                  return (
+                    <TableHead key={header.id} colSpan={header.colSpan}>
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </TableHead>
+                  );
+                })}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows?.length ? (
+              table.getRowModel().rows.map((row) => (
+                <TableRow
+                  key={row.id}
+                  data-state={row.getIsSelected() && "selected"}
+                >
+                  {row.getVisibleCells().map((cell) => (
+                    <TableCell key={cell.id}>
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  Không tìm thấy dữ liệu nhật ký phù hợp.
+                </TableCell>
+              </TableRow>
+            )}
+          </TableBody>
+        </Table>
+      </div>
+
+      <DataTablePagination table={table} totalRows={total} />
+    </>
+  );
 }

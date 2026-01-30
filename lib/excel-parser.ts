@@ -1,5 +1,7 @@
 import * as XLSX from 'xlsx'
-import { ExtractedFile, ExtractedDocument, ExtractedLocation, ImportData } from './types/excel'
+import { ExtractedFile, ExtractedDocument, ExtractedLocation, ImportData, FileDetails } from './types/excel'
+
+
 
 export const parseExcelFile = async (buffer: ArrayBuffer): Promise<ImportData> => {
     const workbook = XLSX.read(buffer, { type: 'array' })
@@ -39,9 +41,11 @@ export const parseExcelFile = async (buffer: ArrayBuffer): Promise<ImportData> =
     }))
 
     // Post-process to set title and startDate from details
+
+
     files.forEach(f => {
         if (f.details) {
-            const d = f.details as any; // Cast to access dynamic properties from parseDetails
+            const d = f.details as FileDetails; 
             if (d.summary) f.title = d.summary;
             if (d.judgmentDate) f.startDate = new Date(d.judgmentDate);
             f.judgmentNumber = d.judgmentNumber;
@@ -51,24 +55,18 @@ export const parseExcelFile = async (buffer: ArrayBuffer): Promise<ImportData> =
         }
     })
 
-    // Skip parsing Sheet 2 and 3 as requested
     const documents: ExtractedDocument[] = []
     const boxes: ExtractedLocation[] = []
 
     return { files, documents, boxes }
 }
 
-function parseDetails(text: string): any {
+function parseDetails(text: string): FileDetails {
     if (!text) return {};
     const lines = text.split('\r\n').map(l => l.trim());
-    const details: any = {};
+    const details: FileDetails = {};
 
-    // Example format:
-    // Hình sự sơ thẩm năm 2016
-    // Về việc: Trộm cắp tài sản
-    // Bị cáo: Nhang Hồng Thọ, Đỗ Phú Quí
-    // QDTHS: 01/2016/HSST-QĐ
-    // Ngày: 15/01/2016
+    // ...
 
     lines.forEach(line => {
         if (line.startsWith('Về việc:')) details.summary = line.replace('Về việc:', '').trim();
@@ -103,7 +101,7 @@ export const parseChildDocumentsExcel = async (buffer: ArrayBuffer): Promise<Ext
 
     const rawData = XLSX.utils.sheet_to_json<Record<string, unknown>>(sheet)
 
-    return rawData.map((row: any, index: number) => ({
+    return rawData.map((row: Record<string, unknown>, index: number) => ({
         // Assuming "Hồ sơ số" maps to fileCode (to link to parent). Default to '' if missing.
         fileCode: row['Hồ sơ số'] ? String(row['Hồ sơ số']) : '',
 
@@ -116,7 +114,7 @@ export const parseChildDocumentsExcel = async (buffer: ArrayBuffer): Promise<Ext
 
         year: parseYear(row['Thời gian']),
 
-        pageCount: typeof row['Số tờ'] === 'number' ? row['Số tờ'] : parseInt(row['Số tờ'] || '0'),
+        pageCount: typeof row['Số tờ'] === 'number' ? row['Số tờ'] : parseInt((row['Số tờ'] as string) || '0'),
 
         // New fields
         note: row['Ghi chú'] ? String(row['Ghi chú']) : undefined,

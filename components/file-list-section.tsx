@@ -1,23 +1,36 @@
 'use client'
 
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useFiles } from '@/lib/hooks/use-files'
 import { FileTable } from '@/components/file-table'
-import { PaginationControls } from '@/components/ui/pagination-controls'
 import { Loader2 } from 'lucide-react'
 
-export function FileListSection() {
+interface FileListSectionProps {
+    onCreate?: () => void
+}
+
+export function FileListSection({ onCreate }: FileListSectionProps) {
     const searchParams = useSearchParams()
     const q = searchParams.get('q') || undefined
     const type = searchParams.get('type') || undefined
     const page = parseInt(searchParams.get('page') || '1')
+    const limit = parseInt(searchParams.get('limit') || '10')
 
     const { files, total, isLoading } = useFiles({
         query: q,
         type,
-        limit: 10,
-        offset: (page - 1) * 10
+        limit,
+        offset: (page - 1) * limit
     })
+
+    const router = useRouter()
+
+    const handlePaginationChange = (newPage: number, newPageSize: number) => {
+         const params = new URLSearchParams(searchParams)
+         params.set('page', newPage.toString())
+         params.set('limit', newPageSize.toString())
+         router.replace(`/?${params.toString()}`)
+    }
 
     if (isLoading) {
         return (
@@ -28,23 +41,15 @@ export function FileListSection() {
     }
 
     return (
-        <>
-            <div className="flex-1 min-h-0 overflow-auto">
-                <FileTable files={files} />
-            </div>
-
-            <div className="flex justify-between items-center pt-2">
-                <div className="text-sm text-muted-foreground">
-                    Hiển thị {files.length} / {total} kết quả
-                </div>
-
-                <PaginationControls
-                    hasNextPage={(page * 10) < total}
-                    hasPrevPage={page > 1}
-                    totalPages={Math.ceil(total / 10)}
-                    currentPage={page}
-                />
-            </div>
-        </>
+        <div className="flex-1 min-h-0 overflow-auto">
+            <FileTable 
+                files={files} 
+                onCreate={onCreate} 
+                total={total}
+                page={page}
+                pageSize={limit}
+                onPaginationChange={handlePaginationChange}
+            />
+        </div>
     )
 }

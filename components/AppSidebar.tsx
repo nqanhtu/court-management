@@ -16,6 +16,7 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
+  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -33,7 +34,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
   if (pathname === "/login") return null;
 
   const role = user?.role;
-  
+
   // Define menu logic dynamically
   const menuItems = [
     {
@@ -65,6 +66,22 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
   return (
     <Sidebar>
+      <SidebarHeader>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              asChild
+              className="data-[slot=sidebar-menu-button]:!p-1.5"
+            >
+              <a href="#">
+                <span className="text-base font-semibold">
+                  Phần mềm chỉnh lý hồ sơ
+                </span>
+              </a>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarHeader>
       <SidebarContent>
         {menuItems.map((group, idx) => (
           <SidebarGroup key={idx}>

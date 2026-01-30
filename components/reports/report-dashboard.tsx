@@ -1,8 +1,9 @@
 'use client'
+'use no memo';
 
+import * as React from 'react';
 import { BarChart3, TrendingUp, AlertCircle, CheckCircle2, FileClock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Table,
@@ -13,9 +14,26 @@ import {
     TableRow,
 } from "@/components/ui/table";
 import { useReportStats } from "@/lib/hooks/use-reports";
+import {
+    flexRender,
+    getCoreRowModel,
+    useReactTable,
+} from '@tanstack/react-table';
+import { columns, RecentBorrow } from "@/components/reports/columns";
 
 export function ReportDashboard() {
     const { stats, isLoading } = useReportStats();
+
+    // Memoize the data for the table
+    const recentBorrows = React.useMemo(() => 
+        (stats?.recentBorrows || []) as RecentBorrow[], 
+    [stats]);
+
+    const table = useReactTable({
+        data: recentBorrows,
+        columns,
+        getCoreRowModel: getCoreRowModel(),
+    });
 
     if (isLoading) {
         return (
@@ -26,7 +44,7 @@ export function ReportDashboard() {
         )
     }
 
-    const { totalBorrows, activeBorrows, overdueBorrows, returnedRate, recentBorrows } = stats;
+    const { totalBorrows, activeBorrows, overdueBorrows, returnedRate } = stats;
 
     return (
         <>
@@ -62,56 +80,49 @@ export function ReportDashboard() {
                 <CardContent className="flex-1 overflow-auto p-0">
                     <Table>
                         <TableHeader className="bg-white sticky top-0 z-10">
-                            <TableRow>
-                                <TableHead className="whitespace-nowrap">Mã mượn</TableHead>
-                                <TableHead className="whitespace-nowrap">Hồ sơ số</TableHead>
-                                <TableHead className="whitespace-nowrap">Ngày mượn</TableHead>
-                                <TableHead className="whitespace-nowrap">Hạn trả</TableHead>
-                                <TableHead className="whitespace-nowrap">Thời gian trả</TableHead>
-                                <TableHead className="whitespace-nowrap">Trạng thái</TableHead>
-                            </TableRow>
+                            {table.getHeaderGroups().map((headerGroup) => (
+                                <TableRow key={headerGroup.id}>
+                                    {headerGroup.headers.map((header) => {
+                                        return (
+                                            <TableHead key={header.id} colSpan={header.colSpan} className="whitespace-nowrap">
+                                                {header.isPlaceholder
+                                                    ? null
+                                                    : flexRender(
+                                                        header.column.columnDef.header,
+                                                        header.getContext()
+                                                    )}
+                                            </TableHead>
+                                        )
+                                    })}
+                                </TableRow>
+                            ))}
                         </TableHeader>
                         <TableBody>
-                            {recentBorrows.length === 0 ? (
+                            {table.getRowModel().rows?.length ? (
+                                table.getRowModel().rows.map((row) => (
+                                    <TableRow
+                                        key={row.id}
+                                        data-state={row.getIsSelected() && "selected"}
+                                    >
+                                        {row.getVisibleCells().map((cell) => (
+                                            <TableCell key={cell.id}>
+                                                {flexRender(
+                                                    cell.column.columnDef.cell,
+                                                    cell.getContext()
+                                                )}
+                                            </TableCell>
+                                        ))}
+                                    </TableRow>
+                                ))
+                            ) : (
                                 <TableRow>
-                                    <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
+                                    <TableCell
+                                        colSpan={columns.length}
+                                        className="h-24 text-center text-muted-foreground"
+                                    >
                                         Chưa có dữ liệu giao dịch.
                                     </TableCell>
                                 </TableRow>
-                            ) : (
-                                recentBorrows.map((slip) => {
-                                    const isReturned = slip.status === "RETURNED";
-                                    const isOverdue = slip.status === "OVERDUE" || (new Date() > new Date(slip.dueDate) && !isReturned);
-
-                                    return (
-                                        <TableRow key={slip.id}>
-                                            <TableCell className="font-medium text-slate-800">{slip.code}</TableCell>
-                                            <TableCell>
-                                                {slip.items.length > 0 ? slip.items.map(i => i.file.code).join(", ") : "-"}
-                                            </TableCell>
-                                            <TableCell>{format(new Date(slip.borrowDate), "dd/MM/yyyy")}</TableCell>
-                                            <TableCell>{format(new Date(slip.dueDate), "dd/MM/yyyy")}</TableCell>
-                                            <TableCell>
-                                                {slip.returnedDate ? format(new Date(slip.returnedDate), "dd/MM/yyyy") : "-"}
-                                            </TableCell>
-                                            <TableCell>
-                                                {isReturned ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-medium border border-emerald-200">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Đã trả
-                                                    </span>
-                                                ) : isOverdue ? (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-red-100 text-red-700 text-xs font-medium border border-red-200">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-red-500"></span> Quá hạn
-                                                    </span>
-                                                ) : (
-                                                    <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 text-xs font-medium border border-amber-200">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Đang mượn
-                                                    </span>
-                                                )}
-                                            </TableCell>
-                                        </TableRow>
-                                    );
-                                })
                             )}
                         </TableBody>
                     </Table>

@@ -1,5 +1,4 @@
 import { History } from 'lucide-react';
-import { AuditFilters } from '@/components/audit/audit-filters';
 import { AuditList } from '@/components/audit/audit-list';
 
 export default function AuditLogPage() {
@@ -15,10 +14,7 @@ export default function AuditLogPage() {
                 </div>
             </div>
 
-            <div className='flex flex-col h-full bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden'>
-                <AuditFilters />
                 <AuditList />
-            </div>
         </div>
     );
 }

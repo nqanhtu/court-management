@@ -12,7 +12,7 @@ export async function POST(request: Request) {
         const formData = await request.formData()
         const file = formData.get('file') as File
         const fileId = formData.get('fileId') as string
-
+        console.log(fileId)
         if (!file || !fileId) {
             return NextResponse.json({ error: 'Missing fileId or file' }, { status: 400 })
         }
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
         if (documents.length === 0) {
             return NextResponse.json({ error: 'No data in file Excel' }, { status: 400 })
         }
-
+        // console.log(fileId)
         const targetFile = await db.file.findUnique({
             where: {
                 id: fileId,

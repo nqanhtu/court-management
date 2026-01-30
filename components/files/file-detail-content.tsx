@@ -4,9 +4,10 @@ import { useMemo } from 'react'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { Box, FileText, MapPin, Loader2 } from 'lucide-react'
+
+import { Box, FileText, MapPin, Loader2, Pencil, Trash2 } from 'lucide-react'
 import Link from 'next/link'
 import { useFile } from '@/lib/hooks/use-files'
 
@@ -15,6 +16,18 @@ import { DataTable } from '@/components/ui/data-table'
 import { getColumns } from './columns'
 import { ChildDocumentFormModal } from './child-document-form-modal'
 
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+    AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { toast } from 'sonner'
 
 // ... existing imports
 
@@ -161,7 +174,7 @@ export function FileDetailContent({ id }: { id: string }) {
                     <div className="flex items-center justify-between">
                         <CardTitle className="flex items-center text-lg">
                             <FileText className="mr-2 h-5 w-5" />
-                            Mục lục văn bản ({file.documents.length})
+                            Mục lục văn bản ({file.documents?.length || 0})
                         </CardTitle>
                         <div className="flex gap-2">
                             <ChildDocumentFormModal fileId={file.id} onSuccess={() => mutate()} />
@@ -170,7 +183,97 @@ export function FileDetailContent({ id }: { id: string }) {
                     </div>
                 </CardHeader>
                 <CardContent>
-                    <DataTable columns={columns} data={file.documents} />
+                    <Table className="w-full">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[80px]">Order</TableHead>
+                                <TableHead>Trích yếu / Tên văn bản</TableHead>
+                                <TableHead>Mã VB / MLHS</TableHead>
+                                <TableHead>Thời gian</TableHead>
+                                <TableHead className="text-right">Số tờ</TableHead>
+
+                                <TableHead>Ghi chú</TableHead>
+                                <TableHead className="w-[50px]"></TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {file.documents && file.documents.length > 0 ? (
+                                file.documents.map((doc: any, index: number) => (
+                                    <TableRow key={doc.id}>
+                                        <TableCell>{doc.order || index + 1}</TableCell>
+                                        <TableCell className="font-medium max-w-[400px]">
+                                            {doc.title}
+                                            {doc.contentIndex && <div className="text-xs text-muted-foreground mt-1">MLVB: {doc.contentIndex}</div>}
+                                        </TableCell>
+                                        <TableCell>
+                                            <div className="flex flex-col text-xs gap-1">
+                                                <span>{doc.code || '-'}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell>{doc.year || '-'}</TableCell>
+                                        <TableCell className="text-right">{doc.pageCount}</TableCell>
+
+                                        <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note}>{doc.note}</TableCell>
+                                        <TableCell>
+                                            <div className="flex items-center">
+                                                <ChildDocumentFormModal
+                                                    fileId={file.id}
+                                                    document={doc}
+                                                    trigger={
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                    }
+                                                    onSuccess={() => mutate()}
+                                                />
+                                                <AlertDialog>
+                                                    <AlertDialogTrigger asChild>
+                                                        <Button variant="outline"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-muted-foreground hover:text-red-600"><Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </AlertDialogTrigger>
+                                                    <AlertDialogContent>
+                                                        <AlertDialogHeader>
+                                                            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                                            <AlertDialogDescription>
+                                                                This action cannot be undone. This will permanently delete this document from our servers.
+                                                            </AlertDialogDescription>
+                                                        </AlertDialogHeader>
+                                                        <AlertDialogFooter>
+                                                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                                            <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
+                                                                try {
+                                                                    const res = await fetch(`/api/files/child-document?id=${doc.id}`, {
+                                                                        method: 'DELETE'
+                                                                    })
+                                                                    if (res.ok) {
+                                                                        toast.success('Delete successful')
+                                                                        mutate()
+                                                                    } else {
+                                                                        toast.error('Delete failed')
+                                                                    }
+                                                                } catch (e) {
+                                                                    toast.error('Delete failed')
+                                                                }
+                                                            }}>Continue</AlertDialogAction>
+                                                        </AlertDialogFooter>
+                                                    </AlertDialogContent>
+                                                </AlertDialog>
+                                            </div>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            ) : (
+                                <TableRow>
+
+                                    <TableCell colSpan={7} className="text-center text-muted-foreground p-8">
+                                        Chưa có văn bản con
+                                    </TableCell>
+                                </TableRow>
+                            )}
+                        </TableBody>
+                    </Table>
                 </CardContent>
             </Card>
         </div >

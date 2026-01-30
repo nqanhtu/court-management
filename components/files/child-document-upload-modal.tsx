@@ -27,6 +27,7 @@ export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDo
     const [isLoading, setIsLoading] = useState(false)
     const [file, setFile] = useState<File | null>(null)
     const router = useRouter()
+    console.log("day: ", fileId)
 
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -38,6 +39,7 @@ export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDo
         setIsLoading(true)
         const formData = new FormData()
         formData.append('file', file)
+        console.log("day: ", fileId)
         formData.append('fileId', fileId)
 
         try {

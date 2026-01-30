@@ -1,11 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Plus } from "lucide-react";
 import BorrowTable from "@/components/BorrowTable";
 import Modal from "@/components/Modal";
 import BorrowForm from "@/components/BorrowForm";
-import { Button } from "@/components/ui/button";
 import {
   BorrowSlipModel as BorrowSlip,
   UserModel as User,

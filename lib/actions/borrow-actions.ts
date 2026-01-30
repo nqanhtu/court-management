@@ -56,10 +56,6 @@ export async function createBorrowSlip(params: CreateSlipParams) {
                 // Since updateMany doesn't return IDs, we re-query to find the culprits if needed
                 // or just throw a generic error.
                 // For better UX, let's find out which ones are unavailable.
-                const confusedFiles = await tx.file.findMany({
-                   where: { id: { in: fileIds } }
-                });
-                const unavailable = confusedFiles.filter(f => f.status !== 'BORROWED' && f.status !== 'IN_STOCK' || (f.status === 'BORROWED' && !fileIds.includes(f.id))); 
                 // Note: The logic above is tricky because we just updated them. 
                 // Simplest robust way: 
                 // If count mismatch, it means some were NOT 'IN_STOCK' at the moment of update.

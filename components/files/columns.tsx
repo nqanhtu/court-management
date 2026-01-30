@@ -134,7 +134,7 @@ export const getColumns = (fileId: string | undefined, mutate: () => void): Colu
         return (
           <div className="flex items-center">
             <ChildDocumentFormModal
-              fileId={fileId}
+              fileId={fileId ?? ""}
               document={doc}
               trigger={
                 <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">

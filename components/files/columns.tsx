@@ -42,19 +42,13 @@ export type FileDocument = {
 export const getColumns = (fileId: string | undefined, mutate: () => void): ColumnDef<FileDocument>[] => {
   const cols: ColumnDef<FileDocument>[] = [
     {
-      accessorKey: "order",
-      header: ({ column }) => {
-        return (
-          <Button
-            variant="ghost"
-            onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          >
-            Order
-            <ArrowUpDown className="ml-2 h-4 w-4" />
-          </Button>
-        )
-      },
-      cell: ({ row }) => <div className="pl-4">{row.original.order || row.index + 1}</div>,
+      accessorKey: "code",
+      header: "Mã VB / MLHS",
+      cell: ({ row }) => (
+        <div className="flex flex-col text-xs gap-1">
+          <span>{row.original.code || "-"}</span>
+        </div>
+      ),
     },
     {
       accessorKey: "title",
@@ -94,15 +88,6 @@ export const getColumns = (fileId: string | undefined, mutate: () => void): Colu
           </Badge>
         )
       },
-    },
-    {
-      accessorKey: "code",
-      header: "Mã VB / MLHS",
-      cell: ({ row }) => (
-        <div className="flex flex-col text-xs gap-1">
-          <span>{row.original.code || "-"}</span>
-        </div>
-      ),
     },
     {
       accessorKey: "year",

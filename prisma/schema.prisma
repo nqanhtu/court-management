@@ -33,8 +33,9 @@ model User {
   auditLogs   AuditLog[]
   borrowSlips BorrowSlip[] @relation("Lender")
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  borrowSlipEvents BorrowSlipEvent[]
 }
 
 // ==========================================
@@ -188,7 +189,8 @@ model BorrowSlip {
   lenderId String
   lender   User   @relation("Lender", fields: [lenderId], references: [id])
 
-  items BorrowItem[]
+  items  BorrowItem[]
+  events BorrowSlipEvent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -208,6 +210,21 @@ model BorrowItem {
   condition    String? // Tình trạng khi trả
 
   @@unique([borrowSlipId, fileId])
+}
+
+model BorrowSlipEvent {
+  id           String     @id @default(uuid())
+  borrowSlipId String
+  borrowSlip   BorrowSlip @relation(fields: [borrowSlipId], references: [id], onDelete: Cascade)
+
+  eventType   String // CREATED, RETURNED_PARTIAL, RETURNED_ALL, EXTENDED, ADD_FILE, REMOVE_FILE, NOTE
+  description String? // "Trả 2 hồ sơ", "Mượn thêm hồ sơ ABC"
+  details     Json? // { fileIds: ["..."], changes: {} }
+
+  creatorId String?
+  creator   User?   @relation(fields: [creatorId], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 // ==========================================

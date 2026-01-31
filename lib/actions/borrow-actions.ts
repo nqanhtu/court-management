@@ -16,6 +16,7 @@ interface CreateSlipParams {
 }
 
 export async function createBorrowSlip(params: CreateSlipParams) {
+    console.log('Creating borrow slip:', params)    
     try {
         const session = await getSession()
         if (!session?.id) {

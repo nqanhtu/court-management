@@ -14,7 +14,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 
-import { File } from '@/app/generated/prisma/client'
+import { File } from '@/generated/prisma/client'
 import {
   Table,
   TableBody,

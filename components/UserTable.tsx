@@ -14,7 +14,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { UserModel } from '@/app/generated/prisma/models';
+import { UserModel } from '@/generated/prisma/models';
 import {
   Table,
   TableBody,

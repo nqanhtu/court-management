@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/select";
 import { getUsers } from "@/lib/actions/users";
 import { searchFiles } from "@/lib/actions/files";
-import { UserModel, FileModel } from "@/app/generated/prisma/models";
+import { UserModel, FileModel } from "@/generated/prisma/models";
 import { toast } from "sonner";
 import { Field, FieldLabel, FieldGroup } from "./ui/field";
 

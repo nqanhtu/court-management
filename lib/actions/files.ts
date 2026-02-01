@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { Prisma } from '@/app/generated/prisma/client'
+import { Prisma } from '@/generated/prisma/client'
 
 export interface SearchParams {
   query?: string

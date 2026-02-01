@@ -87,7 +87,7 @@ export async function uploadChildDocuments(fileId: string, formData: FormData) {
 }
 import { createAuditLog } from '@/lib/services/audit-log'
 import { getAgencyForYear } from '@/lib/services/agency-history'
-import type { Prisma } from '@/app/generated/prisma/client'
+import type { Prisma } from '@/generated/prisma/client'
 import type { User } from '@/lib/types/user'
 
 import { getSession } from './auth'

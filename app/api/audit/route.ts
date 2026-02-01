@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { Prisma, AuditAction } from '@/app/generated/prisma/client'
+import { Prisma, AuditAction } from '@/generated/prisma/client'
 
 export const dynamic = 'force-dynamic'
 

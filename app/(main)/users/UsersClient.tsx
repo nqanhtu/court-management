@@ -5,7 +5,7 @@ import UserTable from "@/components/UserTable";
 import Modal from "@/components/Modal";
 import UserForm from "@/components/UserForm";
 
-import { UserModel as User } from "@/app/generated/prisma/models";
+import { UserModel as User } from "@/generated/prisma/models";
 
 interface UsersClientProps {
   initialUsers: User[];

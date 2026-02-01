@@ -4,7 +4,7 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2 } from "lucide-react"
-import { UserModel } from '@/app/generated/prisma/models';
+import { UserModel } from '@/generated/prisma/models';
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 
 interface ColumnActions {

@@ -1,5 +1,5 @@
 import useSWR from 'swr'
-import { BorrowSlipModel, FileModel, BorrowItemModel } from '@/app/generated/prisma/models'
+import { BorrowSlipModel, FileModel, BorrowItemModel } from '@/generated/prisma/models'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 

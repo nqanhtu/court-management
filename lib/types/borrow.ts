@@ -3,7 +3,7 @@ import {
   UserModel,
   BorrowItemModel,
   FileModel,
-} from '@/app/generated/prisma/models';
+} from '@/generated/prisma/models';
 
 export type BorrowSlipWithDetails = BorrowSlipModel & {
   lender: UserModel;

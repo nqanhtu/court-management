@@ -1,6 +1,6 @@
 import useSWR from 'swr'
 import { SearchParams } from '@/lib/actions/files'
-import { Prisma } from '@/app/generated/prisma/client'
+import { Prisma } from '@/generated/prisma/client'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 

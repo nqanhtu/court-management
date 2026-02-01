@@ -20,7 +20,7 @@ import { toast } from 'sonner'
 import { Badge } from "@/components/ui/badge"
 
 
-import { File, StorageBox } from "@/app/generated/prisma/client"
+import { File, StorageBox } from "@/generated/prisma/client"
 
 export type FileWithBox = File & {
   box: StorageBox | null

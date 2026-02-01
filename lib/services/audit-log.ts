@@ -1,7 +1,7 @@
 import { db } from '@/lib/db'
 import { headers } from 'next/headers'
 
-import { AuditAction } from '@/app/generated/prisma/enums'
+import { AuditAction } from '@/generated/prisma/enums'
 
 interface CreateAuditLogParams {
     action: AuditAction

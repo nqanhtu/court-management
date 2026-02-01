@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
-import { Prisma } from '@/app/generated/prisma/client'
+import { Prisma } from '@/generated/prisma/client'
 import { createAuditLog } from '@/lib/services/audit-log'
 import { getSession } from '@/lib/actions/auth'
 

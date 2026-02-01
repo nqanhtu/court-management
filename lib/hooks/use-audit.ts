@@ -1,5 +1,5 @@
 import useSWR from 'swr'
-import { AuditLogModel, UserModel } from '@/app/generated/prisma/models'
+import { AuditLogModel, UserModel } from '@/generated/prisma/models'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())
 

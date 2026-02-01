@@ -55,9 +55,9 @@ export async function POST(request: NextRequest) {
         const slip = await db.$transaction(async (tx) => {
             // 1. Atomic Check & Lock
             const updatedBatch = await tx.file.updateMany({
-                where: { 
+                where: {
                     id: { in: fileIds },
-                    status: 'IN_STOCK' 
+                    status: 'IN_STOCK'
                 },
                 data: { status: 'BORROWED' }
             })
@@ -110,7 +110,7 @@ export async function PUT(request: NextRequest) {
     try {
         const session = await getSession();
         if (!session?.id) {
-             return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+            return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
         }
         const userId = session.id;
 
@@ -118,35 +118,35 @@ export async function PUT(request: NextRequest) {
         const { id } = data; // borrowSlipId
 
         await db.$transaction(async (tx) => {
-             const borrowSlip = await tx.borrowSlip.findUnique({
+            const borrowSlip = await tx.borrowSlip.findUnique({
                 where: { id },
                 include: { items: true }
-             })
+            })
 
-             if (!borrowSlip) {
-                 throw new Error("Phiếu mượn không tồn tại.")
-             }
+            if (!borrowSlip) {
+                throw new Error("Phiếu mượn không tồn tại.")
+            }
 
-             if (borrowSlip.status === 'RETURNED') {
-                 throw new Error("Phiếu mượn đã được trả.")
-             }
+            if (borrowSlip.status === 'RETURNED') {
+                throw new Error("Phiếu mượn đã được trả.")
+            }
 
-             const fileIds = borrowSlip.items.map(item => item.fileId)
+            const fileIds = borrowSlip.items.map(item => item.fileId)
 
-             await tx.borrowSlip.update({
-                 where: { id },
-                 data: { status: 'RETURNED' }
-             })
+            await tx.borrowSlip.update({
+                where: { id },
+                data: { status: 'RETURNED' }
+            })
 
-             await tx.borrowItem.updateMany({
-                 where: { borrowSlipId: id },
-                 data: { status: 'RETURNED' }
-             })
+            await tx.borrowItem.updateMany({
+                where: { borrowSlipId: id },
+                data: { status: 'RETURNED' }
+            })
 
-             await tx.file.updateMany({
-                 where: { id: { in: fileIds } },
-                 data: { status: 'IN_STOCK' }
-             })
+            await tx.file.updateMany({
+                where: { id: { in: fileIds } },
+                data: { status: 'IN_STOCK' }
+            })
         })
 
         await createAuditLog({
@@ -157,7 +157,7 @@ export async function PUT(request: NextRequest) {
             userId: userId
         })
 
-         return NextResponse.json({ success: true })
+        return NextResponse.json({ success: true })
 
     } catch (error: unknown) {
         console.error('Return Borrow Slip Error:', error)

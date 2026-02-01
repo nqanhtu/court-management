@@ -33,7 +33,7 @@ import { toast } from 'sonner'
 
 export function FileDetailContent({ id }: { id: string }) {
     const { file, isLoading, mutate } = useFile(id)
-
+    console.log('file: ', file)
     const columns = useMemo(() => getColumns(file?.id || '', mutate), [file?.id, mutate])
 
     if (isLoading) {

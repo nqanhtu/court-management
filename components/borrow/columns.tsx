@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Pencil, RotateCcw, Trash2 } from "lucide-react"
+import { Book, Pencil, RotateCcw, Trash2 } from "lucide-react"
 import { BorrowSlipWithDetails } from '@/lib/types/borrow';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -52,24 +52,24 @@ export const getColumns = ({ onReturn, onEdit, onDelete }: ColumnActions): Colum
       <DataTableColumnHeader column={column} title="Hạn trả" />
     ),
     cell: ({ row }) => {
-        const slip = row.original;
-        const isReturned = slip.status === 'RETURNED';
-        const isOverdue =
-          slip.status === 'OVERDUE' ||
-          (new Date() > new Date(slip.dueDate) && !isReturned);
-        
-        return (
-            <div
-            className={cn(
+      const slip = row.original;
+      const isReturned = slip.status === 'RETURNED';
+      const isOverdue =
+        slip.status === 'OVERDUE' ||
+        (new Date() > new Date(slip.dueDate) && !isReturned);
+
+      return (
+        <div
+          className={cn(
             'font-medium',
             isOverdue && !isReturned
-                ? 'text-destructive'
-                : 'text-muted-foreground'
-            )}
+              ? 'text-destructive'
+              : 'text-muted-foreground'
+          )}
         >
-            {format(new Date(row.original.dueDate), 'dd/MM/yyyy')}
+          {format(new Date(row.original.dueDate), 'dd/MM/yyyy')}
         </div>
-        )
+      )
     },
   },
   {
@@ -93,35 +93,35 @@ export const getColumns = ({ onReturn, onEdit, onDelete }: ColumnActions): Colum
       <DataTableColumnHeader column={column} title="Trạng thái" />
     ),
     cell: ({ row }) => {
-        const slip = row.original;
+      const slip = row.original;
 
-        // Keep simplified badge logic or use statuses metadata if preferred.
-        // For now sticking to original badge logic but using constants where helpful or just keeping as is since it has custom logic (overdue calc).
-        
-        const isReturned = slip.status === 'RETURNED';
-        const isOverdue =
-          slip.status === 'OVERDUE' ||
-          (new Date() > new Date(slip.dueDate) && !isReturned);
+      // Keep simplified badge logic or use statuses metadata if preferred.
+      // For now sticking to original badge logic but using constants where helpful or just keeping as is since it has custom logic (overdue calc).
 
-        if (isReturned) {
-            return (
-                <Badge variant="outline" className="border-emerald-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
-                    Đã trả
-                </Badge>
-            )
-        }
-        if (isOverdue) {
-            return (
-                <Badge variant="destructive">
-                    Quá hạn
-                </Badge>
-            )
-        }
+      const isReturned = slip.status === 'RETURNED';
+      const isOverdue =
+        slip.status === 'OVERDUE' ||
+        (new Date() > new Date(slip.dueDate) && !isReturned);
+
+      if (isReturned) {
         return (
-            <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-100">
-                Đang mượn
-            </Badge>
+          <Badge variant="outline" className="border-emerald-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+            Đã trả
+          </Badge>
         )
+      }
+      if (isOverdue) {
+        return (
+          <Badge variant="destructive">
+            Quá hạn
+          </Badge>
+        )
+      }
+      return (
+        <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+          Đang mượn
+        </Badge>
+      )
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id))
@@ -137,15 +137,15 @@ export const getColumns = ({ onReturn, onEdit, onDelete }: ColumnActions): Colum
       return (
         <div className='flex items-center gap-1'>
           {!isReturned && (
-             <Button
-               variant="ghost"
-               size="icon"
-               onClick={() => onReturn(slip.id)}
-               className='h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
-               title='Trả hồ sơ'
-             >
-               <RotateCcw className='w-4 h-4' />
-             </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onReturn(slip.id)}
+              className='h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+              title='Trả hồ sơ'
+            >
+              <RotateCcw className='w-4 h-4' />
+            </Button>
           )}
           <Button
             variant="ghost"

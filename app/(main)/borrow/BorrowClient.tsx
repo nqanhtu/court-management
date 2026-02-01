@@ -18,6 +18,9 @@ import BorrowTable from "@/components/BorrowTable";
 import Modal from "@/components/Modal";
 import BorrowForm from "@/components/BorrowForm";
 import { BorrowSlipWithDetails } from "@/lib/types/borrow";
+import { mutate } from "swr";
+
+const fetcher = (url: string) => fetch(url).then(r => r.json())
 
 interface BorrowClientProps {
   initialBorrowSlips: BorrowSlipWithDetails[];
@@ -39,24 +42,24 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
     if (returnSlipId) {
       try {
         const response = await fetch('/api/borrow', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ id: returnSlipId })
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ id: returnSlipId })
         })
         const result = await response.json()
-        
+
         if (result.success) {
-            toast.success("Đã trả hồ sơ thành công")
-            onDataChange?.();
+          toast.success("Đã trả hồ sơ thành công")
+          onDataChange?.();
         } else {
-            toast.error("Lỗi khi trả hồ sơ", {
-                description: result.message
-            })
+          toast.error("Lỗi khi trả hồ sơ", {
+            description: result.message
+          })
         }
       } catch (error) {
-          toast.error("Lỗi kết nối")
+        toast.error("Lỗi kết nối")
       }
       setReturnSlipId(null);
     }
@@ -68,7 +71,7 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
   };
 
   const handleDelete = (id: string) => {
-      console.log("Delete", id);
+    console.log("Delete", id);
   };
 
   return (
@@ -113,7 +116,14 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
         title={`Chỉnh sửa phiếu mượn ${editingSlipId || ""}`}
         className="max-w-5xl"
       >
-        <BorrowForm />
+        <BorrowForm
+          slipId={editingSlipId || undefined}
+          initialData={initialBorrowSlips.find(s => s.id === editingSlipId)}
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            onDataChange?.();
+          }}
+        />
       </Modal>
 
       <Dialog open={!!returnSlipId} onOpenChange={(open) => !open && setReturnSlipId(null)}>
@@ -128,7 +138,7 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
             <Button variant="outline" onClick={() => setReturnSlipId(null)}>
               Hủy
             </Button>
-            <Button 
+            <Button
               onClick={confirmReturn}
               className="bg-emerald-600 hover:bg-emerald-700 text-white"
             >

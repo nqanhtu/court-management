@@ -21,6 +21,7 @@ import { Badge } from "@/components/ui/badge"
 
 
 import { File, StorageBox } from "@/generated/prisma/client"
+import { Checkbox } from "../ui/checkbox"
 
 export type FileWithBox = File & {
   box: StorageBox | null
@@ -41,6 +42,32 @@ export type FileDocument = {
 
 export const getColumns = (fileId: string | undefined, mutate: () => void): ColumnDef<FileDocument>[] => {
   const cols: ColumnDef<FileDocument>[] = [
+    {
+    id: "select",
+    header: ({ table }) => (
+      <div className="flex items-center justify-center">
+        <Checkbox
+          checked={
+            table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() && "indeterminate")
+          }
+          onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
+          aria-label="Select all"
+        />
+      </div>
+    ),
+    cell: ({ row }) => (
+      <div className="flex items-center justify-center">
+        <Checkbox
+          checked={row.getIsSelected()}
+          onCheckedChange={(value) => row.toggleSelected(!!value)}
+          aria-label="Select row"
+        />
+      </div>
+    ),
+    enableSorting: false,
+    enableHiding: false,
+  },
     {
       accessorKey: "code",
       header: "Mã VB / MLHS",

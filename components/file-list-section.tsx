@@ -4,6 +4,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useFiles } from '@/lib/hooks/use-files'
 import { FileTable } from '@/components/file-table'
 import { Loader2 } from 'lucide-react'
+import { useSWRConfig } from 'swr'
 
 interface FileListSectionProps {
     onCreate?: () => void
@@ -16,12 +17,14 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
 
-    const { files, total, isLoading } = useFiles({
+    const { files, total, isLoading, mutate } = useFiles({
         query: q,
         type,
         limit,
         offset: (page - 1) * limit
     })
+
+    const { mutate: globalMutate } = useSWRConfig()
 
     const router = useRouter()
 
@@ -49,6 +52,10 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
                 page={page}
                 pageSize={limit}
                 onPaginationChange={handlePaginationChange}
+                onRefresh={() => {
+                    mutate();
+                    globalMutate('/api/files/stats');
+                }}
             />
         </div>
     )

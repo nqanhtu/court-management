@@ -191,7 +191,6 @@ export function FileDetailContent({ id }: { id: string }) {
                                 <TableHead>Mã VB / MLHS</TableHead>
                                 <TableHead>Thời gian</TableHead>
                                 <TableHead className="text-right">Số tờ</TableHead>
-
                                 <TableHead>Ghi chú</TableHead>
                                 <TableHead className="w-[50px]"></TableHead>
                             </TableRow>

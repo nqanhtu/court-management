@@ -16,7 +16,7 @@ import { toast } from "sonner"
 import { useState } from "react";
 import BorrowTable from "@/components/BorrowTable";
 import Modal from "@/components/Modal";
-import BorrowForm from "@/components/BorrowForm";
+import BorrowForm from "@/components/borrow/BorrowForm";
 import { BorrowSlipWithDetails } from "@/lib/types/borrow";
 import { mutate } from "swr";
 

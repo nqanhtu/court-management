@@ -12,6 +12,7 @@ import { DataTableFacetedFilter } from "@/components/ui/data-table-faceted-filte
 interface FileTableToolbarProps<TData> {
   table: Table<TData>;
   onCreate?: () => void;
+  onBorrow?: (files: TData[]) => void;
 }
 
 // TODO: Define status options properly or import shared constants
@@ -29,6 +30,7 @@ const statuses = [
 export function FileTableToolbar<TData>({
   table,
   onCreate,
+  onBorrow,
 }: FileTableToolbarProps<TData>) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -110,11 +112,18 @@ export function FileTableToolbar<TData>({
           </Button>
         )}
       </div>
+      <div className="flex items-center gap-2">
+      {onBorrow && table.getFilteredSelectedRowModel().rows.length > 0 && (
+          <Button   onClick={() => onBorrow(table.getFilteredSelectedRowModel().rows.map((row) => row.original))}>
+            Tạo phiếu mượn ({table.getFilteredSelectedRowModel().rows.length})
+          </Button>
+      )}
       {onCreate && (
-        <Button size="sm" onClick={onCreate}>
+        <Button onClick={onCreate}>
           Thêm hồ sơ
         </Button>
       )}
+      </div>
     </div>
   );
 }

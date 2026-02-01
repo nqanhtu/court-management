@@ -23,7 +23,7 @@ import { UserModel, FileModel, BorrowSlipModel, BorrowItemModel, BorrowSlipEvent
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { History, FileText } from "lucide-react";
-import { Field, FieldLabel, FieldGroup } from "./ui/field";
+import { Field, FieldLabel, FieldGroup } from "../ui/field";
 
 
 interface BorrowSlipWithDetails extends BorrowSlipModel {
@@ -35,9 +35,10 @@ interface BorrowFormProps {
   onSuccess?: () => void;
   initialData?: BorrowSlipWithDetails;
   slipId?: string;
+  initialFiles?: FileModel[];
 }
 
-export default function BorrowForm({ onSuccess, initialData, slipId }: BorrowFormProps) {
+export default function BorrowForm({ onSuccess, initialData, slipId, initialFiles = [] }: BorrowFormProps) {
   const [users, setUsers] = useState<UserModel[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
@@ -59,7 +60,7 @@ export default function BorrowForm({ onSuccess, initialData, slipId }: BorrowFor
   // File State
   const [fileQuery, setFileQuery] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<FileModel[]>(
-    initialData?.items.map((item) => item.file) || []
+    initialFiles || initialData?.items.map((item) => item.file) || []
   );
   const [isSearchingFile, setIsSearchingFile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);

@@ -1,5 +1,4 @@
 'use client'
-'use no memo';
 
 import * as React from 'react'
 import {
@@ -14,7 +13,9 @@ import {
   useReactTable,
 } from '@tanstack/react-table'
 
-import { File } from '@/generated/prisma/client'
+import { toast } from "sonner"
+import { useRouter } from "next/navigation"
+
 import {
   Table,
   TableBody,
@@ -24,9 +25,11 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-import { getColumns, FileWithBox, FileDocument } from "@/components/files/columns"
+import { getColumns, FileWithBox } from "@/components/files/columns"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
 import { FileTableToolbar } from '@/components/files/file-table-toolbar'
+import Modal from "@/components/Modal"
+import BorrowForm from "@/components/borrow/BorrowForm"
 
 interface FileTableProps {
     files: FileWithBox[]
@@ -36,10 +39,14 @@ interface FileTableProps {
     page?: number
     pageSize?: number
     onPaginationChange?: (page: number, pageSize: number) => void
+    onRefresh?: () => void
 }
 
-export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onPaginationChange }: FileTableProps) {
+export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onPaginationChange, onRefresh }: FileTableProps) {
+  const router = useRouter();
   const [rowSelection, setRowSelection] = React.useState({})
+  const [isBorrowModalOpen, setIsBorrowModalOpen] = React.useState(false);
+  const [borrowFiles, setBorrowFiles] = React.useState<FileWithBox[]>([]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
@@ -77,7 +84,6 @@ export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onP
              onPaginationChange(nextState.pageIndex + 1, nextState.pageSize);
         }
     } : undefined,
-    enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -88,9 +94,22 @@ export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onP
     getSortedRowModel: getSortedRowModel(),
   })
 
+  const handleBorrow = (selectedFiles: FileWithBox[]) => {
+    const files = selectedFiles;
+    const borrowed = files.filter((f) => f.status === "BORROWED");
+    if (borrowed.length > 0) {
+      toast.error(
+        `Có ${borrowed.length} hồ sơ đang được mượn không thể tạo phiếu.`
+      );
+      return;
+    }
+    setBorrowFiles(files);
+    setIsBorrowModalOpen(true);
+  };
+
   return (
     <div className="space-y-4">
-      <FileTableToolbar table={table} onCreate={onCreate} />
+      <FileTableToolbar table={table} onCreate={onCreate} onBorrow={handleBorrow} />
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -142,6 +161,23 @@ export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onP
         </Table>
       </div>
       <DataTablePagination table={table} totalRows={total} />
+
+      <Modal
+        isOpen={isBorrowModalOpen}
+        onClose={() => setIsBorrowModalOpen(false)}
+        title="Tạo phiếu mượn hồ sơ"
+        className="max-w-5xl"
+      >
+        <BorrowForm
+          initialFiles={borrowFiles}
+          onSuccess={() => {
+            setIsBorrowModalOpen(false);
+            setRowSelection({});
+            router.refresh();
+            onRefresh?.();
+          }}
+        />
+      </Modal>
     </div>
   )
 }

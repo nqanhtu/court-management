@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { createAuditLog } from '@/lib/services/audit-log'
+import { getSession } from '@/lib/actions/auth'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,8 +29,14 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
     try {
+        const session = await getSession();
+        if (!session?.id) {
+            return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+        }
+        const lenderId = session.id;
+
         const data = await request.json()
-        const { borrowerName, borrowerUnit, borrowerTitle, reason, dueDate, fileIds, lenderId } = data
+        const { borrowerName, borrowerUnit, borrowerTitle, reason, dueDate, fileIds } = data
 
         // 1. Validate files availability
         const files = await db.file.findMany({
@@ -46,6 +53,20 @@ export async function POST(request: NextRequest) {
 
         // Transaction
         const slip = await db.$transaction(async (tx) => {
+            // 1. Atomic Check & Lock
+            const updatedBatch = await tx.file.updateMany({
+                where: { 
+                    id: { in: fileIds },
+                    status: 'IN_STOCK' 
+                },
+                data: { status: 'BORROWED' }
+            })
+
+            if (updatedBatch.count !== fileIds.length) {
+                throw new Error("Một hoặc nhiều hồ sơ đã được mượn bởi người khác hoặc không tồn tại.");
+            }
+
+            // 2. Create Slip
             const newSlip = await tx.borrowSlip.create({
                 data: {
                     code: slipCode,
@@ -53,7 +74,7 @@ export async function POST(request: NextRequest) {
                     borrowerUnit,
                     borrowerTitle,
                     reason,
-                    dueDate: new Date(dueDate), // Ensure date is Date object
+                    dueDate: new Date(dueDate),
                     lenderId,
                     status: 'BORROWING',
                     items: {
@@ -63,12 +84,6 @@ export async function POST(request: NextRequest) {
                         }))
                     }
                 }
-            })
-
-            // Update File Status
-            await tx.file.updateMany({
-                where: { id: { in: fileIds } },
-                data: { status: 'BORROWED' }
             })
 
             return newSlip
@@ -84,8 +99,69 @@ export async function POST(request: NextRequest) {
 
         return NextResponse.json({ success: true, slipId: slip.id })
 
-    } catch (error) {
+    } catch (error: unknown) {
         console.error('Create Borrow Slip Error:', error)
-        return NextResponse.json({ success: false, message: 'Failed to create borrow slip' }, { status: 500 })
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        return NextResponse.json({ success: false, message: errorMessage }, { status: 500 })
+    }
+}
+
+export async function PUT(request: NextRequest) {
+    try {
+        const session = await getSession();
+        if (!session?.id) {
+             return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
+        }
+        const userId = session.id;
+
+        const data = await request.json();
+        const { id } = data; // borrowSlipId
+
+        await db.$transaction(async (tx) => {
+             const borrowSlip = await tx.borrowSlip.findUnique({
+                where: { id },
+                include: { items: true }
+             })
+
+             if (!borrowSlip) {
+                 throw new Error("Phiếu mượn không tồn tại.")
+             }
+
+             if (borrowSlip.status === 'RETURNED') {
+                 throw new Error("Phiếu mượn đã được trả.")
+             }
+
+             const fileIds = borrowSlip.items.map(item => item.fileId)
+
+             await tx.borrowSlip.update({
+                 where: { id },
+                 data: { status: 'RETURNED' }
+             })
+
+             await tx.borrowItem.updateMany({
+                 where: { borrowSlipId: id },
+                 data: { status: 'RETURNED' }
+             })
+
+             await tx.file.updateMany({
+                 where: { id: { in: fileIds } },
+                 data: { status: 'IN_STOCK' }
+             })
+        })
+
+        await createAuditLog({
+            action: 'UPDATE',
+            target: 'BorrowSlip',
+            targetId: id,
+            detail: { status: 'RETURNED' },
+            userId: userId
+        })
+
+         return NextResponse.json({ success: true })
+
+    } catch (error: unknown) {
+        console.error('Return Borrow Slip Error:', error)
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        return NextResponse.json({ success: false, message: errorMessage }, { status: 500 })
     }
 }

@@ -23,20 +23,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  BorrowSlipModel,
-  UserModel,
-  BorrowItemModel,
-  FileModel,
-} from '@/app/generated/prisma/models';
+import { BorrowSlipWithDetails } from '@/lib/types/borrow';
 import { getColumns } from "@/components/borrow/columns";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { BorrowTableToolbar } from "@/components/borrow/borrow-table-toolbar";
-
-type BorrowSlipWithDetails = BorrowSlipModel & {
-  lender: UserModel;
-  items: (BorrowItemModel & { file: FileModel })[];
-};
 
 interface BorrowTableProps {
   borrowSlips: BorrowSlipWithDetails[];

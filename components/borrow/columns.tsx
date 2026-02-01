@@ -4,23 +4,10 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Pencil, RotateCcw, Trash2 } from "lucide-react"
-import {
-  BorrowSlipModel,
-  UserModel,
-  BorrowItemModel,
-  FileModel,
-} from '@/app/generated/prisma/models';
+import { BorrowSlipWithDetails } from '@/lib/types/borrow';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
-import { statuses } from "./data"
-
-
-export type BorrowSlipWithDetails = BorrowSlipModel & {
-  lender: UserModel;
-  items: (BorrowItemModel & { file: FileModel })[];
-};
-
 interface ColumnActions {
   onReturn: (id: string) => void;
   onEdit: (id: string) => void;
@@ -107,9 +94,6 @@ export const getColumns = ({ onReturn, onEdit, onDelete }: ColumnActions): Colum
     ),
     cell: ({ row }) => {
         const slip = row.original;
-        const status = statuses.find(
-          (status) => status.value === slip.status
-        )
 
         // Keep simplified badge logic or use statuses metadata if preferred.
         // For now sticking to original badge logic but using constants where helpful or just keeping as is since it has custom logic (overdue calc).
@@ -153,15 +137,15 @@ export const getColumns = ({ onReturn, onEdit, onDelete }: ColumnActions): Colum
       return (
         <div className='flex items-center gap-1'>
           {!isReturned && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onReturn(slip.id)}
-              className='h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
-              title='Trả hồ sơ'
-            >
-              <RotateCcw className='w-4 h-4' />
-            </Button>
+             <Button
+               variant="ghost"
+               size="icon"
+               onClick={() => onReturn(slip.id)}
+               className='h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+               title='Trả hồ sơ'
+             >
+               <RotateCcw className='w-4 h-4' />
+             </Button>
           )}
           <Button
             variant="ghost"
@@ -186,4 +170,7 @@ export const getColumns = ({ onReturn, onEdit, onDelete }: ColumnActions): Colum
     },
   },
 ]
+
+
+
 

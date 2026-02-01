@@ -1,10 +1,10 @@
 'use client'
 
 import { useBorrowSlips } from '@/lib/hooks/use-borrow'
-import BorrowClient from "@/app/borrow/BorrowClient";
+import BorrowClient from "@/app/(main)/borrow/BorrowClient";
 import { Loader2 } from 'lucide-react';
 
-export function BorrowListSection() {
+export default function BorrowPage() {
     const { borrowSlips, isLoading, mutate } = useBorrowSlips();
 
     if (isLoading) {

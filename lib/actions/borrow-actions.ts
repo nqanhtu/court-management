@@ -1,106 +1,77 @@
 'use server'
 
 import { db } from '@/lib/db'
-import { createAuditLog } from '@/lib/services/audit-log'
-import { revalidatePath } from 'next/cache'
-
 import { getSession } from '@/lib/actions/auth'
+import { revalidatePath } from 'next/cache'
+import type { User } from '@/lib/types/user'
 
-interface CreateSlipParams {
-    borrowerName: string
-    borrowerUnit: string
-    borrowerTitle: string
-    reason: string
-    dueDate: Date
-    fileIds: string[]
+function generateBorrowCode() {
+  const date = new Date()
+  const year = date.getFullYear()
+  const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+  return `PM-${year}-${random}`
 }
 
-export async function createBorrowSlip(params: CreateSlipParams) {
-    console.log('Creating borrow slip:', params)    
-    try {
-        const session = await getSession()
-        if (!session?.id) {
-            return { success: false, message: 'Unauthorized' }
-        }
-        const lenderId = session.id
-
-        const { borrowerName, borrowerUnit, borrowerTitle, reason, dueDate, fileIds } = params
-
-        // 1. Validate files availability
-        const files = await db.file.findMany({
-            where: { id: { in: fileIds } }
-        })
-
-        const unavailable = files.filter(f => f.status === 'BORROWED')
-        if (unavailable.length > 0) {
-            return { success: false, message: `Hồ sơ ${unavailable.map(f => f.code).join(', ')} đang được mượn.` }
-        }
-
-        // 2. Create Slip
-        const slipCode = `PM-${new Date().getFullYear()}-${Math.floor(Math.random() * 10000)}`
-        // In real app, use atomic counter or better generation
-
-        // Transaction
-        const slip = await db.$transaction(async (tx) => {
-            // 1. Atomic Check & Lock: Try to update status to BORROWED for available files
-            // This prevents race conditions where someone else borrows the file between read and write
-            const updatedBatch = await tx.file.updateMany({
-                where: { 
-                    id: { in: fileIds },
-                    status: 'IN_STOCK' // Critical: Only update if still available
-                },
-                data: { status: 'BORROWED' }
-            })
-
-            if (updatedBatch.count !== fileIds.length) {
-                // Determine which files failed (optional, for better error message)
-                // Since updateMany doesn't return IDs, we re-query to find the culprits if needed
-                // or just throw a generic error.
-                // For better UX, let's find out which ones are unavailable.
-                // Note: The logic above is tricky because we just updated them. 
-                // Simplest robust way: 
-                // If count mismatch, it means some were NOT 'IN_STOCK' at the moment of update.
-                throw new Error("Một hoặc nhiều hồ sơ đã được mượn bởi người khác hoặc không tồn tại.");
-            }
-
-            // 2. Create Slip
-            const newSlip = await tx.borrowSlip.create({
-                data: {
-                    code: slipCode,
-                    borrowerName,
-                    borrowerUnit,
-                    borrowerTitle,
-                    reason,
-                    dueDate,
-                    lenderId,
-                    status: 'BORROWING',
-                    items: {
-                        create: fileIds.map(fid => ({
-                            fileId: fid,
-                            status: 'BORROWING'
-                        }))
-                    }
-                }
-            })
-
-            return newSlip
-        })
-
-        await createAuditLog({
-            action: 'CREATE',
-            target: 'BorrowSlip',
-            targetId: slip.id,
-            detail: { code: slip.code, files: fileIds },
-            userId: lenderId
-        })
-
-        revalidatePath('/')
-        revalidatePath('/files')
-        return { success: true, slipId: slip.id }
-
-    } catch (error: unknown) {
-        console.error('Create Borrow Slip Error:', error)
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-        return { success: false, message: errorMessage }
+export async function createBorrowSlip(data: {
+  borrowerName: string
+  borrowerUnit: string
+  borrowerTitle: string
+  reason: string
+  dueDate: Date
+  fileIds: string[]
+}) {
+  try {
+    const session = await getSession() as User | null
+    if (!session) {
+      return { success: false, message: 'Unauthorized' }
     }
+
+    const code = generateBorrowCode()
+
+    await db.$transaction(async (tx) => {
+      // 1. Create Borrow Slip
+      const borrowSlip = await tx.borrowSlip.create({
+        data: {
+            code,
+            borrowerName: data.borrowerName,
+            borrowerUnit: data.borrowerUnit,
+            borrowerTitle: data.borrowerTitle,
+            reason: data.reason,
+            dueDate: data.dueDate,
+            lenderId: session.id,
+            status: 'BORROWING',
+            items: {
+                create: data.fileIds.map((fileId) => ({
+                    fileId,
+                    status: 'BORROWING'
+                }))
+            }
+        }
+      })
+
+      // 2. Update File Status
+      await tx.file.updateMany({
+        where: { id: { in: data.fileIds } },
+        data: { status: 'BORROWED' }
+      })
+
+      // 3. Create Event
+      await tx.borrowSlipEvent.create({
+        data: {
+            borrowSlipId: borrowSlip.id,
+            eventType: 'CREATED',
+            description: `Tạo phiếu mượn ${code}`,
+            creatorId: session.id,
+            details: { fileIds: data.fileIds }
+        }
+      })
+    })
+
+    revalidatePath('/borrow')
+    revalidatePath('/files')
+    return { success: true, message: 'Created successfully' }
+  } catch (error) {
+    console.error('Error creating borrow slip:', error)
+    return { success: false, message: 'Failed to create borrow slip' }
+  }
 }

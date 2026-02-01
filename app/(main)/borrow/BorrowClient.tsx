@@ -1,20 +1,23 @@
 "use client";
 
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Button } from "@/components/ui/button"
+import { RotateCcw } from "lucide-react"
+import { toast } from "sonner"
+
 import { useState } from "react";
 import BorrowTable from "@/components/BorrowTable";
 import Modal from "@/components/Modal";
 import BorrowForm from "@/components/BorrowForm";
-import {
-  BorrowSlipModel as BorrowSlip,
-  UserModel as User,
-  BorrowItemModel as BorrowItem,
-  FileModel as File
-} from "@/app/generated/prisma/models";
-
-type BorrowSlipWithDetails = BorrowSlip & {
-  lender: User;
-  items: (BorrowItem & { file: File })[];
-};
+import { BorrowSlipWithDetails } from "@/lib/types/borrow";
 
 interface BorrowClientProps {
   initialBorrowSlips: BorrowSlipWithDetails[];
@@ -26,9 +29,36 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingSlipId, setEditingSlipId] = useState<string | null>(null);
 
+  const [returnSlipId, setReturnSlipId] = useState<string | null>(null);
+
   const handleReturn = (id: string) => {
-    if (confirm(`Xác nhận trả hồ sơ cho phiếu ${id}?`)) {
-      console.log("Returned", id);
+    setReturnSlipId(id);
+  };
+
+  const confirmReturn = async () => {
+    if (returnSlipId) {
+      try {
+        const response = await fetch('/api/borrow', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ id: returnSlipId })
+        })
+        const result = await response.json()
+        
+        if (result.success) {
+            toast.success("Đã trả hồ sơ thành công")
+            onDataChange?.();
+        } else {
+            toast.error("Lỗi khi trả hồ sơ", {
+                description: result.message
+            })
+        }
+      } catch (error) {
+          toast.error("Lỗi kết nối")
+      }
+      setReturnSlipId(null);
     }
   };
 
@@ -38,9 +68,7 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
   };
 
   const handleDelete = (id: string) => {
-    if (confirm(`Bạn có chắc muốn xóa phiếu mượn ${id}?`)) {
       console.log("Delete", id);
-    }
   };
 
   return (
@@ -75,6 +103,8 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
           setIsAddModalOpen(false);
           onDataChange?.();
         }} />
+
+        {/* <h1>Hello</h1> */}
       </Modal>
 
       <Modal
@@ -85,6 +115,30 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
       >
         <BorrowForm />
       </Modal>
+
+      <Dialog open={!!returnSlipId} onOpenChange={(open) => !open && setReturnSlipId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Xác nhận trả hồ sơ</DialogTitle>
+            <DialogDescription>
+              Bạn có chắc chắn muốn đánh dấu phiếu mượn này là đã trả? Hành động này sẽ cập nhật trạng thái của hồ sơ và phiếu mượn.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setReturnSlipId(null)}>
+              Hủy
+            </Button>
+            <Button 
+              onClick={confirmReturn}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              Xác nhận trả
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
+
+

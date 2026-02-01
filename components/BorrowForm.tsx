@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import {
-  User,
   Calendar,
   FileStack,
   Plus,
@@ -16,14 +15,12 @@ import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { getUsers } from "@/lib/actions/users";
 import { searchFiles } from "@/lib/actions/files";
-import { createBorrowSlip } from "@/lib/actions/borrow-actions";
 import { UserModel, FileModel } from "@/app/generated/prisma/models";
 import { toast } from "sonner";
 import { Field, FieldLabel, FieldGroup } from "./ui/field";
@@ -115,26 +112,41 @@ export default function BorrowForm({ onSuccess }: BorrowFormProps) {
     setIsSubmitting(true);
     const selectedUser = users.find((u) => u.id === selectedUserId);
 
-    const result = await createBorrowSlip({
-      borrowerName: selectedUser?.fullName || "Unknown",
-      borrowerUnit: selectedUser?.unit || "",
-      borrowerTitle: borrowerTitle,
-      reason: reason,
-      dueDate: new Date(dueDate),
-      fileIds: selectedFiles.map((f) => f.id),
-    });
+    try {
+        const response = await fetch('/api/borrow', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                borrowerName: selectedUser?.fullName || "Unknown",
+                borrowerUnit: selectedUser?.unit || "",
+                borrowerTitle: borrowerTitle,
+                reason: reason,
+                dueDate: new Date(dueDate),
+                fileIds: selectedFiles.map((f) => f.id),
+            }),
+        });
 
-    setIsSubmitting(false);
+        const result = await response.json();
 
-    if (result.success) {
-      toast.success("Thành công", {
-        description: "Đã tạo phiếu mượn thành công",
-      });
-      onSuccess?.();
-    } else {
-      toast.error("Lỗi", {
-        description: result.message || "Có lỗi xảy ra",
-      });
+        setIsSubmitting(false);
+
+        if (result.success) {
+            toast.success("Thành công", {
+                description: "Đã tạo phiếu mượn thành công",
+            });
+            onSuccess?.();
+        } else {
+            toast.error("Lỗi", {
+                description: result.message || "Có lỗi xảy ra",
+            });
+        }
+    } catch (error) {
+        setIsSubmitting(false);
+        toast.error("Lỗi", {
+            description: "Gặp lỗi khi gọi API",
+        });
     }
   };
 

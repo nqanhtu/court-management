@@ -12,7 +12,6 @@ export async function POST(request: Request) {
         const formData = await request.formData()
         const file = formData.get('file') as File
         const fileId = formData.get('fileId') as string
-        console.log(fileId)
         if (!file || !fileId) {
             return NextResponse.json({ error: 'Missing fileId or file' }, { status: 400 })
         }

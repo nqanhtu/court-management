@@ -2,11 +2,13 @@
 
 import { useUsers } from '@/lib/hooks/use-users'
 import { useSession } from '@/lib/hooks/use-auth'
-import UsersClient from "@/app/users/UsersClient";
+import UsersClient from "@/app/(main)/users/UsersClient";
 import { Loader2 } from 'lucide-react';
 
 export function UsersListSection() {
     const { users, isLoading: isUsersLoading } = useUsers();
+
+
     const { session, isLoading: isSessionLoading } = useSession();
 
     if (isUsersLoading || isSessionLoading) {

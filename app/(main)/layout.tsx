@@ -1,7 +1,7 @@
 import Header from "@/components/Header";
 import { AppSidebar } from "@/components/AppSidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { getSession } from "@/lib/actions/auth";
+import { getSession } from '@/lib/session'
 import type { User } from "@/lib/types/user";
 
 export default async function MainLayout({

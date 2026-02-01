@@ -1,13 +1,11 @@
 "use client";
 
-import { Bell, Search, UserCircle, LogOut } from "lucide-react";
+import { UserCircle, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { logout } from "@/lib/actions/auth";
+// cleaned import
 import type { User } from "@/lib/types/user";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "./ui/sidebar";
-import { Separator } from "@/components/ui/separator";
 
 interface HeaderProps {
   user?: User;
@@ -20,7 +18,7 @@ export default function Header({ user }: HeaderProps) {
   if (pathname === "/login") return null;
 
   async function handleLogout() {
-    await logout();
+    await fetch('/api/auth/logout', { method: 'POST' });
     router.refresh();
     router.push("/login");
   }

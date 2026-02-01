@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '@/lib/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,16 +21,25 @@ export default function LoginPage() {
         setError('');
 
         const formData = new FormData(e.currentTarget);
+        const username = formData.get('username');
+        const password = formData.get('password');
 
         try {
-            const res = await login(formData);
-            if (res.success) {
+            const res = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
+            });
+            
+            const data = await res.json();
+
+            if (res.ok && data.success) {
                 toast.success('Đăng nhập thành công');
                 router.refresh();
                 router.push('/');
             } else {
-                setError(res.message || 'Đăng nhập thất bại');
-                toast.error(res.message);
+                setError(data.message || 'Đăng nhập thất bại');
+                toast.error(data.message || 'Đăng nhập thất bại');
             }
         } catch {
             setError('Lỗi kết nối');

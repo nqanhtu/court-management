@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button'
 import { DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { UploadCloud, Loader2 } from 'lucide-react'
-import { uploadExcel } from '@/lib/actions/upload'
+// cleaned import
 
 interface ExcelUploadFormProps {
     onSuccess: () => void
@@ -29,7 +29,11 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
         formData.append('file', file)
 
         try {
-            const result = await uploadExcel(formData)
+            const response = await fetch('/api/upload/excel', {
+                method: 'POST',
+                body: formData // Content-Type header is automatic with FormData
+            })
+            const result = await response.json()
             if (result.success) {
                 toast.success(`Import thành công: ${result.stats?.success} hồ sơ`)
                 if (result.stats?.failure && result.stats.failure > 0) {

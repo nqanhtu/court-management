@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { createAuditLog } from '@/lib/services/audit-log'
-import { getSession } from '@/lib/actions/auth'
+import { getSession } from '@/lib/session'
 
 export const dynamic = 'force-dynamic'
 

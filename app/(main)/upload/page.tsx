@@ -5,7 +5,7 @@ import { Upload, FileUp, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { uploadExcel } from '@/lib/actions/upload'
+// cleaned import
 import { toast } from 'sonner'
 import { useFormStatus } from 'react-dom'
 
@@ -42,19 +42,18 @@ export default function UploadPage() {
     const [result, setResult] = useState<UploadResult | null>(null)
 
     async function action(formData: FormData) {
-        // In real app, get userId from session. Hardcoding Admin ID for now or passing from hidden input if server action can't detect context (Server Actions usually read session from cookies)
-        // For this MVP, I'll pass a placeholder or let the action resolve the user if we had auth set up.
-        // The action signature is uploadExcel(formData, userId).
-        // I'll append a dummy user ID or handle it.
-
         try {
-            // User ID is now handled purely on server side via session
-            const response = await uploadExcel(formData)
+            const res = await fetch('/api/upload/excel', {
+                method: 'POST',
+                body: formData
+            });
+            const response = await res.json();
+            
             setResult(response)
             if (response.success) {
                 toast.success(`Nhập thành công ${response.stats?.success ?? 0} hồ sơ!`)
             } else {
-                toast.error('Có lỗi xảy ra khi upload')
+                toast.error(response.message || 'Có lỗi xảy ra khi upload')
             }
         } catch {
             toast.error('Lỗi kết nối')

@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
-import { createFile } from '@/lib/actions/files'
+// cleaned import
 
 interface ManualFileFormProps {
     onSuccess: () => void
@@ -41,23 +41,29 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
         try {
             const splitToList = (str: string) => str ? str.split(',').map(s => s.trim()).filter(Boolean) : []
 
-            const result = await createFile({
-                code: formData.code,
-                title: formData.title,
-                type: formData.type,
-                year: formData.year,
-                retention: formData.retention,
-                note: formData.note,
-                datetime: new Date(),
-                judgmentNumber: formData.judgmentNumber,
-                judgmentDate: formData.judgmentDate ? new Date(formData.judgmentDate) : null,
-                pageCount: formData.pageCount,
-                defendants: splitToList(formData.defendants),
-                plaintiffs: splitToList(formData.plaintiffs),
-                civilDefendants: splitToList(formData.civilDefendants),
+            const response = await fetch('/api/files', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: formData.code,
+                    title: formData.title,
+                    type: formData.type,
+                    year: formData.year,
+                    retention: formData.retention,
+                    note: formData.note,
+                    datetime: new Date(),
+                    judgmentNumber: formData.judgmentNumber,
+                    judgmentDate: formData.judgmentDate ? new Date(formData.judgmentDate) : null,
+                    pageCount: formData.pageCount,
+                    defendants: splitToList(formData.defendants),
+                    plaintiffs: splitToList(formData.plaintiffs),
+                    civilDefendants: splitToList(formData.civilDefendants),
+                })
             })
+            
+            const result = await response.json();
 
-            if (result.success) {
+            if (response.ok && result.success) {
                 toast.success('Tạo hồ sơ thành công')
                 router.refresh()
                 // Reset form

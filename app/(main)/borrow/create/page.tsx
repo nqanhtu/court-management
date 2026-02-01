@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { createBorrowSlip } from '@/lib/actions/borrow-actions'
+// cleaned import
 import { toast } from 'sonner'
 import { CalendarIcon, Loader2 } from 'lucide-react'
 import { Calendar } from '@/components/ui/calendar'
@@ -42,14 +42,21 @@ function CreateBorrowContent() {
         // For this prototype, I'll pass a known ID or handle it in the action.
 
         try {
-            const res = await createBorrowSlip({
-                borrowerName: formData.get('borrowerName') as string,
-                borrowerUnit: formData.get('borrowerUnit') as string,
-                borrowerTitle: formData.get('borrowerTitle') as string,
-                reason: formData.get('reason') as string,
-                dueDate: date,
-                fileIds
+            const response = await fetch('/api/borrow', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    borrowerName: formData.get('borrowerName') as string,
+                    borrowerUnit: formData.get('borrowerUnit') as string,
+                    borrowerTitle: formData.get('borrowerTitle') as string,
+                    reason: formData.get('reason') as string,
+                    dueDate: date,
+                    fileIds
+                }),
             })
+            const res = await response.json()
 
             if (res.success) {
                 toast.success('Tạo phiếu mượn thành công')

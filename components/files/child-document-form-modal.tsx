@@ -16,7 +16,18 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { Loader2, Plus } from 'lucide-react'
-import { type DocumentFormData } from '@/lib/actions/document'
+export interface DocumentFormData {
+    id?: string
+    fileId: string
+    title: string
+    code?: string
+    year?: number
+    pageCount?: number
+    order?: number
+    note?: string
+    preservationTime?: string
+    contentIndex?: string
+}
 
 interface ChildDocumentFormModalProps {
     fileId: string
@@ -87,8 +98,11 @@ export function ChildDocumentFormModal({ fileId, document, trigger, onSuccess }:
 
         setIsLoading(true)
         try {
-            const response = await fetch('/api/files/child-document', {
-                method: isEdit ? 'PUT' : 'POST',
+            const url = isEdit ? `/api/documents/${formData.id}` : '/api/documents';
+            const method = isEdit ? 'PUT' : 'POST';
+            
+            const response = await fetch(url, {
+                method,
                 headers: {
                     'Content-Type': 'application/json',
                 },

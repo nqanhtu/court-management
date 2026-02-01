@@ -2,9 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { Prisma, AuditAction } from '@/generated/prisma/client'
 
+import { getSession } from '@/lib/session'
+
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
+    const session = await getSession();
+    if (!session || session.role !== 'SUPER_ADMIN') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const searchParams = request.nextUrl.searchParams
     const q = searchParams.get('q') || undefined
     const action = searchParams.get('action') || undefined

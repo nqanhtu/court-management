@@ -1,5 +1,11 @@
 import useSWR from 'swr'
-import { SearchParams } from '@/lib/actions/files'
+export interface SearchParams {
+  query?: string
+  type?: string
+  year?: number
+  limit?: number
+  offset?: number
+}
 import { Prisma } from '@/generated/prisma/client'
 
 const fetcher = (url: string) => fetch(url).then(r => r.json())

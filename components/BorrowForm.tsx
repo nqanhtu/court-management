@@ -19,8 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { getUsers } from "@/lib/actions/users";
-import { searchFiles } from "@/lib/actions/files";
+// cleaned imports
 import { UserModel, FileModel } from "@/generated/prisma/models";
 import { toast } from "sonner";
 import { Field, FieldLabel, FieldGroup } from "./ui/field";
@@ -56,9 +55,17 @@ export default function BorrowForm({ onSuccess }: BorrowFormProps) {
   useEffect(() => {
     const fetchUsers = async () => {
       setIsLoadingUsers(true);
-      const data = await getUsers();
-      setUsers(data);
-      setIsLoadingUsers(false);
+      try {
+        const res = await fetch('/api/users');
+        if (res.ok) {
+           const data = await res.json();
+           setUsers(data);
+        }
+      } catch (e) {
+         console.error(e);
+      } finally {
+        setIsLoadingUsers(false);
+      }
     };
     fetchUsers();
   }, []);
@@ -77,7 +84,15 @@ export default function BorrowForm({ onSuccess }: BorrowFormProps) {
 
     setIsSearchingFile(true);
     // Exact match search for adding
-    const result = await searchFiles({ query: fileQuery, limit: 1 });
+    let result: { files: FileModel[] } = { files: [] };
+    try {
+        const res = await fetch(`/api/files?q=${encodeURIComponent(fileQuery)}&limit=1`);
+        if (res.ok) {
+            result = await res.json();
+        }
+    } catch(e) {
+        console.error(e);
+    }
     setIsSearchingFile(false);
 
     if (result.files && result.files.length > 0) {

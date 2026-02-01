@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Book, Pencil, RotateCcw, Trash2 } from "lucide-react"
+import { Book, Pencil, RotateCcw, Trash2, History } from "lucide-react"
 import { BorrowSlipWithDetails } from '@/lib/types/borrow';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -12,9 +12,10 @@ interface ColumnActions {
   onReturn: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onViewHistory: (id: string) => void;
 }
 
-export const getColumns = ({ onReturn, onEdit, onDelete }: ColumnActions): ColumnDef<BorrowSlipWithDetails>[] => [
+export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory }: ColumnActions): ColumnDef<BorrowSlipWithDetails>[] => [
   {
     accessorKey: "code",
     header: ({ column }) => (
@@ -147,6 +148,15 @@ export const getColumns = ({ onReturn, onEdit, onDelete }: ColumnActions): Colum
               <RotateCcw className='w-4 h-4' />
             </Button>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onViewHistory(slip.id)}
+            className='h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+            title='Nhật ký'
+          >
+            <History className='w-4 h-4' />
+          </Button>
           <Button
             variant="ghost"
             size="icon"

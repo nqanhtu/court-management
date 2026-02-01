@@ -33,6 +33,7 @@ interface BorrowTableProps {
   onReturn: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onViewHistory: (id: string) => void;
   onCreate?: () => void;
 }
 
@@ -41,6 +42,7 @@ export default function BorrowTable({
   onReturn,
   onEdit,
   onDelete,
+  onViewHistory,
   onCreate,
 }: BorrowTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
@@ -51,7 +53,7 @@ export default function BorrowTable({
   )
   const [sorting, setSorting] = React.useState<SortingState>([])
 
-  const columns = React.useMemo(() => getColumns({ onReturn, onEdit, onDelete }), [onReturn, onEdit, onDelete]);
+  const columns = React.useMemo(() => getColumns({ onReturn, onEdit, onDelete, onViewHistory }), [onReturn, onEdit, onDelete, onViewHistory]);
 
   const table = useReactTable({
     data: borrowSlips,

@@ -65,26 +65,6 @@ export default function BorrowForm({ onSuccess, initialData, slipId, initialFile
   const [isSearchingFile, setIsSearchingFile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // borrowEvent State
-  const [borrowEvent, setBorrowEvent] = useState<(BorrowSlipEventModel & { creator: { fullName: string, username: string } | null })[]>([]);
-  const [activeTab, setActiveTab] = useState<'files' | 'borrowEvent'>('files');
-  const [isAddingNote, setIsAddingNote] = useState(false);
-  const [noteContent, setNoteContent] = useState("");
-  const [isSavingNote, setIsSavingNote] = useState(false);
-
-  useEffect(() => {
-    if (slipId) {
-      const fetchBorrowEvent = async () => {
-        const res = await fetch(`/api/borrow/${slipId}/borrow-slip-event`);
-        if (res.ok) {
-          const data = await res.json();
-          setBorrowEvent(data);
-        }
-      };
-      fetchBorrowEvent();
-    }
-  }, [slipId]);
-
   useEffect(() => {
     if (initialData && users.length > 0 && !selectedUserId) {
       // Try to find the user by name since we only stored string name
@@ -209,33 +189,6 @@ export default function BorrowForm({ onSuccess, initialData, slipId, initialFile
     }
   };
 
-  const handleAddNote = async () => {
-    setIsAddingNote(true);
-    const response = await fetch(`/api/borrow/${slipId}/borrow-slip-event`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        eventType: "NOTE",
-        description: noteContent,
-      }),
-    });
-    setIsAddingNote(false);
-    if (response.ok) {
-      toast.success("Thành công", {
-        description: "Đã thêm ghi chú",
-      });
-      setNoteContent("");
-      setIsAddingNote(false);
-      onSuccess?.();
-    } else {
-      toast.error("Lỗi", {
-        description: response.statusText || "Có lỗi xảy ra",
-      });
-    }
-  };
-
   const selectedUser = users.find((u) => u.id === selectedUserId);
 
   return (
@@ -351,157 +304,88 @@ export default function BorrowForm({ onSuccess, initialData, slipId, initialFile
         </FieldGroup>
       </form >
 
-      {/* Right: Selected Files List or borrowEvent */}
+      {/* Right: Selected Files List */}
       < div className="max-w-md w-full flex flex-col gap-4 border-l border-slate-100 pl-8" >
         <div className="flex items-center justify-between">
           <div className="flex bg-slate-100 p-1 rounded-lg">
-            <button
-              onClick={() => setActiveTab('files')}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-all ${activeTab === 'files' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
+            <div
+              className={`px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-all bg-white shadow-sm text-slate-800`}
             >
               <FileText className="w-3.5 h-3.5" />
               Danh sách hồ sơ
               <span className="bg-indigo-100 text-indigo-700 px-1.5 rounded-full text-[10px]">
                 {selectedFiles.length}
               </span>
-            </button>
-            {slipId && (
-              <button
-                onClick={() => setActiveTab('borrowEvent')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-md flex items-center gap-1.5 transition-all ${activeTab === 'borrowEvent' ? 'bg-white shadow-sm text-slate-800' : 'text-slate-500 hover:text-slate-700'}`}
-              >
-                <History className="w-3.5 h-3.5" />
-                Nhật ký
-              </button>
-            )}
+            </div>
           </div>
         </div>
 
-        {
-          activeTab === 'files' ? (
-            <>
-              <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <FileStack className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
-                  <Input
-                    type="text"
-                    value={fileQuery}
-                    onChange={(e) => setFileQuery(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAddFile();
-                    }}
-                    disabled={isSearchingFile}
-                    placeholder="Nhập mã hoặc quét..."
-                    className="w-full pl-9 pr-3 py-2 bg-slate-50 border-slate-200 rounded-lg text-sm focus:bg-white focus-visible:ring-indigo-500 outline-none transition-colors"
-                  />
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <FileStack className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 z-10" />
+            <Input
+              type="text"
+              value={fileQuery}
+              onChange={(e) => setFileQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAddFile();
+              }}
+              disabled={isSearchingFile}
+              placeholder="Nhập mã hoặc quét..."
+              className="w-full pl-9 pr-3 py-2 bg-slate-50 border-slate-200 rounded-lg text-sm focus:bg-white focus-visible:ring-indigo-500 outline-none transition-colors"
+            />
+          </div>
+          <Button
+            size="icon"
+            onClick={handleAddFile}
+            disabled={isSearchingFile || !fileQuery}
+          >
+            {isSearchingFile ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4" />
+            )}
+          </Button>
+        </div>
+
+        <div className="flex-1 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden flex flex-col h-full">
+          <div className="flex-1 overflow-auto p-2 space-y-2">
+            {selectedFiles.length === 0 && (
+              <div className="text-center text-slate-400 py-10 text-sm">
+                Chưa có hồ sơ nào được chọn
+              </div>
+            )}
+            {selectedFiles.map((file) => (
+              <div
+                key={file.id}
+                className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm flex items-start gap-3 group"
+              >
+                <div className="p-2 bg-indigo-50 text-indigo-600 rounded">
+                  <FileStack className="w-4 h-4" />
                 </div>
-                <Button
-                  size="icon"
-                  onClick={handleAddFile}
-                  disabled={isSearchingFile || !fileQuery}
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="text-sm font-medium text-slate-800 truncate"
+                    title={file.title}
+                  >
+                    {file.title}
+                  </p>
+                  <p className="text-xs text-slate-500 font-mono">
+                    {file.code}
+                  </p>
+                </div>
+                <button
+                  onClick={() => handleRemoveFile(file.id)}
                 >
-                  {isSearchingFile ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <Plus className="w-4 h-4" />
-                  )}
-                </Button>
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </div>
-
-              <div className="flex-1 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden flex flex-col h-full">
-                <div className="flex-1 overflow-auto p-2 space-y-2">
-                  {selectedFiles.length === 0 && (
-                    <div className="text-center text-slate-400 py-10 text-sm">
-                      Chưa có hồ sơ nào được chọn
-                    </div>
-                  )}
-                  {selectedFiles.map((file) => (
-                    <div
-                      key={file.id}
-                      className="bg-white p-3 rounded-lg border border-slate-100 shadow-sm flex items-start gap-3 group"
-                    >
-                      <div className="p-2 bg-indigo-50 text-indigo-600 rounded">
-                        <FileStack className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p
-                          className="text-sm font-medium text-slate-800 truncate"
-                          title={file.title}
-                        >
-                          {file.title}
-                        </p>
-                        <p className="text-xs text-slate-500 font-mono">
-                          {file.code}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => handleRemoveFile(file.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <div className="p-3 border-t border-slate-200 bg-white text-xs text-slate-500 text-center">
-                  Đã chọn {selectedFiles.length} hồ sơ
-                </div>
-              </div>
-            </>
-          ) : ( /* borrowEvent layout*/
-            <div className="flex-1 bg-slate-50 rounded-xl border border-slate-200 overflow-hidden flex flex-col h-full relative">
-              <div className="p-2 border-b border-slate-200 bg-white flex justify-between items-center">
-                <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider pl-2">Timeline</h4>
-                <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsAddingNote(!isAddingNote)}>
-                  <Plus className="w-3 h-3 mr-1" /> Thêm ghi chú
-                </Button>
-              </div>
-
-              {isAddingNote && (
-                <div className="p-3 bg-white border-b border-slate-200 animate-in slide-in-from-top-2">
-                  <Textarea
-                    value={noteContent}
-                    onChange={(e) => setNoteContent(e.target.value)}
-                    placeholder="Nhập ghi chú..."
-                    className="mb-2 text-xs min-h-[60px]"
-                  />
-                  <div className="flex justify-end gap-2">
-                    <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsAddingNote(false)}>Hủy</Button>
-                    <Button size="sm" className="h-7 text-xs" onClick={handleAddNote} disabled={isSavingNote || !noteContent.trim()}>
-                      {isSavingNote ? <Loader2 className="w-3 h-3 animate-spin" /> : "Lưu"}
-                    </Button>
-                  </div>
-                </div>
-              )}
-
-              <div className="absolute inset-0 top-[44px] data-[adding=true]:top-[150px] overflow-auto p-4 transition-all" data-adding={isAddingNote}>
-                <ol className="relative border-s border-indigo-200 ml-3">
-                  {borrowEvent.length === 0 && (
-                    <li className="mb-10 ms-6 text-slate-500 text-sm italic">Chưa có nhật ký nào.</li>
-                  )}
-                  {borrowEvent.map((log) => (
-                    <li key={log.id} className="mb-10 ms-6">
-                      <span className="absolute flex items-center justify-center w-6 h-6 bg-indigo-100 rounded-full -start-3 ring-8 ring-white">
-                        <History className="w-3 h-3 text-indigo-600" />
-                      </span>
-                      <time className="bg-slate-100 border border-slate-200 text-slate-600 text-xs font-medium px-1.5 py-0.5 rounded">
-                        {format(new Date(log.createdAt), "dd/MM/yyyy HH:mm")}
-                      </time>
-                      <h3 className="flex items-center mb-1 text-sm font-semibold text-slate-800 my-2">
-                        {log.eventType}
-                        {/* Show user if available */}
-                        {log.creator && <span className="ms-2 font-normal text-slate-500">bởi {log.creator.fullName}</span>}
-                      </h3>
-                      <div className="text-xs text-slate-600 mb-4 bg-white p-2 rounded border border-slate-100 shadow-sm">
-                        {log.description && <p className="font-medium mb-1">{log.description}</p>}
-                        <p className="truncate opacity-75">{JSON.stringify(log.details)}</p>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-            </div>
-          )
-        }
+            ))}
+          </div>
+          <div className="p-3 border-t border-slate-200 bg-white text-xs text-slate-500 text-center">
+            Đã chọn {selectedFiles.length} hồ sơ
+          </div>
+        </div>
       </div >
     </div >
   );

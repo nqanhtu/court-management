@@ -17,6 +17,7 @@ import { useState } from "react";
 import BorrowTable from "@/components/BorrowTable";
 import Modal from "@/components/Modal";
 import BorrowForm from "@/components/borrow/BorrowForm";
+import BorrowHistoryModal from "@/components/borrow/BorrowHistoryModal";
 import { BorrowSlipWithDetails } from "@/lib/types/borrow";
 import { mutate } from "swr";
 
@@ -33,6 +34,9 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
   const [editingSlipId, setEditingSlipId] = useState<string | null>(null);
 
   const [returnSlipId, setReturnSlipId] = useState<string | null>(null);
+
+  // History State
+  const [historySlipId, setHistorySlipId] = useState<string | null>(null);
 
   const handleReturn = (id: string) => {
     setReturnSlipId(id);
@@ -70,6 +74,10 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
     setIsEditModalOpen(true);
   };
 
+  const handleViewHistory = (id: string) => {
+    setHistorySlipId(id);
+  };
+
   const handleDelete = (id: string) => {
     console.log("Delete", id);
   };
@@ -91,6 +99,7 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
           onReturn={handleReturn}
           onEdit={handleEdit}
           onDelete={handleDelete}
+          onViewHistory={handleViewHistory}
           onCreate={() => setIsAddModalOpen(true)}
         />
       </div>
@@ -125,6 +134,13 @@ export default function BorrowClient({ initialBorrowSlips, onDataChange }: Borro
           }}
         />
       </Modal>
+
+      {/* History Modal */}
+      <BorrowHistoryModal
+        isOpen={!!historySlipId}
+        onClose={() => setHistorySlipId(null)}
+        slipId={historySlipId}
+      />
 
       <Dialog open={!!returnSlipId} onOpenChange={(open) => !open && setReturnSlipId(null)}>
         <DialogContent>

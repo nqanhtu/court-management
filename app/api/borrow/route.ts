@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { createAuditLog } from '@/lib/services/audit-log'
 import { getSession } from '@/lib/session'
+import { createBorrowSlipEvent } from '@/lib/services/borrow'
+import { revalidatePath } from 'next/cache'
 
 export const dynamic = 'force-dynamic'
 
@@ -89,6 +91,13 @@ export async function POST(request: NextRequest) {
             return newSlip
         })
 
+        await createBorrowSlipEvent({
+            borrowSlipId: slip.id,
+            eventType: 'CREATED',
+            description: 'Tạo phiếu mượn mới',
+            details: { code: slip.code, files: fileIds }
+        })
+
         await createAuditLog({
             action: 'CREATE',
             target: 'BorrowSlip',
@@ -97,6 +106,8 @@ export async function POST(request: NextRequest) {
             userId: lenderId
         })
 
+        revalidatePath('/')
+        revalidatePath('/files')
         return NextResponse.json({ success: true, slipId: slip.id })
 
     } catch (error: unknown) {

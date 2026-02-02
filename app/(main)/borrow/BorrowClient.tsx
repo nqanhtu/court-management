@@ -14,10 +14,10 @@ import { RotateCcw } from "lucide-react"
 import { toast } from "sonner"
 
 import { useState } from "react";
-import BorrowTable from "@/components/BorrowTable";
-import Modal from "@/components/Modal";
-import BorrowForm from "@/components/borrow/BorrowForm";
-import BorrowHistoryModal from "@/components/borrow/BorrowHistoryModal";
+import BorrowTable from "@/components/borrow-table";
+import Modal from "@/components/modal";
+import BorrowForm from "@/components/borrow/borrow-form";
+import BorrowHistoryModal from "@/components/borrow/borrow-history-modal";
 import { BorrowSlipWithDetails } from "@/lib/types/borrow";
 import { mutate } from "swr";
 

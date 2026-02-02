@@ -113,16 +113,24 @@ export function FileTableToolbar<TData>({
         )}
       </div>
       <div className="flex items-center gap-2">
-      {onBorrow && table.getFilteredSelectedRowModel().rows.length > 0 && (
-          <Button   onClick={() => onBorrow(table.getFilteredSelectedRowModel().rows.map((row) => row.original))}>
-            Tạo phiếu mượn ({table.getFilteredSelectedRowModel().rows.length})
-          </Button>
-      )}
-      {onCreate && (
-        <Button onClick={onCreate}>
-          Thêm hồ sơ
-        </Button>
-      )}
+        {onBorrow && (
+          table.getFilteredSelectedRowModel().rows.length > 0 ? (
+            <Button
+              onClick={() =>
+                onBorrow(
+                  table
+                    .getFilteredSelectedRowModel()
+                    .rows.map((row) => row.original),
+                )
+              }
+            >
+              Tạo phiếu mượn ({table.getFilteredSelectedRowModel().rows.length})
+            </Button>
+          ) : (
+            <Button disabled>Chọn hồ sơ để tạo phiếu mượn</Button>
+          )
+        )}
+        {onCreate && <Button onClick={onCreate}>Thêm hồ sơ</Button>}
       </div>
     </div>
   );

@@ -37,7 +37,7 @@ export const getColumns = ({ onEdit, onDelete, isAdmin }: ColumnActions): Column
       <DataTableColumnHeader column={column} title="Vai trò" />
     ),
     cell: ({ row }) => (
-      <Badge variant="outline" className="text-muted-foreground">
+      <Badge variant="outline">
         {row.getValue("role")}
       </Badge>
     ),
@@ -60,7 +60,7 @@ export const getColumns = ({ onEdit, onDelete, isAdmin }: ColumnActions): Column
     cell: ({ row }) => {
       const status = row.getValue("status");
       return status ? (
-        <Badge variant="secondary" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200">
+        <Badge variant="success">
           Hoạt động
         </Badge>
       ) : (

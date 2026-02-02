@@ -12,7 +12,6 @@ import Link from 'next/link'
 import { useFile } from '@/lib/hooks/use-files'
 
 import { ChildDocumentUploadModal } from './child-document-upload-modal'
-import { DataTable } from '@/components/ui/data-table'
 import { getColumns } from './columns'
 import { ChildDocumentFormModal } from './child-document-form-modal'
 
@@ -69,7 +68,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                     </Link>
                                 </Button>
                             )}
-                            <Badge variant={file.status === 'BORROWED' ? 'destructive' : 'secondary'} className="text-lg">
+                            <Badge variant={file.status === 'BORROWED' ? 'warning' : 'secondary'}>
                                 {file.status === 'BORROWED' ? 'Đang mượn' : 'Lưu kho'}
                             </Badge>
                         </div>

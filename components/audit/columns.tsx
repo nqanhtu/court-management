@@ -47,10 +47,10 @@ export const columns: ColumnDef<AuditLogWithUser>[] = [
     cell: ({ row }) => {
       const action = row.getValue("action") as string;
       switch (action) {
-        case 'CREATE': return <Badge variant="outline" className="bg-emerald-100 text-emerald-700 hover:bg-emerald-100 border-emerald-200">THÊM MỚI</Badge>;
-        case 'UPDATE': return <Badge variant="outline" className="bg-sky-100 text-sky-700 hover:bg-sky-100 border-sky-200">CẬP NHẬT</Badge>;
+        case 'CREATE': return <Badge variant="success">THÊM MỚI</Badge>;
+        case 'UPDATE': return <Badge variant="default">CẬP NHẬT</Badge>;
         case 'DELETE': return <Badge variant="destructive">XÓA</Badge>;
-        case 'LOGIN': return <Badge variant="outline" className="bg-indigo-100 text-indigo-700 hover:bg-indigo-100 border-indigo-200">ĐĂNG NHẬP</Badge>;
+        case 'LOGIN': return <Badge variant="secondary">ĐĂNG NHẬP</Badge>;
         default: return <Badge variant="outline">{action}</Badge>;
       }
     },
@@ -61,7 +61,7 @@ export const columns: ColumnDef<AuditLogWithUser>[] = [
       <DataTableColumnHeader column={column} title="Đối tượng" />
     ),
     cell: ({ row }) => (
-      <Badge variant="secondary" className="font-mono text-[10px] uppercase">
+      <Badge variant="secondary">
         {row.getValue("target")}
       </Badge>
     ),

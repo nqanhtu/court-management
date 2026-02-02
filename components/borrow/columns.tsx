@@ -106,7 +106,7 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory }: Column
 
       if (isReturned) {
         return (
-          <Badge variant="outline" className="border-emerald-200 bg-emerald-100 text-emerald-700 hover:bg-emerald-100">
+          <Badge variant="success">
             Đã trả
           </Badge>
         )
@@ -119,7 +119,7 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory }: Column
         )
       }
       return (
-        <Badge variant="secondary" className="bg-amber-100 text-amber-700 hover:bg-amber-100">
+        <Badge variant="warning">
           Đang mượn
         </Badge>
       )

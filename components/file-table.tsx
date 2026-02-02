@@ -28,8 +28,8 @@ import {
 import { getColumns, FileWithBox } from "@/components/files/columns"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
 import { FileTableToolbar } from '@/components/files/file-table-toolbar'
-import Modal from "@/components/Modal"
-import BorrowForm from "@/components/borrow/BorrowForm"
+import Modal from "@/components/modal"
+import BorrowForm from "@/components/borrow/borrow-form"
 
 interface FileTableProps {
     files: FileWithBox[]

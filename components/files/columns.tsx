@@ -106,11 +106,11 @@ export const getColumns = (fileId: string | undefined, mutate: () => void): Colu
       header: "Trạng thái",
       cell: ({ row }) => {
         const status = row.original.status || "IN_STOCK"
-        const variant = status === "BORROWED" ? "destructive" : status === "LOST" ? "secondary" : "default"
+        const variant = status === "BORROWED" ? "warning" : status === "LOST" ? "secondary" : "default"
         const label = status === "BORROWED" ? "Đang mượn" : status === "LOST" ? "Thất lạc" : "Trong kho"
         
         return (
-          <Badge variant={variant} className="whitespace-nowrap">
+          <Badge variant={variant}>
             {label}
           </Badge>
         )

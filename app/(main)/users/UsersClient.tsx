@@ -1,9 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import UserTable from "@/components/UserTable";
-import Modal from "@/components/Modal";
-import UserForm from "@/components/UserForm";
+import UserTable from "@/components/user-table";
+import Modal from "@/components/modal";
+import UserForm from "@/components/user-form";
 
 import { UserModel as User } from "@/generated/prisma/models";
 

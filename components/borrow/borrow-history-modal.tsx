@@ -11,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { BorrowSlipEventModel } from "@/generated/prisma/models";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import Modal from "@/components/Modal";
+import Modal from "@/components/modal";
 
 interface BorrowHistoryModalProps {
     isOpen: boolean;

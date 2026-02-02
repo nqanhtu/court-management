@@ -11,14 +11,19 @@ export async function GET(
         const file = await db.file.findUnique({
             where: { id },
             include: {
-                box: true,
+                box: {
+                    include: {
+                        agency: true
+                    }
+                },
                 borrowItems: {
                     where: { status: 'BORROWING' },
                     include: { borrowSlip: true }
                 },
                 documents: {
                     orderBy: { order: 'asc' }
-                }
+                },
+                fileIndex: true
             }
         })
 

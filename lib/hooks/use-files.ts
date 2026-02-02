@@ -33,7 +33,7 @@ export function useFiles(params: SearchParams) {
 }
 
 export function useFile(id: string) {
-    const { data, error, isLoading, mutate } = useSWR<Prisma.FileGetPayload<{ include: { box: true, borrowItems: { include: { borrowSlip: true } }, documents: true } }>>(
+    const { data, error, isLoading, mutate } = useSWR<Prisma.FileGetPayload<{ include: { box: { include: { agency: true } }, borrowItems: { include: { borrowSlip: true } }, documents: true, fileIndex: true } }>>(
         id ? `/api/files/${id}` : null,
         fetcher
     )

@@ -25,9 +25,9 @@ export function ReportDashboard() {
     const { stats, isLoading } = useReportStats();
 
     // Memoize the data for the table
-    const recentBorrows = React.useMemo(() => 
-        (stats?.recentBorrows || []) as RecentBorrow[], 
-    [stats]);
+    const recentBorrows = React.useMemo(() =>
+        (stats?.recentBorrows || []) as RecentBorrow[],
+        [stats]);
 
     const table = useReactTable({
         data: recentBorrows,
@@ -35,16 +35,9 @@ export function ReportDashboard() {
         getCoreRowModel: getCoreRowModel(),
     });
 
-    if (isLoading) {
-        return (
-            <div className="flex-1 flex items-center justify-center text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin" />
-                <span className="ml-2">Đang tải báo cáo...</span>
-            </div>
-        )
-    }
 
-    const { totalBorrows, activeBorrows, overdueBorrows, returnedRate } = stats;
+
+    const { totalBorrows = 0, activeBorrows = 0, overdueBorrows = 0, returnedRate = 0 } = stats || {};
 
     return (
         <>
@@ -98,7 +91,19 @@ export function ReportDashboard() {
                             ))}
                         </TableHeader>
                         <TableBody>
-                            {table.getRowModel().rows?.length ? (
+                            {isLoading ? (
+                                <TableRow>
+                                    <TableCell
+                                        colSpan={columns.length}
+                                        className="h-24 text-center"
+                                    >
+                                        <div className="flex items-center justify-center text-slate-400">
+                                            <Loader2 className="w-6 h-6 animate-spin" />
+                                            <span className="ml-2">Đang tải...</span>
+                                        </div>
+                                    </TableCell>
+                                </TableRow>
+                            ) : table.getRowModel().rows?.length ? (
                                 table.getRowModel().rows.map((row) => (
                                     <TableRow
                                         key={row.id}

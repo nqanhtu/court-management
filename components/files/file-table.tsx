@@ -1,5 +1,3 @@
-'use client'
-
 import * as React from 'react'
 import {
   ColumnFiltersState,
@@ -14,6 +12,7 @@ import {
 } from '@tanstack/react-table'
 
 import { toast } from "sonner"
+import { Loader2 } from 'lucide-react'
 import { useRouter } from "next/navigation"
 
 import {
@@ -32,17 +31,18 @@ import Modal from "@/components/modal"
 import BorrowForm from "@/components/borrow/borrow-form"
 
 interface FileTableProps {
-    files: FileWithBox[]
-    role?: string // For RBAC display
-    onCreate?: () => void
-    total?: number
-    page?: number
-    pageSize?: number
-    onPaginationChange?: (page: number, pageSize: number) => void
-    onRefresh?: () => void
+  files: FileWithBox[]
+  isLoading?: boolean
+  role?: string // For RBAC display
+  onCreate?: () => void
+  total?: number
+  page?: number
+  pageSize?: number
+  onPaginationChange?: (page: number, pageSize: number) => void
+  onRefresh?: () => void
 }
 
-export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onPaginationChange, onRefresh }: FileTableProps) {
+export function FileTable({ files, isLoading, onCreate, total, page = 1, pageSize = 10, onPaginationChange, onRefresh }: FileTableProps) {
   const router = useRouter();
   const [rowSelection, setRowSelection] = React.useState({})
   const [isBorrowModalOpen, setIsBorrowModalOpen] = React.useState(false);
@@ -56,7 +56,7 @@ export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onP
 
   // Determine if we are using manual pagination (server-side)
   const isManual = total !== undefined
-  
+
   const paginationState = {
     pageIndex: page - 1,
     pageSize: pageSize,
@@ -64,7 +64,7 @@ export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onP
 
   // Use getColumns. We pass undefined for fileId (so no child actions) and a no-op for mutate.
   // We cast to any to satisfy TS constraint differences between FileDocument and FileWithBox
-  const columns = React.useMemo(() => getColumns(undefined, () => {}) as any, [])
+  const columns = React.useMemo(() => getColumns(undefined, () => { }) as any, [])
 
   const table = useReactTable({
     data: files,
@@ -79,10 +79,10 @@ export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onP
     },
     manualPagination: isManual,
     onPaginationChange: isManual ? (updater) => {
-        if (onPaginationChange) {
-             const nextState = typeof updater === 'function' ? updater(paginationState) : updater;
-             onPaginationChange(nextState.pageIndex + 1, nextState.pageSize);
-        }
+      if (onPaginationChange) {
+        const nextState = typeof updater === 'function' ? updater(paginationState) : updater;
+        onPaginationChange(nextState.pageIndex + 1, nextState.pageSize);
+      }
     } : undefined,
     onRowSelectionChange: setRowSelection,
     onSortingChange: setSorting,
@@ -121,9 +121,9 @@ export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onP
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}
@@ -131,7 +131,18 @@ export function FileTable({ files, onCreate, total, page = 1, pageSize = 10, onP
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  <div className="flex items-center justify-center text-slate-400">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

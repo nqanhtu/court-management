@@ -14,7 +14,7 @@ export default function AuditLogPage() {
                 </div>
             </div>
 
-                <AuditList />
+            <AuditList />
         </div>
     );
 }

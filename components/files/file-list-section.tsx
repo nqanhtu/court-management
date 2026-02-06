@@ -2,8 +2,7 @@
 
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useFiles } from '@/lib/hooks/use-files'
-import { FileTable } from '@/components/file-table'
-import { Loader2 } from 'lucide-react'
+import { FileTable } from '@/components/files/file-table'
 import { useSWRConfig } from 'swr'
 
 interface FileListSectionProps {
@@ -29,25 +28,18 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
     const router = useRouter()
 
     const handlePaginationChange = (newPage: number, newPageSize: number) => {
-         const params = new URLSearchParams(searchParams)
-         params.set('page', newPage.toString())
-         params.set('limit', newPageSize.toString())
-         router.replace(`/?${params.toString()}`)
-    }
-
-    if (isLoading) {
-        return (
-            <div className="flex-1 flex items-center justify-center text-slate-400">
-                <Loader2 className="w-8 h-8 animate-spin" />
-            </div>
-        )
+        const params = new URLSearchParams(searchParams)
+        params.set('page', newPage.toString())
+        params.set('limit', newPageSize.toString())
+        router.replace(`/?${params.toString()}`)
     }
 
     return (
-        <div className="flex-1 min-h-0 overflow-auto">
-            <FileTable 
-                files={files} 
-                onCreate={onCreate} 
+        <div className="flex-1 min-h-0">
+            <FileTable
+                files={files}
+                isLoading={isLoading}
+                onCreate={onCreate}
                 total={total}
                 page={page}
                 pageSize={limit}

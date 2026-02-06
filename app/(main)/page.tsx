@@ -4,7 +4,7 @@ import { useState } from 'react'
 
 import { CreateFileDialog } from '@/components/create-file-dialog'
 import { OverviewStats } from '@/components/overview-stats'
-import { FileListSection } from '@/components/file-list-section'
+import { FileListSection } from '@/components/files/file-list-section'
 
 export default function Home() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
@@ -19,11 +19,11 @@ export default function Home() {
 
 
       <FileListSection onCreate={() => setIsCreateModalOpen(true)} />
-      
-      <CreateFileDialog 
-          open={isCreateModalOpen} 
-          onOpenChange={setIsCreateModalOpen} 
-          trigger={<span className="hidden"/>} 
+
+      <CreateFileDialog
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        trigger={<span className="hidden" />}
       />
     </div>
   )

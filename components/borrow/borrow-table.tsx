@@ -7,8 +7,6 @@ import {
   VisibilityState,
   flexRender,
   getCoreRowModel,
-  getFacetedRowModel,
-  getFacetedUniqueValues,
   getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
@@ -25,11 +23,13 @@ import {
 } from "@/components/ui/table";
 import { BorrowSlipWithDetails } from '@/lib/types/borrow';
 import { getColumns } from "@/components/borrow/columns";
-import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { BorrowTableToolbar } from "@/components/borrow/borrow-table-toolbar";
+import { DataTablePagination } from "@/components/ui/data-table-pagination";
+import { Loader2 } from "lucide-react";
 
 interface BorrowTableProps {
   borrowSlips: BorrowSlipWithDetails[];
+  isLoading?: boolean;
   onReturn: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
@@ -39,6 +39,7 @@ interface BorrowTableProps {
 
 export default function BorrowTable({
   borrowSlips,
+  isLoading,
   onReturn,
   onEdit,
   onDelete,
@@ -53,7 +54,8 @@ export default function BorrowTable({
   )
   const [sorting, setSorting] = React.useState<SortingState>([])
 
-  const columns = React.useMemo(() => getColumns({ onReturn, onEdit, onDelete, onViewHistory }), [onReturn, onEdit, onDelete, onViewHistory]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const columns = React.useMemo(() => getColumns({ onReturn, onEdit, onDelete, onViewHistory }), []);
 
   const table = useReactTable({
     data: borrowSlips,
@@ -73,8 +75,6 @@ export default function BorrowTable({
     getFilteredRowModel: getFilteredRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    getFacetedRowModel: getFacetedRowModel(),
-    getFacetedUniqueValues: getFacetedUniqueValues(),
   })
 
   return (
@@ -91,9 +91,9 @@ export default function BorrowTable({
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}
@@ -101,7 +101,18 @@ export default function BorrowTable({
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  <div className="flex items-center justify-center text-muted-foreground">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

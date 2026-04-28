@@ -19,7 +19,7 @@ enum UserRole {
 }
 
 model User {
-  id       String   @id @default(uuid())
+  id       String   @id @default(uuid(7))
   username String   @unique
   password String // Hashed
   fullName String
@@ -44,7 +44,7 @@ model User {
 
 // Agency Name History (Storage Font)
 model AgencyHistory {
-  id        String    @id @default(uuid())
+  id        String    @id @default(uuid(7))
   name      String // Agency Name (e.g., TAND Binh Duong)
   startDate DateTime // Start period
   endDate   DateTime? // End period (null = present)
@@ -54,7 +54,7 @@ model AgencyHistory {
 
 // Location & Box Management
 model StorageBox {
-  id   String @id @default(uuid())
+  id   String @id @default(uuid(7))
   code String @unique // Box code (generated or QR code content)
 
   // Physical Location (Warehouse -> Line -> Shelf -> Slot -> Box)
@@ -83,7 +83,7 @@ model StorageBox {
 }
 
 model StorageBoxLabel {
-  id           String      @id @default(uuid())
+  id           String      @id @default(uuid(7))
   agencyId     String?
   fromYear     Int?
   toYear       Int?
@@ -94,7 +94,7 @@ model StorageBoxLabel {
 
 // Case File (File Jacket)
 model File {
-  id   String @id @default(uuid())
+  id   String @id @default(uuid(7))
   code String @unique // Convention: Code - Type - Year - #
 
   // General Info (Sheet 1)
@@ -136,7 +136,7 @@ model File {
 }
 
 model FileIndex {
-  id     String @id @default(uuid())
+  id     String @id @default(uuid(7))
   fileId String @unique
   file   File   @relation(fields: [fileId], references: [id], onDelete: Cascade)
 
@@ -149,7 +149,7 @@ model FileIndex {
 
 // Documents within File (Sheet 2 - Document List)
 model Document {
-  id        String  @id @default(uuid())
+  id        String  @id @default(uuid(7))
   code      String? // Child Document Code (if any - corresponds to File No in Excel)
   title     String // Title / Abstract
   year      Int?
@@ -170,7 +170,7 @@ model Document {
 // ==========================================
 
 model BorrowSlip {
-  id   String @id @default(uuid())
+  id   String @id @default(uuid(7))
   code String @unique // Mã phiếu (PM-YYYY-XXX)
 
   // Thông tin người mượn (Khách) - Lưu text vì không phải User hệ thống
@@ -197,7 +197,7 @@ model BorrowSlip {
 }
 
 model BorrowItem {
-  id String @id @default(uuid())
+  id String @id @default(uuid(7))
 
   borrowSlipId String
   borrowSlip   BorrowSlip @relation(fields: [borrowSlipId], references: [id], onDelete: Cascade)
@@ -213,7 +213,7 @@ model BorrowItem {
 }
 
 model BorrowSlipEvent {
-  id           String     @id @default(uuid())
+  id           String     @id @default(uuid(7))
   borrowSlipId String
   borrowSlip   BorrowSlip @relation(fields: [borrowSlipId], references: [id], onDelete: Cascade)
 
@@ -232,7 +232,7 @@ model BorrowSlipEvent {
 // ==========================================
 
 model AuditLog {
-  id        String      @id @default(uuid())
+  id        String      @id @default(uuid(7))
   action    AuditAction // LOGIN, VIEW, CREATE, UPDATE, DELETE, EXPORT
   target    String // Tên bảng/đối tượng bị tác động (File/User...)
   targetId  String? // ID đối tượng

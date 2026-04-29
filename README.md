@@ -1,6 +1,6 @@
-# Phần mềm chỉnh lý hồ sơ (UI Prototype)
+# Phần mềm quản lý hồ sơ (UI Prototype)
 
-This is a Next.js + Tailwind CSS prototype of the "Phần mềm chỉnh lý hồ sơ" application.
+This is a Next.js + Tailwind CSS prototype of the "Phần mềm quản lý hồ sơ" application.
 
 ## Getting Started
 

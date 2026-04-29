@@ -48,9 +48,9 @@ export function AppSidebar({ user }: AppSidebarProps) {
         // Users: SuperAdmin only
         ...(role === "SUPER_ADMIN"
           ? [
-              { name: "Người dùng", href: "/users", icon: Users },
-              { name: "Nhật ký", href: "/admin/audit", icon: HistoryIcon },
-            ]
+            { name: "Người dùng", href: "/users", icon: Users },
+            { name: "Nhật ký", href: "/admin/audit", icon: HistoryIcon },
+          ]
           : []),
         // Upload: SuperAdmin or Admin
         ...(role === "SUPER_ADMIN" || role === "ADMIN"
@@ -75,7 +75,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
             >
               <a href="#">
                 <span className="text-base font-semibold">
-                  Phần mềm chỉnh lý hồ sơ
+                  Phần mềm quản lý hồ sơ
                 </span>
               </a>
             </SidebarMenuButton>

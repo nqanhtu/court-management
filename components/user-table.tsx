@@ -1,5 +1,4 @@
 'use client';
-'use no memo';
 
 import * as React from 'react';
 import {
@@ -27,16 +26,18 @@ import {
 import { getColumns } from "@/components/users/columns";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { UserTableToolbar } from "@/components/users/user-table-toolbar";
+import { Loader2 } from "lucide-react";
 
 interface UserTableProps {
   users: UserModel[];
+  isLoading?: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onCreate?: () => void;
   currentUserRole?: string;
 }
 
-export default function UserTable({ users, onEdit, onDelete, onCreate, currentUserRole }: UserTableProps) {
+export default function UserTable({ users, isLoading, onEdit, onDelete, onCreate, currentUserRole }: UserTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -83,9 +84,9 @@ export default function UserTable({ users, onEdit, onDelete, onCreate, currentUs
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
                     </TableHead>
                   )
                 })}
@@ -93,7 +94,18 @@ export default function UserTable({ users, onEdit, onDelete, onCreate, currentUs
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  <div className="flex items-center justify-center text-muted-foreground">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

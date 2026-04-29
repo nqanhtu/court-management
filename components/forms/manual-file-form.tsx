@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -9,7 +9,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
-// cleaned import
+import { StorageBox } from '@/generated/prisma/client'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface ManualFileFormProps {
     onSuccess: () => void
@@ -18,7 +19,7 @@ interface ManualFileFormProps {
 export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     const [isLoading, setIsLoading] = useState(false)
     const router = useRouter()
-
+    const [boxes, setBoxes] = useState<StorageBox[]>([]);
     const [formData, setFormData] = useState({
         code: '',
         title: '',
@@ -31,7 +32,8 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
         pageCount: 0,
         defendants: '',
         plaintiffs: '',
-        civilDefendants: ''
+        civilDefendants: '',
+        boxId: ''
     })
 
     const handleManualSubmit = async (e: React.FormEvent) => {
@@ -58,9 +60,10 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                     defendants: splitToList(formData.defendants),
                     plaintiffs: splitToList(formData.plaintiffs),
                     civilDefendants: splitToList(formData.civilDefendants),
+                    boxId: formData.boxId || null
                 })
             })
-            
+
             const result = await response.json();
 
             if (response.ok && result.success) {
@@ -79,7 +82,8 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                     pageCount: 0,
                     defendants: '',
                     plaintiffs: '',
-                    civilDefendants: ''
+                    civilDefendants: '',
+                    boxId: ''
                 })
                 onSuccess()
             } else {
@@ -92,6 +96,26 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
             setIsLoading(false)
         }
     }
+
+    const handleBoxbyYear = async (year: number) => {
+        if (!year) return
+        try {
+            const response = await fetch(`/api/stogrageBox?year=${year}`)
+            if (response.ok) {
+                const data = await response.json()
+                setBoxes(data)
+            } else {
+                setBoxes([])
+            }
+        } catch (error) {
+            console.error("Failed to fetch boxes", error)
+            setBoxes([])
+        }
+    }
+
+    useEffect(() => {
+        handleBoxbyYear(formData.year)
+    }, [formData.year])
 
     return (
         <form onSubmit={handleManualSubmit} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto px-1">
@@ -206,13 +230,23 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                     />
                 </div>
                 <div className="space-y-2">
-                    <Label htmlFor="boxCode">Hộp số (Mã hộp)</Label>
-                    <Input
-                        id="boxCode"
-                        placeholder="Box code..."
-                        disabled
-                        title="Tính năng chọn hộp sẽ cập nhật sau"
-                    />
+                    <Label htmlFor="boxId">Hộp số (Mã hộp)</Label>
+                    <Select
+                        onValueChange={(value) => setFormData({ ...formData, boxId: value })}
+                        value={formData.boxId}
+                        disabled={isLoading}
+                    >
+                        <SelectTrigger id="boxId">
+                            <SelectValue placeholder="Chọn hộp..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {boxes.map((b) => (
+                                <SelectItem key={b.id} value={b.id}>
+                                    {b.code} (Kệ: {b.shelf})
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
                 </div>
             </div>
 

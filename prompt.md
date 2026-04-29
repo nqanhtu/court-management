@@ -2,11 +2,11 @@
 
 # YÊU CẦU ĐỐI VỚI PHẦN MỀM QUẢN LÝ HỒ SƠ
 
-## 1. Quản lý chỉnh lý hồ sơ
+## 1. Quản lý quản lý hồ sơ
 
 ### Yêu cầu chung
 
-* Chỉnh lý hồ sơ bằng Excel chuẩn.
+* quản lý hồ sơ bằng Excel chuẩn.
 * Upload Excel vào phần mềm.
 * **Cơ chế khóa dữ liệu:** Sau khi vào phần mềm, dữ liệu sẽ bị khóa, không được chỉnh sửa nội dung. Chỉ **01 người có quyền cao nhất** được phép chỉnh sửa và hệ thống phải lưu lại lịch sử chỉnh sửa.
 

@@ -33,12 +33,13 @@ interface BorrowSlipWithDetails extends BorrowSlipModel {
 
 interface BorrowFormProps {
   onSuccess?: () => void;
+  onCancel?: () => void;
   initialData?: BorrowSlipWithDetails;
   slipId?: string;
   initialFiles?: FileModel[];
 }
 
-export default function BorrowForm({ onSuccess, initialData, slipId, initialFiles = [] }: BorrowFormProps) {
+export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, initialFiles = [] }: BorrowFormProps) {
   const [users, setUsers] = useState<UserModel[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
@@ -285,6 +286,7 @@ export default function BorrowForm({ onSuccess, initialData, slipId, initialFile
             <Button
               type="button"
               variant="outline"
+              onClick={onCancel}
             >
               <Printer className="w-4 h-4" /> In phiếu
             </Button>

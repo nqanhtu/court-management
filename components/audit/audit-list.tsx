@@ -90,13 +90,7 @@ export function AuditList() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  if (isLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center text-muted-foreground">
-        <Loader2 className="w-8 h-8 animate-spin" />
-      </div>
-    );
-  }
+
 
   return (
     <>
@@ -118,9 +112,9 @@ export function AuditList() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                     </TableHead>
                   );
                 })}
@@ -128,7 +122,18 @@ export function AuditList() {
             ))}
           </TableHeader>
           <TableBody>
-            {table.getRowModel().rows?.length ? (
+            {isLoading ? (
+              <TableRow>
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
+                  <div className="flex items-center justify-center text-muted-foreground">
+                    <Loader2 className="w-6 h-6 animate-spin" />
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : table.getRowModel().rows?.length ? (
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}

@@ -10,6 +10,7 @@ import { DialogFooter } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { ExcelImportPreview } from '@/lib/validation/import'
+import { mutate } from 'swr'
 
 interface ExcelUploadFormProps {
   onSuccess: () => void
@@ -83,6 +84,12 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
 
       if (response.ok && result.success) {
         toast.success(`Đã nhập ${result.data?.stats.success ?? 0} hồ sơ`)
+        // Clear cached requests related to files so components fetch fresh data
+        mutate(
+          (key: any) => typeof key === 'string' && key.startsWith('/api/files'),
+          undefined,
+          { revalidate: true }
+        )
         onSuccess()
         router.refresh()
         return

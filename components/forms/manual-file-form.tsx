@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import { StorageBox } from '@/generated/prisma/client'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { mutate } from 'swr'
 
 interface ManualFileFormProps {
     onSuccess: () => void
@@ -68,6 +69,11 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
 
             if (response.ok && result.success) {
                 toast.success('Tạo hồ sơ thành công')
+                mutate(
+                    (key: any) => typeof key === 'string' && key.startsWith('/api/files'),
+                    undefined,
+                    { revalidate: true }
+                )
                 router.refresh()
                 // Reset form
                 setFormData({

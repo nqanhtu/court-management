@@ -5,6 +5,7 @@ import { createAuditLog } from '@/lib/services/audit-log'
 import { getAgencyForYear } from '@/lib/services/agency-history'
 import { getSession } from '@/lib/session'
 import type { Prisma, StorageBox } from '@/generated/prisma/client'
+import { requirePermission } from '@/lib/rbac'
 
 export async function GET(request: NextRequest) {
     try {
@@ -13,9 +14,8 @@ export async function GET(request: NextRequest) {
         const year = yearParam ? Number(yearParam) : null
 
         const session = await getSession()
-        if (!session) {
-            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-        }
+        const denied = requirePermission(session, 'viewStorage')
+        if (denied) return denied
 
         const where: Prisma.StorageBoxWhereInput = {}
 

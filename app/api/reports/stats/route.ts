@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { getSession } from '@/lib/session'
+import { requirePermission } from '@/lib/rbac'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
     try {
+        const session = await getSession();
+        const denied = requirePermission(session, 'viewReports');
+        if (denied) return denied;
+
         const totalBorrows = await db.borrowSlip.count();
 
         const activeBorrows = await db.borrowSlip.count({

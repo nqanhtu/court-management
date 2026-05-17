@@ -99,7 +99,7 @@ export default function BorrowHistoryModal({ isOpen, onClose, slipId }: BorrowHi
         >
             <div className="flex flex-col h-[500px]">
                 <div className="p-2 border-b border-slate-200 bg-white flex justify-between items-center shrink-0">
-                    <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider pl-2">Timeline</h4>
+                    <h4 className="text-xs font-semibold text-slate-700 uppercase tracking-wider pl-2">Dòng thời gian</h4>
                     <Button size="sm" variant="ghost" className="h-7 text-xs" onClick={() => setIsAddingNote(!isAddingNote)}>
                         <Plus className="w-3 h-3 mr-1" /> Thêm ghi chú
                     </Button>

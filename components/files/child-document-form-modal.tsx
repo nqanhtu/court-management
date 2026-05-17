@@ -110,12 +110,12 @@ export function ChildDocumentFormModal({ fileId, document, trigger, onSuccess }:
             })
             const result = await response.json();
             if (result.success) {
-                toast.success(isEdit ? 'Update successfuly!' : 'Add successfuly!')
+                toast.success(isEdit ? 'Cập nhật thành công' : 'Thêm thành công')
                 setOpen(false)
                 // router.refresh()
                 if (onSuccess) onSuccess()
             } else {
-                toast.error(result.error || (isEdit ? 'Update failed!' : 'Add failed!'))
+                toast.error(result.error || (isEdit ? 'Cập nhật thất bại' : 'Thêm thất bại'))
             }
         } catch (error) {
             console.error(error)

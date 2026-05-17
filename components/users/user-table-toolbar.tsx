@@ -34,9 +34,10 @@ export function UserTableToolbar<TData>({
             column={table.getColumn("role")}
             title="Vai trò"
             options={[
-              { label: 'Admin', value: 'SUPER_ADMIN' },
-              { label: 'Quản lý', value: 'MANAGER' },
-              { label: 'Nhân viên', value: 'USER' },
+              { label: 'Quản trị toàn hệ thống', value: 'SUPER_ADMIN' },
+              { label: 'Quản trị', value: 'ADMIN' },
+              { label: 'Điều phối', value: 'COORDINATOR' },
+              { label: 'Chỉ xem', value: 'VIEWER' },
             ]}
           />
         )}
@@ -56,7 +57,7 @@ export function UserTableToolbar<TData>({
             onClick={() => table.resetColumnFilters()}
             className="h-8 px-2 lg:px-3"
           >
-            Reset
+            Đặt lại
             <X className="ml-2 h-4 w-4" />
           </Button>
         )}

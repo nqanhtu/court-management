@@ -43,21 +43,21 @@ export function CreateFileDialog({ open: controlledOpen, onOpenChange: setContro
                 ) : (
                     <Button>
                         <FilePlus />
-                        Thêm mới / Import
+                        Thêm mới / Nhập file
                     </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-150">
                 <DialogHeader>
-                    <DialogTitle>Thêm mới Hồ sơ</DialogTitle>
+                    <DialogTitle>Thêm mới hồ sơ</DialogTitle>
                     <DialogDescription>
-                        Tạo hồ sơ thủ công hoặc import hàng loạt từ file Excel.
+                        Tạo hồ sơ thủ công hoặc nhập hàng loạt từ file Excel.
                     </DialogDescription>
                 </DialogHeader>
                 <Tabs defaultValue="manual" className="w-full">
                     <TabsList className="grid w-full grid-cols-2">
                         <TabsTrigger value="manual">Thủ công</TabsTrigger>
-                        <TabsTrigger value="excel">Import Excel</TabsTrigger>
+                        <TabsTrigger value="excel">Nhập Excel</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="manual">

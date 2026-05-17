@@ -78,7 +78,7 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
     const fetchUsers = async () => {
       setIsLoadingUsers(true);
       try {
-        const res = await fetch('/api/users');
+        const res = await fetch('/api/users?purpose=borrower');
         if (res.ok) {
           const data = await res.json();
           setUsers(data);
@@ -149,10 +149,10 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
     setIsSubmitting(true);
 
     try {
-      const method = slipId ? 'PATCH' : 'POST';
+      const method = slipId ? 'PUT' : 'POST';
       const body = {
         id: slipId,
-        borrowerName: selectedUser?.fullName || "Unknown",
+        borrowerName: selectedUser?.fullName || "Không xác định",
         borrowerUnit: selectedUser?.unit || "",
         borrowerTitle: borrowerTitle,
         reason: reason,
@@ -160,7 +160,7 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
         fileIds: selectedFiles.map((f) => f.id),
       };
 
-      const response = await fetch('/api/borrow', {
+      const response = await fetch(slipId ? `/api/borrow/${slipId}` : '/api/borrow', {
         method: method,
         headers: {
           'Content-Type': 'application/json',

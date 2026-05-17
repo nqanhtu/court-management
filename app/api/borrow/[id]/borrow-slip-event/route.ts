@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { getSession } from "@/lib/session";
+import { requirePermission } from "@/lib/rbac";
 
 export async function GET(
     request: NextRequest,
@@ -9,9 +10,8 @@ export async function GET(
     try {
         const { id } = await params;
         const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const denied = requirePermission(session, "viewBorrow");
+        if (denied) return denied;
 
         const events = await db.borrowSlipEvent.findMany({
             where: {
@@ -47,9 +47,8 @@ export async function POST(
     try {
         const { id } = await params;
         const session = await getSession();
-        if (!session?.id) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
+        const denied = requirePermission(session, "manageBorrow");
+        if (denied) return denied;
 
         const body = await request.json();
         const { eventType, description, details } = body;
@@ -67,7 +66,7 @@ export async function POST(
                 eventType,
                 description,
                 details: details ? details : undefined,
-                creatorId: session.id,
+                creatorId: session!.id,
             },
         });
 

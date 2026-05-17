@@ -4,11 +4,16 @@ import { createAuditLog } from '@/lib/services/audit-log'
 import { getSession } from '@/lib/session'
 import { createBorrowSlipEvent } from '@/lib/services/borrow'
 import { revalidatePath } from 'next/cache'
+import { requirePermission } from '@/lib/rbac'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
     try {
+        const session = await getSession();
+        const denied = requirePermission(session, 'viewBorrow');
+        if (denied) return denied;
+
         const borrowSlips = await db.borrowSlip.findMany({
             include: {
                 lender: true,
@@ -32,10 +37,9 @@ export async function GET() {
 export async function POST(request: NextRequest) {
     try {
         const session = await getSession();
-        if (!session?.id) {
-            return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-        }
-        const lenderId = session.id;
+        const denied = requirePermission(session, 'manageBorrow');
+        if (denied) return denied;
+        const lenderId = session!.id;
 
         const data = await request.json()
         const { borrowerName, borrowerUnit, borrowerTitle, reason, dueDate, fileIds } = data
@@ -120,10 +124,9 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
     try {
         const session = await getSession();
-        if (!session?.id) {
-            return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-        }
-        const userId = session.id;
+        const denied = requirePermission(session, 'manageBorrow');
+        if (denied) return denied;
+        const userId = session!.id;
 
         const data = await request.json();
         const { id } = data; // borrowSlipId

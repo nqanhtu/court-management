@@ -3,12 +3,16 @@ import { db } from '@/lib/db'
 import { parseChildDocumentsExcel } from '@/lib/excel-parser'
 import { createAuditLog } from '@/lib/services/audit-log'
 import { getSession } from '@/lib/session'
+import { requirePermission } from '@/lib/rbac'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(request: Request) {
     try {
         const session = await getSession()
+        const denied = requirePermission(session, 'manageFiles')
+        if (denied) return denied
+
         const formData = await request.formData()
         const file = formData.get('file') as File
         const fileId = formData.get('fileId') as string
@@ -51,7 +55,7 @@ export async function POST(request: Request) {
                     data: {
                         fileId: fileId,
                         code: document.code || null,
-                        title: document.title || 'Untitled Document',
+                        title: document.title || 'Văn bản chưa đặt tên',
                         year: document.year,
                         pageCount: document.pageCount,
                         order: document.order,

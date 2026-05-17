@@ -36,7 +36,7 @@ const defaultFormData: FormData = {
   password: '',
   fullName: '',
   unit: '',
-  role: 'USER',
+  role: 'VIEWER',
   status: true
 }
 
@@ -54,7 +54,7 @@ export default function UserForm({ userId, initialData, onSuccess, onCancel }: U
         password: '', // Don't prefill password for edit
         fullName: initialData.fullName || '',
         unit: initialData.unit || '',
-        role: initialData.role || 'USER',
+        role: initialData.role || 'VIEWER',
         status: initialData.status ?? true
       })
     } else {
@@ -207,9 +207,10 @@ export default function UserForm({ userId, initialData, onSuccess, onCancel }: U
                 <SelectValue placeholder="Chọn vai trò" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="USER">Người dùng</SelectItem>
-                <SelectItem value="ADMIN">Quản trị viên</SelectItem>
-                <SelectItem value="SUPER_ADMIN">Super Admin</SelectItem>
+                <SelectItem value="SUPER_ADMIN">Quản trị toàn hệ thống</SelectItem>
+                <SelectItem value="ADMIN">Quản trị</SelectItem>
+                <SelectItem value="COORDINATOR">Điều phối</SelectItem>
+                <SelectItem value="VIEWER">Chỉ xem</SelectItem>
               </SelectContent>
             </Select>
           </div>

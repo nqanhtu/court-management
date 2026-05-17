@@ -4,6 +4,8 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useFiles } from '@/lib/hooks/use-files'
 import { FileTable } from '@/components/files/file-table'
 import { useSWRConfig } from 'swr'
+import { useSession } from '@/lib/hooks/use-auth'
+import { can } from '@/lib/rbac'
 
 interface FileListSectionProps {
     onCreate?: () => void
@@ -24,6 +26,9 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
     })
 
     const { mutate: globalMutate } = useSWRConfig()
+    const { session } = useSession()
+    const canManageFiles = can(session?.role, 'manageFiles')
+    const canManageBorrow = can(session?.role, 'manageBorrow')
 
     const router = useRouter()
 
@@ -39,7 +44,9 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
             <FileTable
                 files={files}
                 isLoading={isLoading}
-                onCreate={onCreate}
+                role={session?.role}
+                onCreate={canManageFiles ? onCreate : undefined}
+                canBorrow={canManageBorrow}
                 total={total}
                 page={page}
                 pageSize={limit}

@@ -13,9 +13,10 @@ interface ColumnActions {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onViewHistory: (id: string) => void;
+  canManageBorrow?: boolean;
 }
 
-export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory }: ColumnActions): ColumnDef<BorrowSlipWithDetails>[] => [
+export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManageBorrow = false }: ColumnActions): ColumnDef<BorrowSlipWithDetails>[] => [
   {
     accessorKey: "code",
     header: ({ column }) => (
@@ -143,6 +144,20 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory }: Column
     cell: ({ row }) => {
       const slip = row.original;
       const isReturned = slip.status === 'RETURNED';
+
+      if (!canManageBorrow) {
+        return (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onViewHistory(slip.id)}
+            className='h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+            title='Nháº­t kÃ½'
+          >
+            <History className='w-4 h-4' />
+          </Button>
+        )
+      }
 
       return (
         <div className='flex items-center gap-1'>

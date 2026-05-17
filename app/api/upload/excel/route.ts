@@ -6,16 +6,16 @@ import { createAuditLog } from '@/lib/services/audit-log'
 import { getAgencyForYear } from '@/lib/services/agency-history'
 import { getSession } from '@/lib/session'
 import type { Prisma } from '@/generated/prisma/client'
+import { requirePermission } from '@/lib/rbac'
 
 export const maxDuration = 300; // Increase max duration for large uploads
 
 export async function POST(request: NextRequest) {
     try {
         const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-        }
-        const userId = session.id;
+        const denied = requirePermission(session, 'manageFiles');
+        if (denied) return denied;
+        const userId = session!.id;
 
         const formData = await request.formData();
         const file = formData.get('file') as File;

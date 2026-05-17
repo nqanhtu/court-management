@@ -4,14 +4,14 @@ import { db } from '@/lib/db'
 import { parseChildDocumentsExcel } from '@/lib/excel-parser'
 import { createAuditLog } from '@/lib/services/audit-log'
 import { getSession } from '@/lib/session'
+import { requirePermission } from '@/lib/rbac'
 
 export async function POST(request: NextRequest) {
     try {
         const session = await getSession();
-        if (!session) {
-            return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-        }
-        const userId = session.id;
+        const denied = requirePermission(session, 'manageFiles');
+        if (denied) return denied;
+        const userId = session!.id;
 
         const formData = await request.formData();
         const file = formData.get('file') as File;

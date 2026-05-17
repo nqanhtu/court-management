@@ -32,7 +32,7 @@ export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDo
     const handleUpload = async (e: React.FormEvent) => {
         e.preventDefault()
         if (!file) {
-            toast.error('Please select a file')
+            toast.error('Vui lòng chọn file')
             return
         }
 
@@ -51,7 +51,7 @@ export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDo
             const result = await response.json()
 
             if (result.success) {
-                toast.success(`Add successfuly! ${result.successCount} documents`)
+                toast.success(`Đã thêm thành công ${result.successCount} văn bản`)
                 if (result.failureCount > 0) {
                     toast.warning(`${result.failureCount}`)
                     console.error(result.errors)
@@ -61,7 +61,7 @@ export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDo
                 // router.refresh()
                 if (onSuccess) onSuccess()
             } else {
-                toast.error(result.error || 'Upload failed!')
+                toast.error(result.error || 'Tải lên thất bại')
             }
         } catch (error) {
             toast.error('Có lỗi xảy ra')
@@ -77,17 +77,17 @@ export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDo
                 {trigger ? trigger : (
                     <Button size="sm" variant="outline" className="gap-2">
                         <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-                        Upload bản kê
+                        Tải lên bản kê
                     </Button>
                 )}
             </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Upload Mục lục văn bản</DialogTitle>
+                    <DialogTitle>Tải lên mục lục văn bản</DialogTitle>
                     <DialogDescription>
                         Tải lên file Excel danh sách các văn bản con (bản kê) cho hồ sơ này.
                         <br />
-                        File import sẽ được thêm vào danh sách hiện tại.
+                        File nhập sẽ được thêm vào danh sách hiện tại.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleUpload} className="space-y-4 py-4">
@@ -96,7 +96,7 @@ export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDo
                         onClick={() => document.getElementById('child-doc-upload')?.click()}
                     >
                         <UploadCloud className="h-10 w-10 text-muted-foreground mb-4" />
-                        <p className="text-sm font-medium">Click chọn file hoặc kéo thả</p>
+                        <p className="text-sm font-medium">Bấm để chọn file hoặc kéo thả</p>
                         <p className="text-xs text-muted-foreground mt-1">Hỗ trợ .xlsx, .xls</p>
                         <input
                             id="child-doc-upload"

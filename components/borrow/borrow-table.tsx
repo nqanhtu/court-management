@@ -35,6 +35,7 @@ interface BorrowTableProps {
   onDelete: (id: string) => void;
   onViewHistory: (id: string) => void;
   onCreate?: () => void;
+  canManageBorrow?: boolean;
 }
 
 export default function BorrowTable({
@@ -45,6 +46,7 @@ export default function BorrowTable({
   onDelete,
   onViewHistory,
   onCreate,
+  canManageBorrow = false,
 }: BorrowTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -55,7 +57,10 @@ export default function BorrowTable({
   const [sorting, setSorting] = React.useState<SortingState>([])
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  const columns = React.useMemo(() => getColumns({ onReturn, onEdit, onDelete, onViewHistory }), []);
+  const columns = React.useMemo(
+    () => getColumns({ onReturn, onEdit, onDelete, onViewHistory, canManageBorrow }),
+    [onReturn, onEdit, onDelete, onViewHistory, canManageBorrow]
+  );
 
   const table = useReactTable({
     data: borrowSlips,
@@ -134,7 +139,7 @@ export default function BorrowTable({
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Không có kết quả.
                 </TableCell>
               </TableRow>
             )}

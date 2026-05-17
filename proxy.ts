@@ -1,16 +1,16 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { decrypt } from '@/lib/auth-jwt';
-import type { User } from '@/lib/types/user';
+import { can } from '@/lib/rbac';
 
 export async function proxy(request: NextRequest) {
     console.log('Middleware (proxy.ts) is executing for:', request.nextUrl.pathname);
     const sessionCookie = request.cookies.get('session');
-    let user = null;
+    let user: { role?: string } | null = null;
 
     if (sessionCookie) {
         try {
-            user = await decrypt(sessionCookie.value);
+            user = (await decrypt(sessionCookie.value)) as { role?: string };
         } catch {
             // Invalid session
         }
@@ -39,21 +39,26 @@ export async function proxy(request: NextRequest) {
 
     // 3. RBAC
     if (user) {
-        // Upload: Only SUPER_ADMIN and COORDINATOR roles
+        // Upload/import and manual file creation are file-management features.
         if (pathname.startsWith('/upload')) {
-            if ((user as User).role !== 'SUPER_ADMIN' && (user as User).role !== 'COORDINATOR') {
+            if (!can(user.role, 'manageFiles')) {
                 return NextResponse.redirect(new URL('/', request.url)); // Or 403 page
             }
         }
 
         // Users/Admin Management: Only SUPER_ADMIN
         if (pathname.startsWith('/users')) {
-            if ((user as User).role !== 'SUPER_ADMIN') {
+            if (!can(user.role, 'manageUsers')) {
+                return NextResponse.redirect(new URL('/', request.url));
+            }
+        }
+        if (pathname.startsWith('/admin')) {
+            if (!can(user.role, 'manageAgencies')) {
                 return NextResponse.redirect(new URL('/', request.url));
             }
         }
         if (pathname.startsWith('/borrow')) {
-            if ((user as User).role !== 'SUPER_ADMIN' && (user as User).role !== 'COORDINATOR' && (user as User).role !== 'ADMIN') {
+            if (!can(user.role, 'viewBorrow')) {
                 return NextResponse.redirect(new URL('/', request.url)); // Or 403 page
             }
         }

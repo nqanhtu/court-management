@@ -21,7 +21,7 @@ function SubmitButton() {
             ) : (
                 <>
                     <Upload className="mr-2 h-4 w-4" />
-                    Upload Hồ sơ
+                    Tải lên hồ sơ
                 </>
             )}
         </Button>
@@ -87,7 +87,7 @@ export default function UploadPage() {
                                 <div className="flex flex-col items-center justify-center pt-5 pb-6">
                                     <Upload className="w-8 h-8 mb-3 text-muted-foreground" />
                                     <p className="mb-2 text-sm text-muted-foreground">
-                                        <span className="font-semibold">Click để chọn</span> hoặc kéo thả file vào đây
+                                        <span className="font-semibold">Bấm để chọn</span> hoặc kéo thả file vào đây
                                     </p>
                                     <p className="text-xs text-muted-foreground">XLSX, XLS (Tối đa 10MB)</p>
                                 </div>

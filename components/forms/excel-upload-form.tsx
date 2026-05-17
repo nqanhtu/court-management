@@ -59,7 +59,7 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
                 onClick={() => document.getElementById('file-upload')?.click()}
             >
                 <UploadCloud className="h-10 w-10 text-muted-foreground mb-4" />
-                <p className="text-sm font-medium">Click để chọn file hoặc kéo thả</p>
+                <p className="text-sm font-medium">Bấm để chọn file hoặc kéo thả</p>
                 <p className="text-xs text-muted-foreground mt-1">Hỗ trợ .xlsx, .xls</p>
                 <input
                     id="file-upload"
@@ -71,7 +71,7 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
             </div>
             {file && (
                 <div className="flex items-center gap-2 text-sm bg-muted p-2 rounded">
-                    <span className="font-semibold">File đã chọn:</span>
+                    <span className="font-semibold">Tệp đã chọn:</span>
                     {file.name}
                 </div>
             )}
@@ -83,7 +83,7 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
                             Đang xử lý...
                         </>
                     ) : (
-                        'Upload & Import'
+                        'Tải lên và nhập dữ liệu'
                     )}
                 </Button>
             </DialogFooter>

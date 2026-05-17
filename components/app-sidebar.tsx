@@ -24,6 +24,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
+import { can } from "@/lib/rbac";
 
 interface AppSidebarProps {
   user?: User;
@@ -43,11 +44,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
       items: [
         { name: "Hồ sơ", href: "/", icon: LayoutDashboard }, // All
         // Borrow: SuperAdmin, Admin, Coordinator
-        ...(role === "SUPER_ADMIN" || role === "ADMIN" || role === "COORDINATOR"
+        ...(can(role, "viewBorrow")
           ? [{ name: "Mượn trả", href: "/borrow", icon: FileText }]
           : []),
         // Users: SuperAdmin only
-        ...(role === "SUPER_ADMIN"
+        ...(can(role, "manageUsers")
           ? [
             { name: "Người dùng", href: "/users", icon: Users },
             { name: "Phông lưu trữ", href: "/admin/agency", icon: Building2 },
@@ -55,7 +56,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
           ]
           : []),
         // Upload: SuperAdmin or Admin
-        ...(role === "SUPER_ADMIN" || role === "ADMIN"
+        ...(can(role, "manageFiles")
           ? [{ name: "Nhập liệu", href: "/upload", icon: Upload }]
           : []),
       ],

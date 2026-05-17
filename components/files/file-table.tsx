@@ -34,6 +34,7 @@ interface FileTableProps {
   files: FileWithBox[]
   isLoading?: boolean
   role?: string // For RBAC display
+  canBorrow?: boolean
   onCreate?: () => void
   total?: number
   page?: number
@@ -42,7 +43,7 @@ interface FileTableProps {
   onRefresh?: () => void
 }
 
-export function FileTable({ files, isLoading, onCreate, total, page = 1, pageSize = 10, onPaginationChange, onRefresh }: FileTableProps) {
+export function FileTable({ files, isLoading, canBorrow = false, onCreate, total, page = 1, pageSize = 10, onPaginationChange, onRefresh }: FileTableProps) {
   const router = useRouter();
   const [rowSelection, setRowSelection] = React.useState({})
   const [isBorrowModalOpen, setIsBorrowModalOpen] = React.useState(false);
@@ -62,9 +63,47 @@ export function FileTable({ files, isLoading, onCreate, total, page = 1, pageSiz
     pageSize: pageSize,
   }
 
+  const handleBorrow = (selectedFiles: FileWithBox[]) => {
+    const files = selectedFiles;
+    const borrowed = files.filter((f) => f.status === "BORROWED");
+    if (borrowed.length > 0) {
+      toast.error(
+        `Có ${borrowed.length} hồ sơ đang được mượn không thể tạo phiếu.`
+      );
+      return;
+    }
+    setBorrowFiles(files);
+    setIsBorrowModalOpen(true);
+  };
+
+  const handleDeleteFile = async (file: FileWithBox) => {
+    try {
+      const response = await fetch(`/api/files/${file.id}`, {
+        method: 'DELETE',
+      })
+      const result = await response.json()
+
+      if (response.ok && result.success) {
+        toast.success('Đã xóa hồ sơ')
+        onRefresh?.()
+        router.refresh()
+        return
+      }
+
+      toast.error('Không thể xóa hồ sơ', {
+        description: result.message || result.error || 'Vui lòng thử lại.',
+      })
+    } catch {
+      toast.error('Không thể xóa hồ sơ')
+    }
+  };
+
   // Use getColumns. We pass undefined for fileId (so no child actions) and a no-op for mutate.
-  // We cast to any to satisfy TS constraint differences between FileDocument and FileWithBox
-  const columns = React.useMemo(() => getColumns(undefined, () => { }) as any, [])
+  // We cast to any to satisfy TS constraint differences between FileDocument and FileWithBox.
+  const columns = React.useMemo(
+    () => getColumns(undefined, () => { }, !!onCreate, handleDeleteFile as any) as any,
+    [onCreate]
+  )
 
   const table = useReactTable({
     data: files,
@@ -94,22 +133,9 @@ export function FileTable({ files, isLoading, onCreate, total, page = 1, pageSiz
     getSortedRowModel: getSortedRowModel(),
   })
 
-  const handleBorrow = (selectedFiles: FileWithBox[]) => {
-    const files = selectedFiles;
-    const borrowed = files.filter((f) => f.status === "BORROWED");
-    if (borrowed.length > 0) {
-      toast.error(
-        `Có ${borrowed.length} hồ sơ đang được mượn không thể tạo phiếu.`
-      );
-      return;
-    }
-    setBorrowFiles(files);
-    setIsBorrowModalOpen(true);
-  };
-
   return (
     <div className="space-y-4">
-      <FileTableToolbar table={table} onCreate={onCreate} onBorrow={handleBorrow} />
+      <FileTableToolbar table={table} onCreate={onCreate} onBorrow={canBorrow ? handleBorrow : undefined} />
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -164,7 +190,7 @@ export function FileTable({ files, isLoading, onCreate, total, page = 1, pageSiz
                   colSpan={columns.length}
                   className="h-24 text-center"
                 >
-                  No results.
+                  Không có kết quả.
                 </TableCell>
               </TableRow>
             )}

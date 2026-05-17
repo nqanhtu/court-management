@@ -4,6 +4,7 @@ import { getSession } from '@/lib/session'
 import { createAuditLog } from '@/lib/services/audit-log'
 import { createBorrowSlipEvent } from '@/lib/services/borrow'
 import { revalidatePath } from 'next/cache'
+import { requirePermission } from '@/lib/rbac'
 
 export async function GET(
     request: NextRequest,
@@ -12,9 +13,8 @@ export async function GET(
     const { id } = await params
     try {
         const session = await getSession();
-         if (!session) {
-             return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-         }
+        const denied = requirePermission(session, 'viewBorrow');
+        if (denied) return denied;
 
         const borrowSlip = await db.borrowSlip.findUnique({
             where: { id },
@@ -46,10 +46,9 @@ export async function PUT(
     try {
         const { id } = await params
         const session = await getSession()
-        if (!session?.id) {
-            return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 })
-        }
-        const editorId = session.id
+        const denied = requirePermission(session, 'manageBorrow')
+        if (denied) return denied
+        const editorId = session!.id
 
         const data = await request.json()
         const { borrowerName, borrowerUnit, borrowerTitle, reason, dueDate, fileIds } = data

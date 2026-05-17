@@ -40,7 +40,12 @@ export type FileDocument = {
   status?: string | null
 }
 
-export const getColumns = (fileId: string | undefined, mutate: () => void): ColumnDef<FileDocument>[] => {
+export const getColumns = (
+  fileId: string | undefined,
+  mutate: () => void,
+  canManageFiles = false,
+  onDeleteFile?: (file: FileDocument) => void
+): ColumnDef<FileDocument>[] => {
   const cols: ColumnDef<FileDocument>[] = [
     {
     id: "select",
@@ -143,6 +148,41 @@ export const getColumns = (fileId: string | undefined, mutate: () => void): Colu
       cell: ({ row }) => {
         const doc = row.original
 
+        if (!fileId) {
+          return (
+            <div className="flex items-center justify-end">
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:text-red-600"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Xác nhận xóa hồ sơ?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Hành động này sẽ xóa hồ sơ và toàn bộ tài liệu con nếu hồ sơ chưa có lịch sử mượn/trả.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Hủy</AlertDialogCancel>
+                    <AlertDialogAction
+                      className="bg-red-600 hover:bg-red-700"
+                      onClick={() => onDeleteFile?.(doc)}
+                    >
+                      Xóa
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          )
+        }
+
         return (
           <div className="flex items-center">
             <ChildDocumentFormModal
@@ -164,28 +204,28 @@ export const getColumns = (fileId: string | undefined, mutate: () => void): Colu
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogTitle>Xác nhận xóa văn bản?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete this document from our servers.
+                    Hành động này không thể hoàn tác. Văn bản này sẽ bị xóa vĩnh viễn khỏi hồ sơ.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogCancel>Hủy</AlertDialogCancel>
                   <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
                     try {
-                      const res = await fetch(`/api/files/child-document?id=${doc.id}`, {
+                      const res = await fetch(`/api/documents/${doc.id}`, {
                         method: 'DELETE'
                       })
                       if (res.ok) {
-                        toast.success('Delete successful')
+                        toast.success('Xóa thành công')
                         mutate()
                       } else {
-                        toast.error('Delete failed')
+                        toast.error('Xóa thất bại')
                       }
                     } catch (e) {
-                      toast.error('Delete failed')
+                      toast.error('Xóa thất bại')
                     }
-                  }}>Continue</AlertDialogAction>
+                  }}>Xóa</AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
@@ -195,7 +235,7 @@ export const getColumns = (fileId: string | undefined, mutate: () => void): Colu
     }
   ]
 
-  return cols
+  return canManageFiles ? cols : cols.filter((column) => column.id !== "actions")
 }
 
 

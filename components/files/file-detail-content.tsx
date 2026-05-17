@@ -1,6 +1,5 @@
 'use client'
 
-import { useMemo } from 'react'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 
@@ -13,6 +12,7 @@ import { Separator } from "@/components/ui/separator"
 
 import { Box, FileText, MapPin, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, User, Users } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { useFile } from '@/lib/hooks/use-files'
 
 import { ChildDocumentUploadModal } from './child-document-upload-modal'
@@ -31,9 +31,39 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { toast } from 'sonner'
+import { useSession } from '@/lib/hooks/use-auth'
+import { can } from '@/lib/rbac'
 
 export function FileDetailContent({ id }: { id: string }) {
     const { file, isLoading, mutate } = useFile(id)
+    const router = useRouter()
+    const { session } = useSession()
+    const canManageFiles = can(session?.role, 'manageFiles')
+    const canManageBorrow = can(session?.role, 'manageBorrow')
+
+    const handleDeleteFile = async () => {
+        if (!file) return
+
+        try {
+            const response = await fetch(`/api/files/${file.id}`, {
+                method: 'DELETE',
+            })
+            const result = await response.json()
+
+            if (response.ok && result.success) {
+                toast.success('Đã xóa hồ sơ')
+                router.push('/')
+                router.refresh()
+                return
+            }
+
+            toast.error('Không thể xóa hồ sơ', {
+                description: result.message || result.error || 'Vui lòng thử lại.',
+            })
+        } catch {
+            toast.error('Không thể xóa hồ sơ')
+        }
+    }
 
     // Helper to format date consistent with Vietnamese format dd/MM/yyyy
     const formatDate = (date: string | Date | null | undefined, includeTime = false) => {
@@ -79,7 +109,34 @@ export function FileDetailContent({ id }: { id: string }) {
                     </div>
                 </div>
                 <div className="flex gap-2">
-                     {file.status !== 'BORROWED' && !file.isLocked && (
+                    {canManageFiles && (
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="outline" className="text-destructive hover:text-destructive">
+                                    <Trash2 className="h-4 w-4" />
+                                    Xóa hồ sơ
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>Xác nhận xóa hồ sơ?</AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Hành động này sẽ xóa hồ sơ và toàn bộ tài liệu con nếu hồ sơ chưa có lịch sử mượn/trả.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Hủy</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        className="bg-red-600 hover:bg-red-700"
+                                        onClick={handleDeleteFile}
+                                    >
+                                        Xóa
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                     {canManageBorrow && file.status !== 'BORROWED' && !file.isLocked && (
                         <Button asChild>
                             <Link href={`/borrow/create?files=${file.id}`}>
                                 Lập phiếu mượn
@@ -342,10 +399,12 @@ export function FileDetailContent({ id }: { id: string }) {
                                 <FileText className="mr-2 h-5 w-5" />
                                 Mục lục văn bản ({file.documents?.length || 0})
                             </CardTitle>
-                            <div className="flex gap-2">
-                                <ChildDocumentFormModal fileId={file.id} onSuccess={() => mutate()} />
-                                <ChildDocumentUploadModal fileId={file.id} onSuccess={() => mutate()} />
-                            </div>
+                            {canManageFiles && (
+                                <div className="flex gap-2">
+                                    <ChildDocumentFormModal fileId={file.id} onSuccess={() => mutate()} />
+                                    <ChildDocumentUploadModal fileId={file.id} onSuccess={() => mutate()} />
+                                </div>
+                            )}
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -358,7 +417,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                     <TableHead>Thời gian</TableHead>
                                     <TableHead className="text-right">Số tờ</TableHead>
                                     <TableHead>Ghi chú</TableHead>
-                                    <TableHead className="w-[50px]"></TableHead>
+                                            {canManageFiles && <TableHead className="w-[50px]"></TableHead>}
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -379,7 +438,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                             <TableCell className="text-right">{doc.pageCount}</TableCell>
 
                                             <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note}>{doc.note}</TableCell>
-                                            <TableCell>
+                                            {canManageFiles && <TableCell>
                                                 <div className="flex items-center">
                                                     <ChildDocumentFormModal
                                                         fileId={file.id}
@@ -409,7 +468,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                                                 <AlertDialogCancel>Hủy</AlertDialogCancel>
                                                                 <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
                                                                     try {
-                                                                        const res = await fetch(`/api/files/child-document?id=${doc.id}`, {
+                                                                        const res = await fetch(`/api/documents/${doc.id}`, {
                                                                             method: 'DELETE'
                                                                         })
                                                                         if (res.ok) {
@@ -426,12 +485,12 @@ export function FileDetailContent({ id }: { id: string }) {
                                                         </AlertDialogContent>
                                                     </AlertDialog>
                                                 </div>
-                                            </TableCell>
+                                            </TableCell>}
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={7} className="text-center text-muted-foreground p-8">
+                                        <TableCell colSpan={canManageFiles ? 7 : 6} className="text-center text-muted-foreground p-8">
                                             Chưa có văn bản con
                                         </TableCell>
                                     </TableRow>

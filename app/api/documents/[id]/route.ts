@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { createAuditLog } from '@/lib/services/audit-log'
 import { getSession } from '@/lib/session'
+import { requirePermission } from '@/lib/rbac'
 
 export async function PUT(
     request: NextRequest,
@@ -11,10 +12,9 @@ export async function PUT(
     const { id } = await params
     try {
         const session = await getSession();
-         if (!session) {
-             return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-         }
-        const userId = session.id;
+        const denied = requirePermission(session, 'manageFiles');
+        if (denied) return denied;
+        const userId = session!.id;
 
         const data = await request.json();
         // data contains updated fields. Check if fileId is needed? 
@@ -62,10 +62,9 @@ export async function DELETE(
     const { id } = await params
      try {
         const session = await getSession();
-         if (!session) {
-             return NextResponse.json({ success: false, message: 'Unauthorized' }, { status: 401 });
-         }
-        const userId = session.id;
+        const denied = requirePermission(session, 'manageFiles');
+        if (denied) return denied;
+        const userId = session!.id;
         
         // We need fileId for the audit log detail in original action?
         // "detail: { title: deletedDoc.title, fileId }"

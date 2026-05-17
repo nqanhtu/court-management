@@ -3,10 +3,15 @@ import { db } from '@/lib/db'
 import { Prisma } from '@/generated/prisma/client'
 import { createAuditLog } from '@/lib/services/audit-log'
 import { getSession } from '@/lib/session'
+import { requirePermission } from '@/lib/rbac'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(request: NextRequest) {
+    const session = await getSession()
+    const denied = requirePermission(session, 'viewFiles')
+    if (denied) return denied
+
     const searchParams = request.nextUrl.searchParams
     const query = searchParams.get('q') || undefined
     const type = searchParams.get('type') || undefined
@@ -53,6 +58,9 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
     try {
         const session = await getSession()
+        const denied = requirePermission(session, 'manageFiles')
+        if (denied) return denied
+
         const data = await request.json()
         // TODO: Validate data with zod if possible, for now trusting inputs or basic checks
 

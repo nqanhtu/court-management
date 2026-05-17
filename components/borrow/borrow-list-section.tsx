@@ -9,9 +9,13 @@ import BorrowHistoryModal from '@/components/borrow/borrow-history-modal'
 import { BorrowReturnDialog } from '@/components/borrow/borrow-return-dialog'
 import { BorrowSlipWithDetails } from '@/lib/types/borrow'
 import { toast } from 'sonner'
+import { useSession } from '@/lib/hooks/use-auth'
+import { can } from '@/lib/rbac'
 
 export function BorrowListSection() {
     const { borrowSlips, isLoading, mutate } = useBorrowSlips()
+    const { session } = useSession()
+    const canManageBorrow = can(session?.role, 'manageBorrow')
 
     // Modal states
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
@@ -82,7 +86,8 @@ export function BorrowListSection() {
                     onEdit={handleEdit}
                     onDelete={handleDelete}
                     onViewHistory={handleViewHistory}
-                    onCreate={() => setIsAddModalOpen(true)}
+                    canManageBorrow={canManageBorrow}
+                    onCreate={canManageBorrow ? () => setIsAddModalOpen(true) : undefined}
                 />
             </div>
 

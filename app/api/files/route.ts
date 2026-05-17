@@ -16,6 +16,13 @@ export async function GET(request: NextRequest) {
     const query = searchParams.get('q') || undefined
     const type = searchParams.get('type') || undefined
     const year = searchParams.get('year') ? parseInt(searchParams.get('year')!) : undefined
+    const status = searchParams.get('status') || undefined
+    const judgmentNumber = searchParams.get('judgmentNumber') || undefined
+    const party = searchParams.get('party') || undefined
+    const warehouse = searchParams.get('warehouse') || undefined
+    const line = searchParams.get('line') || undefined
+    const shelf = searchParams.get('shelf') || undefined
+    const slot = searchParams.get('slot') || undefined
     const limit = parseInt(searchParams.get('limit') || '20')
     const offset = parseInt(searchParams.get('offset') || '0')
 
@@ -27,10 +34,32 @@ export async function GET(request: NextRequest) {
                     { title: { contains: query, mode: 'insensitive' } },
                     { judgmentNumber: { contains: query, mode: 'insensitive' } },
                     { indexCode: { contains: query, mode: 'insensitive' } },
+                    { defendants: { has: query } },
+                    { plaintiffs: { has: query } },
+                    { civilDefendants: { has: query } },
                 ]
             } : {},
             type && type !== 'all' ? { type: { equals: type } } : {},
             year ? { year: { equals: year } } : {},
+            status && status !== 'all' ? { status: { equals: status } } : { NOT: { status: 'ARCHIVED' } },
+            judgmentNumber ? { judgmentNumber: { contains: judgmentNumber, mode: 'insensitive' } } : {},
+            party ? {
+                OR: [
+                    { defendants: { has: party } },
+                    { plaintiffs: { has: party } },
+                    { civilDefendants: { has: party } },
+                ]
+            } : {},
+            warehouse || line || shelf || slot ? {
+                box: {
+                    is: {
+                        ...(warehouse ? { warehouse: { contains: warehouse, mode: 'insensitive' as const } } : {}),
+                        ...(line ? { line: { contains: line, mode: 'insensitive' as const } } : {}),
+                        ...(shelf ? { shelf: { contains: shelf, mode: 'insensitive' as const } } : {}),
+                        ...(slot ? { slot: { contains: slot, mode: 'insensitive' as const } } : {}),
+                    }
+                }
+            } : {},
         ]
     }
 

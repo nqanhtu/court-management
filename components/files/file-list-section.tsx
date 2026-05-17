@@ -15,12 +15,26 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
     const searchParams = useSearchParams()
     const q = searchParams.get('q') || undefined
     const type = searchParams.get('type') || undefined
+    const status = searchParams.get('status') || undefined
+    const judgmentNumber = searchParams.get('judgmentNumber') || undefined
+    const party = searchParams.get('party') || undefined
+    const warehouse = searchParams.get('warehouse') || undefined
+    const line = searchParams.get('line') || undefined
+    const shelf = searchParams.get('shelf') || undefined
+    const slot = searchParams.get('slot') || undefined
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
 
     const { files, total, isLoading, mutate } = useFiles({
         query: q,
         type,
+        status,
+        judgmentNumber,
+        party,
+        warehouse,
+        line,
+        shelf,
+        slot,
         limit,
         offset: (page - 1) * limit
     })

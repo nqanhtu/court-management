@@ -3,6 +3,13 @@ export interface SearchParams {
   query?: string
   type?: string
   year?: number
+  status?: string
+  judgmentNumber?: string
+  party?: string
+  warehouse?: string
+  line?: string
+  shelf?: string
+  slot?: string
   limit?: number
   offset?: number
 }
@@ -15,6 +22,13 @@ export function useFiles(params: SearchParams) {
     if (params.query) queryString.set('q', params.query)
     if (params.type && params.type !== 'all') queryString.set('type', params.type)
     if (params.year) queryString.set('year', params.year.toString())
+    if (params.status && params.status !== 'all') queryString.set('status', params.status)
+    if (params.judgmentNumber) queryString.set('judgmentNumber', params.judgmentNumber)
+    if (params.party) queryString.set('party', params.party)
+    if (params.warehouse) queryString.set('warehouse', params.warehouse)
+    if (params.line) queryString.set('line', params.line)
+    if (params.shelf) queryString.set('shelf', params.shelf)
+    if (params.slot) queryString.set('slot', params.slot)
     if (params.limit) queryString.set('limit', params.limit.toString())
     if (params.offset) queryString.set('offset', params.offset.toString())
 

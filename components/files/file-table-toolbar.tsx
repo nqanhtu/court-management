@@ -1,136 +1,214 @@
 "use client";
 
 import { Table } from "@tanstack/react-table";
-import { X, Search } from "lucide-react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { Search, X } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useDebouncedCallback } from "use-debounce";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { DataTableFacetedFilter } from "@/components/ui/data-table-faceted-filter";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface FileTableToolbarProps<TData> {
   table: Table<TData>;
   onCreate?: () => void;
   onBorrow?: (files: TData[]) => void;
+  density?: "compact" | "comfortable";
+  onDensityChange?: (density: "compact" | "comfortable") => void;
 }
 
-// TODO: Define status options properly or import shared constants
 const statuses = [
-  {
-    value: "BORROWED",
-    label: "Đang mượn",
-  },
-  {
-    value: "IN_STOCK",
-    label: "Lưu kho",
-  },
+  { value: "IN_STOCK", label: "Trong kho" },
+  { value: "BORROWED", label: "Đang mượn" },
+  { value: "ARCHIVED", label: "Ngừng sử dụng" },
+  { value: "LOST", label: "Thất lạc" },
+];
+
+const caseTypes = [
+  { label: "Hình sự", value: "Hình sự" },
+  { label: "Dân sự", value: "Dân sự" },
+  { label: "Hành chính", value: "Hành chính" },
+  { label: "Kinh tế", value: "Kinh tế" },
 ];
 
 export function FileTableToolbar<TData>({
   table,
   onCreate,
   onBorrow,
+  density = "comfortable",
+  onDensityChange,
 }: FileTableToolbarProps<TData>) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isFiltered =
-    !!searchParams.get("q") ||
-    !!searchParams.get("type") ||
-    table.getState().columnFilters.length > 0;
 
-  const handleSearch = useDebouncedCallback((term: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (term) {
-      params.set("q", term);
-    } else {
-      params.delete("q");
-    }
-    params.set("page", "1");
-    router.replace(`/?${params.toString()}`);
-  }, 300);
+  const isFiltered = [
+    "q",
+    "type",
+    "status",
+    "year",
+    "judgmentNumber",
+    "party",
+    "warehouse",
+    "line",
+    "shelf",
+    "slot",
+  ].some((key) => !!searchParams.get(key)) || table.getState().columnFilters.length > 0;
 
-  const handleTypeChange = (value: string) => {
+  const setUrlParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
     if (value && value !== "all") {
-      params.set("type", value);
+      params.set(key, value);
     } else {
-      params.delete("type");
+      params.delete(key);
     }
     params.set("page", "1");
     router.replace(`/?${params.toString()}`);
   };
+
+  const handleSearch = useDebouncedCallback((term: string) => {
+    setUrlParam("q", term.trim());
+  }, 300);
+
+  const handleTextFilter = useDebouncedCallback((key: string, value: string) => {
+    setUrlParam(key, value.trim());
+  }, 300);
 
   const handleReset = () => {
     table.resetColumnFilters();
     const params = new URLSearchParams(searchParams);
-    params.delete("q");
-    params.delete("type");
+    [
+      "q",
+      "type",
+      "status",
+      "year",
+      "judgmentNumber",
+      "party",
+      "warehouse",
+      "line",
+      "shelf",
+      "slot",
+    ].forEach((key) => params.delete(key));
+    params.set("page", "1");
     router.replace(`/?${params.toString()}`);
   };
 
   return (
-    <div className="flex items-center justify-between">
-      <div className="flex flex-1 items-center gap-2">
-        <div className="relative">
-          <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="Tìm kiếm hồ sơ (mã, tiêu đề)..."
-            defaultValue={searchParams.get("q")?.toString()}
-            onChange={(event) => handleSearch(event.target.value)}
-            className="h-9 w-37.5 lg:w-62.5 pl-8"
-          />
-        </div>
+    <div className="flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex flex-1 flex-wrap items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Tìm hồ sơ, mã, tiêu đề..."
+              defaultValue={searchParams.get("q")?.toString()}
+              onChange={(event) => handleSearch(event.target.value)}
+              className="h-9 w-56 pl-8 lg:w-72"
+            />
+          </div>
 
-        <DataTableFacetedFilter
-          title="Loại án"
-          options={[
-            { label: "Hình sự", value: "Hình sự" },
-            { label: "Dân sự", value: "Dân sự" },
-            { label: "Hành chính", value: "Hành chính" },
-            { label: "Kinh tế", value: "Kinh tế" },
-          ]}
-          value={searchParams.get("type") ? [searchParams.get("type")!] : []}
-          onFilter={(values) => handleTypeChange(values?.[0] || "all")}
-        />
-
-        {table.getColumn("status") && (
           <DataTableFacetedFilter
-            column={table.getColumn("status")}
+            title="Loại án"
+            options={caseTypes}
+            value={searchParams.get("type") ? [searchParams.get("type")!] : []}
+            onFilter={(values) => setUrlParam("type", values?.[0] || "all")}
+          />
+
+          <DataTableFacetedFilter
             title="Trạng thái"
             options={statuses}
+            value={searchParams.get("status") ? [searchParams.get("status")!] : []}
+            onFilter={(values) => setUrlParam("status", values?.[0] || "all")}
           />
-        )}
-        {isFiltered && (
-          <Button
-            variant="ghost"
-            onClick={handleReset}
-            className="h-8 px-2 lg:px-3"
-          >
-            Đặt lại
-            <X className="ml-2 h-4 w-4" />
-          </Button>
-        )}
-      </div>
-      <div className="flex items-center gap-2">
-        {onBorrow && (
-          table.getFilteredSelectedRowModel().rows.length > 0 ? (
-            <Button
-              onClick={() =>
-                onBorrow(
-                  table
-                    .getFilteredSelectedRowModel()
-                    .rows.map((row) => row.original),
-                )
-              }
-            >
-              Tạo phiếu mượn ({table.getFilteredSelectedRowModel().rows.length})
+
+          <Input
+            placeholder="Năm"
+            defaultValue={searchParams.get("year")?.toString()}
+            onChange={(event) => handleTextFilter("year", event.target.value)}
+            className="h-9 w-24"
+          />
+          <Input
+            placeholder="Số bản án"
+            defaultValue={searchParams.get("judgmentNumber")?.toString()}
+            onChange={(event) => handleTextFilter("judgmentNumber", event.target.value)}
+            className="h-9 w-36"
+          />
+          <Input
+            placeholder="Đương sự"
+            defaultValue={searchParams.get("party")?.toString()}
+            onChange={(event) => handleTextFilter("party", event.target.value)}
+            className="h-9 w-36"
+          />
+
+          {isFiltered && (
+            <Button variant="ghost" onClick={handleReset} className="h-8 px-2 lg:px-3">
+              Đặt lại
+              <X className="ml-2 h-4 w-4" />
             </Button>
-          ) : (
-            <Button disabled>Chọn hồ sơ để tạo phiếu mượn</Button>
-          )
-        )}
-        {onCreate && <Button onClick={onCreate}>Thêm hồ sơ</Button>}
+          )}
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <Select
+            value={density}
+            onValueChange={(value) => onDensityChange?.(value as "compact" | "comfortable")}
+          >
+            <SelectTrigger className="h-9 w-28">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="comfortable">Thoáng</SelectItem>
+              <SelectItem value="compact">Gọn</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {onBorrow &&
+            (table.getFilteredSelectedRowModel().rows.length > 0 ? (
+              <Button
+                onClick={() =>
+                  onBorrow(table.getFilteredSelectedRowModel().rows.map((row) => row.original))
+                }
+              >
+                Tạo phiếu mượn ({table.getFilteredSelectedRowModel().rows.length})
+              </Button>
+            ) : (
+              <Button disabled>Chọn hồ sơ để tạo phiếu mượn</Button>
+            ))}
+          {onCreate && <Button onClick={onCreate}>Thêm hồ sơ</Button>}
+        </div>
+      </div>
+
+      <div className="grid gap-2 md:grid-cols-4">
+        <Input
+          placeholder="Kho"
+          defaultValue={searchParams.get("warehouse")?.toString()}
+          onChange={(event) => handleTextFilter("warehouse", event.target.value)}
+          className="h-9"
+        />
+        <Input
+          placeholder="Dãy"
+          defaultValue={searchParams.get("line")?.toString()}
+          onChange={(event) => handleTextFilter("line", event.target.value)}
+          className="h-9"
+        />
+        <Input
+          placeholder="Kệ"
+          defaultValue={searchParams.get("shelf")?.toString()}
+          onChange={(event) => handleTextFilter("shelf", event.target.value)}
+          className="h-9"
+        />
+        <Input
+          placeholder="Ngăn"
+          defaultValue={searchParams.get("slot")?.toString()}
+          onChange={(event) => handleTextFilter("slot", event.target.value)}
+          className="h-9"
+        />
       </div>
     </div>
   );

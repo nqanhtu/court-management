@@ -111,8 +111,14 @@ export const getColumns = (
       header: "Trạng thái",
       cell: ({ row }) => {
         const status = row.original.status || "IN_STOCK"
-        const variant = status === "BORROWED" ? "warning" : status === "LOST" ? "secondary" : "default"
-        const label = status === "BORROWED" ? "Đang mượn" : status === "LOST" ? "Thất lạc" : "Trong kho"
+        const variant = status === "BORROWED" ? "warning" : status === "ARCHIVED" || status === "LOST" ? "secondary" : "default"
+        const label = status === "BORROWED"
+          ? "Đang mượn"
+          : status === "ARCHIVED"
+            ? "Ngừng sử dụng"
+            : status === "LOST"
+              ? "Thất lạc"
+              : "Trong kho"
         
         return (
           <Badge variant={variant}>
@@ -163,9 +169,9 @@ export const getColumns = (
                 </AlertDialogTrigger>
                 <AlertDialogContent>
                   <AlertDialogHeader>
-                    <AlertDialogTitle>Xác nhận xóa hồ sơ?</AlertDialogTitle>
+                    <AlertDialogTitle>Lưu trữ hồ sơ?</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Hành động này sẽ xóa hồ sơ và toàn bộ tài liệu con nếu hồ sơ chưa có lịch sử mượn/trả.
+                      Hồ sơ sẽ chuyển sang trạng thái ngừng sử dụng và bị ẩn khỏi danh sách mặc định. Lịch sử mượn/trả vẫn được giữ lại.
                     </AlertDialogDescription>
                   </AlertDialogHeader>
                   <AlertDialogFooter>
@@ -174,7 +180,7 @@ export const getColumns = (
                       className="bg-red-600 hover:bg-red-700"
                       onClick={() => onDeleteFile?.(doc)}
                     >
-                      Xóa
+                      Lưu trữ
                     </AlertDialogAction>
                   </AlertDialogFooter>
                 </AlertDialogContent>

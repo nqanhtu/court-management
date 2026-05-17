@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
 
     return apiSuccess({ stats: result.stats, preview: result.preview }, 'Nhập dữ liệu thành công')
   } catch (error) {
-    console.error('Upload error:', error)
+    console.error('Excel commit error:', error)
     const message = error instanceof Error ? error.message : 'Không thể nhập dữ liệu Excel'
     return apiError(message, 500)
   }

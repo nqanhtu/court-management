@@ -1,6 +1,7 @@
 import * as React from 'react'
 import {
   ColumnFiltersState,
+  ColumnDef,
   SortingState,
   VisibilityState,
   flexRender,
@@ -12,7 +13,7 @@ import {
 } from '@tanstack/react-table'
 
 import { toast } from "sonner"
-import { Loader2 } from 'lucide-react'
+import { Columns3, Loader2 } from 'lucide-react'
 import { useRouter } from "next/navigation"
 
 import {
@@ -24,11 +25,20 @@ import {
   TableRow,
 } from '@/components/ui/table'
 
-import { getColumns, FileWithBox } from "@/components/files/columns"
+import { FileDocument, getColumns, FileWithBox } from "@/components/files/columns"
 import { DataTablePagination } from "@/components/ui/data-table-pagination"
 import { FileTableToolbar } from '@/components/files/file-table-toolbar'
 import Modal from "@/components/modal"
 import BorrowForm from "@/components/borrow/borrow-form"
+import { Button } from "@/components/ui/button"
+import {
+  DropdownMenu,
+  DropdownMenuCheckboxItem,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 interface FileTableProps {
   files: FileWithBox[]
@@ -50,6 +60,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
   const [borrowFiles, setBorrowFiles] = React.useState<FileWithBox[]>([]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
+  const [density, setDensity] = React.useState<'compact' | 'comfortable'>('comfortable')
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   )
@@ -57,6 +68,22 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
 
   // Determine if we are using manual pagination (server-side)
   const isManual = total !== undefined
+
+  React.useEffect(() => {
+    const storedVisibility = window.localStorage.getItem('files-table-column-visibility')
+    const storedDensity = window.localStorage.getItem('files-table-density')
+
+    if (storedVisibility) setColumnVisibility(JSON.parse(storedVisibility))
+    if (storedDensity === 'compact' || storedDensity === 'comfortable') setDensity(storedDensity)
+  }, [])
+
+  React.useEffect(() => {
+    window.localStorage.setItem('files-table-column-visibility', JSON.stringify(columnVisibility))
+  }, [columnVisibility])
+
+  React.useEffect(() => {
+    window.localStorage.setItem('files-table-density', density)
+  }, [density])
 
   const paginationState = {
     pageIndex: page - 1,
@@ -76,7 +103,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
     setIsBorrowModalOpen(true);
   };
 
-  const handleDeleteFile = async (file: FileWithBox) => {
+  const handleDeleteFile = React.useCallback(async (file: FileDocument) => {
     try {
       const response = await fetch(`/api/files/${file.id}`, {
         method: 'DELETE',
@@ -96,13 +123,11 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
     } catch {
       toast.error('Không thể xóa hồ sơ')
     }
-  };
+  }, [onRefresh, router]);
 
-  // Use getColumns. We pass undefined for fileId (so no child actions) and a no-op for mutate.
-  // We cast to any to satisfy TS constraint differences between FileDocument and FileWithBox.
-  const columns = React.useMemo(
-    () => getColumns(undefined, () => { }, !!onCreate, handleDeleteFile as any) as any,
-    [onCreate]
+  const columns = React.useMemo<ColumnDef<FileWithBox>[]>(
+    () => getColumns(undefined, () => { }, !!onCreate, handleDeleteFile) as unknown as ColumnDef<FileWithBox>[],
+    [onCreate, handleDeleteFile]
   )
 
   const table = useReactTable({
@@ -135,10 +160,43 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
 
   return (
     <div className="space-y-4">
-      <FileTableToolbar table={table} onCreate={onCreate} onBorrow={canBorrow ? handleBorrow : undefined} />
-      <div className="rounded-md border">
+      <FileTableToolbar
+        table={table}
+        onCreate={onCreate}
+        onBorrow={canBorrow ? handleBorrow : undefined}
+        density={density}
+        onDensityChange={setDensity}
+      />
+      <div className="overflow-hidden rounded-md border">
+        <div className="flex items-center justify-end gap-2 border-b bg-muted/30 px-2 py-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm">
+                <Columns3 className="h-4 w-4" />
+                Cột hiển thị
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Tùy chỉnh bảng</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => (
+                  <DropdownMenuCheckboxItem
+                    key={column.id}
+                    checked={column.getIsVisible()}
+                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                  >
+                    {column.id}
+                  </DropdownMenuCheckboxItem>
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+        <div className="max-h-[65vh] overflow-auto">
         <Table>
-          <TableHeader>
+          <TableHeader className="sticky top-0 z-10 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => {
@@ -175,7 +233,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
                   data-state={row.getIsSelected() && "selected"}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className={density === 'compact' ? 'py-2' : undefined}>
                       {flexRender(
                         cell.column.columnDef.cell,
                         cell.getContext()
@@ -196,6 +254,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
             )}
           </TableBody>
         </Table>
+        </div>
       </div>
       <DataTablePagination table={table} totalRows={total} />
 

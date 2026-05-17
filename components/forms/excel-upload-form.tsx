@@ -2,91 +2,193 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { AlertCircle, CheckCircle2, FileSpreadsheet, Loader2, UploadCloud } from 'lucide-react'
+import { toast } from 'sonner'
+
 import { Button } from '@/components/ui/button'
 import { DialogFooter } from '@/components/ui/dialog'
-import { toast } from 'sonner'
-import { UploadCloud, Loader2 } from 'lucide-react'
-// cleaned import
+import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import type { ExcelImportPreview } from '@/lib/validation/import'
 
 interface ExcelUploadFormProps {
-    onSuccess: () => void
+  onSuccess: () => void
+}
+
+type ApiResult<T> = {
+  success: boolean
+  data?: T
+  message?: string
+  errors?: unknown
 }
 
 export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
-    const [isLoading, setIsLoading] = useState(false)
-    const [file, setFile] = useState<File | null>(null)
-    const router = useRouter()
+  const [isPreviewing, setIsPreviewing] = useState(false)
+  const [isCommitting, setIsCommitting] = useState(false)
+  const [file, setFile] = useState<File | null>(null)
+  const [preview, setPreview] = useState<ExcelImportPreview | null>(null)
+  const router = useRouter()
 
-    const handleExcelUpload = async (e: React.FormEvent) => {
-        e.preventDefault()
-        if (!file) {
-            toast.error('Vui lòng chọn file Excel')
-            return
-        }
+  const buildFormData = () => {
+    const formData = new FormData()
+    if (file) formData.append('file', file)
+    return formData
+  }
 
-        setIsLoading(true)
-        const formData = new FormData()
-        formData.append('file', file)
-
-        try {
-            const response = await fetch('/api/upload/excel', {
-                method: 'POST',
-                body: formData // Content-Type header is automatic with FormData
-            })
-            const result = await response.json()
-            if (result.success) {
-                toast.success(`Import thành công: ${result.stats?.success} hồ sơ`)
-                if (result.stats?.failure && result.stats.failure > 0) {
-                    toast.warning(`Có ${result.stats.failure} hồ sơ lỗi. Xem chi tiết trong console.`)
-                    console.error(result.errors)
-                }
-                onSuccess()
-                window.location.reload()
-            } else {
-                toast.error(result.message || 'Import thất bại')
-            }
-        } catch (error) {
-            toast.error('Có lỗi xảy ra khi upload')
-            console.error(error)
-        } finally {
-            setIsLoading(false)
-        }
+  const handlePreview = async (event: React.FormEvent) => {
+    event.preventDefault()
+    if (!file) {
+      toast.error('Vui lòng chọn file Excel')
+      return
     }
 
-    return (
-        <form onSubmit={handleExcelUpload} className="space-y-4 py-4">
-            <div className="flex flex-col items-center justify-center border-2 border-dashed rounded-lg p-10 cursor-pointer hover:bg-muted/50 transition-colors"
-                onClick={() => document.getElementById('file-upload')?.click()}
-            >
-                <UploadCloud className="h-10 w-10 text-muted-foreground mb-4" />
-                <p className="text-sm font-medium">Bấm để chọn file hoặc kéo thả</p>
-                <p className="text-xs text-muted-foreground mt-1">Hỗ trợ .xlsx, .xls</p>
-                <input
-                    id="file-upload"
-                    type="file"
-                    accept=".xlsx, .xls"
-                    className="hidden"
-                    onChange={(e) => setFile(e.target.files?.[0] || null)}
-                />
-            </div>
-            {file && (
-                <div className="flex items-center gap-2 text-sm bg-muted p-2 rounded">
-                    <span className="font-semibold">Tệp đã chọn:</span>
-                    {file.name}
-                </div>
+    setIsPreviewing(true)
+    setPreview(null)
+
+    try {
+      const response = await fetch('/api/upload/excel/preview', {
+        method: 'POST',
+        body: buildFormData(),
+      })
+      const result: ApiResult<ExcelImportPreview> = await response.json()
+
+      if (response.ok && result.success && result.data) {
+        setPreview(result.data)
+        if (result.data.summary.errors > 0) {
+          toast.warning(`File có ${result.data.summary.errors} lỗi cần xử lý trước khi nhập`)
+        } else {
+          toast.success('File hợp lệ, có thể nhập dữ liệu')
+        }
+        return
+      }
+
+      toast.error(result.message || 'Không thể kiểm tra file Excel')
+    } catch {
+      toast.error('Có lỗi xảy ra khi kiểm tra file')
+    } finally {
+      setIsPreviewing(false)
+    }
+  }
+
+  const handleCommit = async () => {
+    if (!file || !preview || preview.summary.errors > 0) return
+
+    setIsCommitting(true)
+    try {
+      const response = await fetch('/api/upload/excel/commit', {
+        method: 'POST',
+        body: buildFormData(),
+      })
+      const result: ApiResult<{ stats: { success: number; failure: number } }> = await response.json()
+
+      if (response.ok && result.success) {
+        toast.success(`Đã nhập ${result.data?.stats.success ?? 0} hồ sơ`)
+        onSuccess()
+        router.refresh()
+        return
+      }
+
+      toast.error(result.message || 'Nhập dữ liệu thất bại')
+    } catch {
+      toast.error('Có lỗi xảy ra khi nhập dữ liệu')
+    } finally {
+      setIsCommitting(false)
+    }
+  }
+
+  return (
+    <form onSubmit={handlePreview} className="space-y-4 py-4">
+      <div
+        className="flex cursor-pointer flex-col items-center justify-center rounded-lg border-2 border-dashed p-8 transition-colors hover:bg-muted/50"
+        onClick={() => document.getElementById('file-upload')?.click()}
+      >
+        <UploadCloud className="mb-4 h-10 w-10 text-muted-foreground" />
+        <p className="text-sm font-medium">Bấm để chọn file hoặc kéo thả</p>
+        <p className="mt-1 text-xs text-muted-foreground">Hỗ trợ .xlsx, .xls</p>
+        <input
+          id="file-upload"
+          type="file"
+          accept=".xlsx, .xls"
+          className="hidden"
+          onChange={(event) => {
+            setFile(event.target.files?.[0] || null)
+            setPreview(null)
+          }}
+        />
+      </div>
+
+      {file && (
+        <div className="flex items-center gap-2 rounded-md bg-muted p-2 text-sm">
+          <FileSpreadsheet className="h-4 w-4 text-muted-foreground" />
+          <span className="font-semibold">Tệp đã chọn:</span>
+          <span className="truncate">{file.name}</span>
+        </div>
+      )}
+
+      {preview && (
+        <div className="space-y-3 rounded-md border p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <Badge variant="secondary">{preview.summary.files} hồ sơ</Badge>
+            <Badge variant="secondary">{preview.summary.documents} văn bản</Badge>
+            <Badge variant="secondary">{preview.summary.boxes} hộp</Badge>
+            {preview.summary.errors > 0 ? (
+              <Badge variant="destructive">
+                <AlertCircle className="h-3 w-3" />
+                {preview.summary.errors} lỗi
+              </Badge>
+            ) : (
+              <Badge className="bg-emerald-600">
+                <CheckCircle2 className="h-3 w-3" />
+                Sẵn sàng nhập
+              </Badge>
             )}
-            <DialogFooter>
-                <Button type="submit" disabled={isLoading || !file}>
-                    {isLoading ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Đang xử lý...
-                        </>
-                    ) : (
-                        'Tải lên và nhập dữ liệu'
-                    )}
-                </Button>
-            </DialogFooter>
-        </form>
-    )
+          </div>
+
+          {preview.issues.length > 0 ? (
+            <div className="max-h-56 overflow-auto rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Dòng</TableHead>
+                    <TableHead>Cột</TableHead>
+                    <TableHead>Mã hồ sơ</TableHead>
+                    <TableHead>Lỗi</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {preview.issues.map((issue, index) => (
+                    <TableRow key={`${issue.row}-${issue.column}-${index}`}>
+                      <TableCell>{issue.row}</TableCell>
+                      <TableCell>{issue.column}</TableCell>
+                      <TableCell>{issue.code || '-'}</TableCell>
+                      <TableCell>{issue.message}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          ) : (
+            <div className="text-sm text-muted-foreground">
+              Đã kiểm tra {preview.summary.files} hồ sơ. Bấm xác nhận để nhập dữ liệu vào hệ thống.
+            </div>
+          )}
+        </div>
+      )}
+
+      <DialogFooter>
+        <Button type="submit" variant="outline" disabled={isPreviewing || !file}>
+          {isPreviewing ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          Kiểm tra file
+        </Button>
+        <Button
+          type="button"
+          disabled={!preview || preview.summary.errors > 0 || isCommitting}
+          onClick={handleCommit}
+        >
+          {isCommitting ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+          Xác nhận nhập
+        </Button>
+      </DialogFooter>
+    </form>
+  )
 }

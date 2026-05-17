@@ -2,7 +2,7 @@ import 'dotenv/config'
 import bcrypt from 'bcryptjs'
 import { Pool } from 'pg'
 import { PrismaPg } from '@prisma/adapter-pg'
-import { PrismaClient } from '../generated/prisma/client'
+import { PrismaClient, type Prisma } from '../generated/prisma/client'
 import { AuditAction, UserRole } from '../generated/prisma/enums'
 
 const connectionString = process.env.DATABASE_URL
@@ -310,7 +310,7 @@ async function upsertFile(data: {
   status?: string
   isLocked?: boolean
   boxId: string
-  details: Record<string, unknown>
+  details: Prisma.InputJsonValue
   documents: Array<{
     code: string
     title: string
@@ -611,7 +611,25 @@ async function seedBorrowSlips(
 ) {
   console.log('Seeding borrow slips...')
 
-  const slips = [
+  type BorrowSlipSeed = {
+    code: string
+    borrowerName: string
+    borrowerUnit: string
+    borrowerTitle: string
+    reason: string
+    borrowDate: Date
+    dueDate: Date
+    returnedDate?: Date
+    status: string
+    lenderId: string
+    items: Array<{
+      fileCode: string
+      status: string
+      returnedDate?: Date
+    }>
+  }
+
+  const slips: BorrowSlipSeed[] = [
     {
       code: 'PM-2026-001',
       borrowerName: 'Hoàng Văn Phúc',

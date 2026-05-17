@@ -1,18 +1,36 @@
-import { Metadata } from "next";
+'use client';
+
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { AgencyList } from "@/components/admin/agency-list";
-import { getSession } from "@/lib/session";
-import { redirect } from "next/navigation";
+import { useSession } from "@/lib/hooks/use-auth";
+import { Loader2 } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "Quản lý Phông lưu trữ | Court Management",
-  description: "Quản lý lịch sử tên cơ quan (Phông lưu trữ)",
-};
+export default function AgencyPage() {
+  const router = useRouter();
+  const { session, isLoading } = useSession();
 
-export default async function AgencyPage() {
-  const session = await getSession();
+  useEffect(() => {
+    document.title = "Quản lý Phông lưu trữ | Court Management";
+  }, []);
 
+  useEffect(() => {
+    if (!isLoading && (!session || session.role !== "SUPER_ADMIN")) {
+      router.replace("/forbidden");
+    }
+  }, [session, isLoading, router]);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Prevent rendering protected content while redirecting
   if (!session || session.role !== "SUPER_ADMIN") {
-    redirect("/");
+    return null;
   }
 
   return (

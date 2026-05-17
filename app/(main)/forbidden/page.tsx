@@ -1,9 +1,15 @@
-import Link from 'next/link'
-import { ShieldAlert } from 'lucide-react'
+'use client';
 
-import { Button } from '@/components/ui/button'
+import { useEffect } from 'react';
+import Link from 'next/link';
+import { ShieldAlert } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function ForbiddenPage() {
+  useEffect(() => {
+    document.title = "Không có quyền truy cập | Court Management";
+  }, []);
+
   return (
     <div className="flex min-h-[60vh] items-center justify-center">
       <div className="max-w-md text-center">

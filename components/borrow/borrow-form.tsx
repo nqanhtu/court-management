@@ -66,6 +66,9 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
   const [isSearchingFile, setIsSearchingFile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [fileSuggestions, setFileSuggestions] = useState<FileModel[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
   useEffect(() => {
     if (initialData && users.length > 0 && !selectedUserId) {
       // Try to find the user by name since we only stored string name
@@ -91,6 +94,29 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
     };
     fetchUsers();
   }, []);
+
+  useEffect(() => {
+    const fetchSuggestions = async () => {
+      if (!fileQuery.trim()) {
+        setFileSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+      try {
+        const res = await fetch(`/api/files?q=${encodeURIComponent(fileQuery)}&limit=5`);
+        if (res.ok) {
+          const result = await res.json();
+          setFileSuggestions(result.files || []);
+          setShowSuggestions(true);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+
+    const timeoutId = setTimeout(fetchSuggestions, 300);
+    return () => clearTimeout(timeoutId);
+  }, [fileQuery]);
 
   const handleAddFile = async () => {
     if (!fileQuery.trim()) return;
@@ -132,6 +158,24 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
         description: "Không tìm thấy hồ sơ nào với mã này",
       });
     }
+  };
+
+  const handleSelectSuggestion = (file: FileModel) => {
+    if (selectedFiles.some((f) => f.id === file.id)) {
+      toast.warning("Đã thêm", {
+        description: "Hồ sơ đã có trong danh sách",
+      });
+      return;
+    }
+    if (file.status === "BORROWED") {
+      toast.error("Không thể thêm", {
+        description: `Hồ sơ ${file.code} đang được mượn`,
+      });
+      return;
+    }
+    setSelectedFiles((prev) => [...prev, file]);
+    setFileQuery("");
+    setShowSuggestions(false);
   };
 
   const handleRemoveFile = (id: string) => {
@@ -329,13 +373,32 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
               type="text"
               value={fileQuery}
               onChange={(e) => setFileQuery(e.target.value)}
+              onFocus={() => fileQuery.trim() && setShowSuggestions(true)}
+              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
               onKeyDown={(e) => {
-                if (e.key === "Enter") handleAddFile();
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddFile();
+                }
               }}
               disabled={isSearchingFile}
               placeholder="Nhập mã hoặc quét..."
               className="w-full pl-9 pr-3 py-2 bg-slate-50 border-slate-200 rounded-lg text-sm focus:bg-white focus-visible:ring-indigo-500 outline-none transition-colors"
             />
+            {showSuggestions && fileSuggestions.length > 0 && (
+              <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50 max-h-60 overflow-auto">
+                {fileSuggestions.map(file => (
+                  <div 
+                    key={file.id} 
+                    className="p-2 hover:bg-slate-50 cursor-pointer border-b border-slate-100 last:border-0"
+                    onClick={() => handleSelectSuggestion(file)}
+                  >
+                    <div className="font-medium text-sm text-slate-800">{file.code}</div>
+                    <div className="text-xs text-slate-500 truncate">{file.title}</div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
           <Button
             size="icon"

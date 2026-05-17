@@ -1,4 +1,3 @@
-
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/session';
@@ -12,16 +11,25 @@ export async function GET() {
         const denied = requirePermission(session, 'viewFiles');
         if (denied) return denied;
 
-        const [total, borrowed, byType] = await Promise.all([
+        const now = new Date();
+        const [total, borrowed, overdue, byType] = await Promise.all([
             db.file.count(),
             db.file.count({ where: { status: 'BORROWED' } }),
+            db.borrowSlip.count({ 
+                where: { 
+                    OR: [
+                        { status: 'OVERDUE' },
+                        { status: { in: ['BORROWING', 'PARTIAL_RETURN'] }, dueDate: { lt: now } }
+                    ]
+                } 
+            }),
             db.file.groupBy({
                 by: ['type'],
                 _count: true
             })
         ]);
 
-        return NextResponse.json({ total, borrowed, byType });
+        return NextResponse.json({ total, borrowed, overdue, byType });
     } catch (error) {
         console.error('Error fetching file stats:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

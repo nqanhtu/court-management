@@ -128,7 +128,14 @@ export const parseChildDocumentsExcel = async (buffer: ArrayBuffer): Promise<Ext
 // ... (keep existing functions)
 
 function parseYear(dateStr: unknown): number {
-    if (typeof dateStr === 'number') return dateStr
+    if (typeof dateStr === 'number') {
+        if (dateStr > 10000) {
+            // Excel serial date (days since 1900-01-01)
+            const date = new Date(Math.round((dateStr - 25569) * 86400 * 1000))
+            return date.getFullYear()
+        }
+        return dateStr
+    }
     if (!dateStr) return new Date().getFullYear()
     const date = new Date(dateStr as string | number)
     if (!isNaN(date.getTime())) return date.getFullYear()

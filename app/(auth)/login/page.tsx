@@ -61,7 +61,7 @@ export default function LoginPage() {
                     </div>
                     <CardTitle className="text-2xl font-bold text-slate-800">Đăng Nhập Hệ Thống</CardTitle>
                     <CardDescription className="text-slate-500">
-                        Phần mềm Quản lý Hồ sơ Toà án
+                        Phần mềm Quản lý Hồ sơ
                     </CardDescription>
                 </CardHeader>
                 <CardContent>

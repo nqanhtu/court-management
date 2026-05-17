@@ -210,7 +210,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="retention">Bảo quản</Label>
                     <Input
@@ -229,25 +229,26 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                         onChange={(e) => setFormData({ ...formData, pageCount: parseInt(e.target.value || '0') })}
                     />
                 </div>
-                <div className="space-y-2">
-                    <Label htmlFor="boxId">Hộp số (Mã hộp)</Label>
-                    <Select
-                        onValueChange={(value) => setFormData({ ...formData, boxId: value })}
-                        value={formData.boxId}
-                        disabled={isLoading}
-                    >
-                        <SelectTrigger id="boxId">
-                            <SelectValue placeholder="Chọn hộp..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {boxes.map((b) => (
-                                <SelectItem key={b.id} value={b.id}>
-                                    {b.code} (Kệ: {b.shelf})
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
+            </div>
+
+            <div className="space-y-2">
+                <Label htmlFor="boxId">Hộp số (Mã hộp)</Label>
+                <Select
+                    onValueChange={(value) => setFormData({ ...formData, boxId: value })}
+                    value={formData.boxId}
+                    disabled={isLoading}
+                >
+                    <SelectTrigger id="boxId">
+                        <SelectValue placeholder="Chọn hộp..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {boxes.map((b: any) => (
+                            <SelectItem key={b.id} value={b.id}>
+                                {b.code} (Kệ: {b.shelf}) {b.agency?.name ? `- Phông: ${b.agency.name}` : ''}
+                            </SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
             </div>
 
             <div className="space-y-2">

@@ -30,7 +30,10 @@ export async function GET(request: NextRequest) {
             }
         }
 
-        const storageBoxes = await db.storageBox.findMany({ where })
+        const storageBoxes = await db.storageBox.findMany({ 
+            where,
+            include: { agency: true }
+        })
 
         return NextResponse.json(storageBoxes)
     } catch (error) {

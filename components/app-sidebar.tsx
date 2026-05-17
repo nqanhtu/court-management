@@ -8,6 +8,7 @@ import {
   Upload,
   History as HistoryIcon,
   Building2,
+  RotateCcw,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { User } from "@/lib/types/user";
@@ -37,27 +38,24 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
   const role = user?.role;
 
-  // Define menu logic dynamically
   const menuItems = [
     {
       category: "Quản lý",
       items: [
-        { name: "Hồ sơ", href: "/", icon: LayoutDashboard }, // All
-        // Borrow: SuperAdmin, Admin, Coordinator
+        { name: "Hồ sơ", href: "/", icon: LayoutDashboard },
         ...(can(role, "viewBorrow")
           ? [{ name: "Mượn trả", href: "/borrow", icon: FileText }]
           : []),
-        // Users: SuperAdmin only
-        ...(can(role, "manageUsers")
-          ? [
-            { name: "Người dùng", href: "/users", icon: Users },
-            { name: "Phông lưu trữ", href: "/admin/agency", icon: Building2 },
-            { name: "Nhật ký", href: "/admin/audit", icon: HistoryIcon },
-          ]
-          : []),
-        // Upload: SuperAdmin or Admin
         ...(can(role, "manageFiles")
           ? [{ name: "Nhập liệu", href: "/upload", icon: Upload }]
+          : []),
+        ...(can(role, "manageUsers")
+          ? [
+              { name: "Người dùng", href: "/users", icon: Users },
+              { name: "Phông lưu trữ", href: "/admin/agency", icon: Building2 },
+              { name: "Nhật ký", href: "/admin/audit", icon: HistoryIcon },
+              { name: "Reset dữ liệu", href: "/reset", icon: RotateCcw },
+            ]
           : []),
       ],
     },

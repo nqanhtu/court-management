@@ -3,18 +3,20 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, LockKeyhole, LockKeyholeOpen } from "lucide-react"
 import { UserModel } from '@/generated/prisma/models';
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
+import { toast } from "sonner"
 
 interface ColumnActions {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onToggleLock?: (user: UserModel) => void;
   currentUserRole?: string;
   isAdmin: boolean;
 }
 
-export const getColumns = ({ onEdit, onDelete, isAdmin }: ColumnActions): ColumnDef<UserModel>[] => [
+export const getColumns = ({ onEdit, onDelete, onToggleLock, isAdmin }: ColumnActions): ColumnDef<UserModel>[] => [
   {
     accessorKey: "username",
     header: ({ column }) => (
@@ -77,10 +79,31 @@ export const getColumns = ({ onEdit, onDelete, isAdmin }: ColumnActions): Column
     header: "Hành động",
     cell: ({ row }) => {
       if (!isAdmin) return null;
-      
+
       const user = row.original;
+      const isLocked = !user.status;
+
       return (
-        <div className='flex items-center gap-2'>
+        <div className='flex items-center gap-1'>
+          {/* Nút khóa / mở khóa nhanh */}
+          {onToggleLock && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onToggleLock(user)}
+              className={`h-8 w-8 ${isLocked
+                ? 'text-emerald-600 hover:text-emerald-600 hover:bg-emerald-50'
+                : 'text-amber-500 hover:text-amber-500 hover:bg-amber-50'
+              }`}
+              title={isLocked ? 'Mở khóa tài khoản' : 'Khóa tài khoản'}
+            >
+              {isLocked
+                ? <LockKeyholeOpen className='w-4 h-4' />
+                : <LockKeyhole className='w-4 h-4' />
+              }
+            </Button>
+          )}
+
           <Button
             variant="ghost"
             size="icon"

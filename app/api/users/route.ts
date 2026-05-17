@@ -68,17 +68,19 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({ error: 'Password is required' }, { status: 400 });
         }
 
-        data.password = await bcrypt.hash(data.password, 10);
-        
-        // Remove system fields if present
-        delete data.id;
-        delete data.createdAt;
-        delete data.updatedAt;
+        const hashedPassword = await bcrypt.hash(data.password, 10);
 
         const user = await db.user.create({
-            data,
+            data: {
+                username: String(data.username ?? '').trim(),
+                fullName: String(data.fullName ?? '').trim(),
+                unit: data.unit ? String(data.unit).trim() : null,
+                role: data.role,
+                status: data.status === true || data.status === 'active',
+                password: hashedPassword,
+            },
         });
-        return NextResponse.json(user);
+        return NextResponse.json({ success: true, user });
     } catch (error) {
         console.error('Error creating user:', error);
         return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

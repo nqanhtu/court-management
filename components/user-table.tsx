@@ -33,11 +33,12 @@ interface UserTableProps {
   isLoading?: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
+  onToggleLock?: (user: UserModel) => void;
   onCreate?: () => void;
   currentUserRole?: string;
 }
 
-export default function UserTable({ users, isLoading, onEdit, onDelete, onCreate, currentUserRole }: UserTableProps) {
+export default function UserTable({ users, isLoading, onEdit, onDelete, onToggleLock, onCreate, currentUserRole }: UserTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -48,7 +49,7 @@ export default function UserTable({ users, isLoading, onEdit, onDelete, onCreate
 
   const isAdmin = currentUserRole === 'SUPER_ADMIN';
 
-  const columns = React.useMemo(() => getColumns({ onEdit, onDelete, isAdmin, currentUserRole }), [onEdit, onDelete, isAdmin, currentUserRole]);
+  const columns = React.useMemo(() => getColumns({ onEdit, onDelete, onToggleLock, isAdmin, currentUserRole }), [onEdit, onDelete, onToggleLock, isAdmin, currentUserRole]);
 
   const table = useReactTable({
     data: users,

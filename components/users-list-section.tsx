@@ -42,6 +42,27 @@ export function UsersListSection() {
         setDeleteUserId(id)
     }
 
+    const handleToggleLock = async (user: { id: string; status: boolean; username: string }) => {
+        if (!isSuperAdmin) return
+        const newStatus = !user.status
+        try {
+            const res = await fetch(`/api/users/${user.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            })
+            if (res.ok) {
+                toast.success(newStatus ? `Đã mở khóa "${user.username}"` : `Đã khóa "${user.username}"`)
+                mutate()
+            } else {
+                const data = await res.json()
+                toast.error(data.error || 'Không thể thay đổi trạng thái')
+            }
+        } catch {
+            toast.error('Lỗi kết nối')
+        }
+    }
+
     const confirmDelete = async () => {
         if (!deleteUserId) return
         try {
@@ -80,6 +101,7 @@ export function UsersListSection() {
                     isLoading={isLoading}
                     onEdit={handleEdit}
                     onDelete={handleDelete}
+                    onToggleLock={isSuperAdmin ? handleToggleLock : undefined}
                     onCreate={isSuperAdmin ? () => setIsAddModalOpen(true) : undefined}
                     currentUserRole={session?.role}
                 />

@@ -106,7 +106,7 @@ export default function UserForm({ userId, initialData, onSuccess, onCancel }: U
         onSuccess?.()
       } else {
         const data = await res.json()
-        toast.error(data.message || 'Có lỗi xảy ra')
+        toast.error(data.error || data.message || 'Có lỗi xảy ra')
       }
     } catch {
       toast.error('Lỗi kết nối')

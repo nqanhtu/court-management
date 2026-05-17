@@ -5,7 +5,7 @@ import * as fs from 'fs';
 
 async function run() {
     const buffer = fs.readFileSync('HS628.xlsx');
-    const { files } = await parseExcelFile(buffer);
+    const { files } = await parseExcelFile(buffer.buffer as ArrayBuffer);
     console.log(`Extracted ${files.length} rows from HS628.xlsx.`);
 
     let imported = 0;

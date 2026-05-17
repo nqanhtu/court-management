@@ -174,6 +174,9 @@ export async function commitExcelImport(payload: ImportPayload, userId: string) 
     }
 
     return { success, failure: 0 }
+  }, {
+    maxWait: 10000, // 10 giây để chờ kết nối
+    timeout: 120000 // 120 giây (2 phút) để xử lý dữ liệu
   })
 
   await createAuditLog({

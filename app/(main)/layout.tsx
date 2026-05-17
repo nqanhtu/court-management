@@ -1,8 +1,9 @@
-import Header from "@/components/header";
 import { AppSidebar } from "@/components/app-sidebar";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { getSession } from '@/lib/session'
 import type { User } from "@/lib/types/user";
+import { BorrowAlertBanner } from "@/components/borrow/borrow-alert-banner";
+import Header from "@/components/header";
 
 export default async function MainLayout({
   children,
@@ -23,6 +24,7 @@ export default async function MainLayout({
       <AppSidebar user={session ?? undefined} />
       <SidebarInset>
         <Header user={session ?? undefined} />
+        <BorrowAlertBanner />
         <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
           <div className="@container/main flex flex-1 flex-col gap-2 p-4 lg:p-8 md:p-6 min-h-0 overflow-auto max-w-360 mx-auto w-full">
             {children}

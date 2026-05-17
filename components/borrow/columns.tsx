@@ -54,21 +54,23 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory }: Column
     ),
     cell: ({ row }) => {
       const slip = row.original;
+      const now = new Date();
+      const dueDate = new Date(slip.dueDate);
+      const soonDate = new Date();
+      soonDate.setDate(now.getDate() + 3);
+
       const isReturned = slip.status === 'RETURNED';
-      const isOverdue =
-        slip.status === 'OVERDUE' ||
-        (new Date() > new Date(slip.dueDate) && !isReturned);
+      const isOverdue = slip.status === 'OVERDUE' || (now > dueDate && !isReturned);
+      const isSoonOverdue = !isReturned && !isOverdue && dueDate <= soonDate;
 
       return (
         <div
           className={cn(
             'font-medium',
-            isOverdue && !isReturned
-              ? 'text-destructive'
-              : 'text-muted-foreground'
+            isOverdue ? 'text-destructive' : isSoonOverdue ? 'text-amber-600' : 'text-muted-foreground'
           )}
         >
-          {format(new Date(row.original.dueDate), 'dd/MM/yyyy')}
+          {format(dueDate, 'dd/MM/yyyy')}
         </div>
       )
     },
@@ -95,14 +97,14 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory }: Column
     ),
     cell: ({ row }) => {
       const slip = row.original;
-
-      // Keep simplified badge logic or use statuses metadata if preferred.
-      // For now sticking to original badge logic but using constants where helpful or just keeping as is since it has custom logic (overdue calc).
+      const now = new Date();
+      const dueDate = new Date(slip.dueDate);
+      const soonDate = new Date();
+      soonDate.setDate(now.getDate() + 3);
 
       const isReturned = slip.status === 'RETURNED';
-      const isOverdue =
-        slip.status === 'OVERDUE' ||
-        (new Date() > new Date(slip.dueDate) && !isReturned);
+      const isOverdue = slip.status === 'OVERDUE' || (now > dueDate && !isReturned);
+      const isSoonOverdue = !isReturned && !isOverdue && dueDate <= soonDate;
 
       if (isReturned) {
         return (
@@ -115,6 +117,13 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory }: Column
         return (
           <Badge variant="destructive">
             Quá hạn
+          </Badge>
+        )
+      }
+      if (isSoonOverdue) {
+        return (
+          <Badge variant="warning" className="bg-amber-500 hover:bg-amber-600">
+            Sắp hết hạn
           </Badge>
         )
       }

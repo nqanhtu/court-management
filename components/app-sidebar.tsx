@@ -7,6 +7,7 @@ import {
   BarChart3,
   Upload,
   History as HistoryIcon,
+  Building2,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { User } from "@/lib/types/user";
@@ -49,6 +50,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
         ...(role === "SUPER_ADMIN"
           ? [
             { name: "Người dùng", href: "/users", icon: Users },
+            { name: "Phông lưu trữ", href: "/admin/agency", icon: Building2 },
             { name: "Nhật ký", href: "/admin/audit", icon: HistoryIcon },
           ]
           : []),

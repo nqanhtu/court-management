@@ -9,6 +9,7 @@ import {
   History as HistoryIcon,
   Building2,
   RotateCcw,
+  Archive,
 } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type { User } from "@/lib/types/user";
@@ -53,6 +54,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
           ? [
               { name: "Người dùng", href: "/users", icon: Users },
               { name: "Phông lưu trữ", href: "/admin/agency", icon: Building2 },
+              { name: "Hộp lưu trữ", href: "/admin/boxes", icon: Archive },
               { name: "Nhật ký", href: "/admin/audit", icon: HistoryIcon },
               { name: "Reset dữ liệu", href: "/reset", icon: RotateCcw },
             ]

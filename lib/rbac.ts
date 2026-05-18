@@ -14,6 +14,7 @@ export const permissions = {
   viewBorrow: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'],
   manageBorrow: ['SUPER_ADMIN', 'COORDINATOR'],
   viewStorage: ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR'],
+  manageStorage: ['SUPER_ADMIN'],
   viewReports: ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR'],
 } as const satisfies Record<string, readonly UserRole[]>
 

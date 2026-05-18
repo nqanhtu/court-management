@@ -106,7 +106,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     const handleBoxbyYear = async (year: number) => {
         if (!year) return
         try {
-            const response = await fetch(`/api/stogrageBox?year=${year}`)
+            const response = await fetch(`/api/admin/boxes?year=${year}`)
             if (response.ok) {
                 const data = await response.json()
                 setBoxes(data)

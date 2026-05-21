@@ -196,7 +196,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="max-h-[65vh] overflow-auto">
+        <div className="overflow-auto max-h-[calc(100vh-22rem)] min-h-[300px]">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (

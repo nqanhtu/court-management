@@ -109,7 +109,7 @@ export function FileTableToolbar<TData>({
               placeholder="Tìm hồ sơ, mã, tiêu đề..."
               defaultValue={searchParams.get("q")?.toString()}
               onChange={(event) => handleSearch(event.target.value)}
-              className="h-9 w-56 pl-8 lg:w-72"
+              className="h-8 w-56 pl-8 lg:w-72"
             />
           </div>
 
@@ -127,25 +127,6 @@ export function FileTableToolbar<TData>({
             onFilter={(values) => setUrlParam("status", values?.[0] || "all")}
           />
 
-          <Input
-            placeholder="Năm"
-            defaultValue={searchParams.get("year")?.toString()}
-            onChange={(event) => handleTextFilter("year", event.target.value)}
-            className="h-9 w-24"
-          />
-          <Input
-            placeholder="Số bản án"
-            defaultValue={searchParams.get("judgmentNumber")?.toString()}
-            onChange={(event) => handleTextFilter("judgmentNumber", event.target.value)}
-            className="h-9 w-36"
-          />
-          <Input
-            placeholder="Đương sự"
-            defaultValue={searchParams.get("party")?.toString()}
-            onChange={(event) => handleTextFilter("party", event.target.value)}
-            className="h-9 w-36"
-          />
-
           {isFiltered && (
             <Button variant="ghost" onClick={handleReset} className="h-8 px-2 lg:px-3">
               Đặt lại
@@ -159,7 +140,7 @@ export function FileTableToolbar<TData>({
             value={density}
             onValueChange={(value) => onDensityChange?.(value as "compact" | "comfortable")}
           >
-            <SelectTrigger className="h-9 w-28">
+            <SelectTrigger className="h-8 w-28">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -174,41 +155,63 @@ export function FileTableToolbar<TData>({
                 onClick={() =>
                   onBorrow(table.getFilteredSelectedRowModel().rows.map((row) => row.original))
                 }
+                className="h-8"
               >
                 Tạo phiếu mượn ({table.getFilteredSelectedRowModel().rows.length})
               </Button>
             ) : (
-              <Button disabled>Chọn hồ sơ để tạo phiếu mượn</Button>
+              <Button className="h-8" disabled>Chọn hồ sơ để tạo phiếu mượn</Button>
             ))}
-          {onCreate && <Button onClick={onCreate}>Thêm hồ sơ</Button>}
+          {onCreate && <Button className="h-8" onClick={onCreate}>Thêm hồ sơ</Button>}
         </div>
       </div>
 
-      <div className="grid gap-2 md:grid-cols-4">
+      <div className="flex flex-wrap items-center gap-2">
         <Input
-          placeholder="Kho"
-          defaultValue={searchParams.get("warehouse")?.toString()}
-          onChange={(event) => handleTextFilter("warehouse", event.target.value)}
-          className="h-9"
+          placeholder="Năm"
+          defaultValue={searchParams.get("year")?.toString()}
+          onChange={(event) => handleTextFilter("year", event.target.value)}
+          className="h-8 w-[100px]"
         />
         <Input
-          placeholder="Dãy"
-          defaultValue={searchParams.get("line")?.toString()}
-          onChange={(event) => handleTextFilter("line", event.target.value)}
-          className="h-9"
+          placeholder="Số bản án"
+          defaultValue={searchParams.get("judgmentNumber")?.toString()}
+          onChange={(event) => handleTextFilter("judgmentNumber", event.target.value)}
+          className="h-8 w-[140px]"
         />
         <Input
-          placeholder="Kệ"
-          defaultValue={searchParams.get("shelf")?.toString()}
-          onChange={(event) => handleTextFilter("shelf", event.target.value)}
-          className="h-9"
+          placeholder="Đương sự"
+          defaultValue={searchParams.get("party")?.toString()}
+          onChange={(event) => handleTextFilter("party", event.target.value)}
+          className="h-8 w-[180px]"
         />
-        <Input
-          placeholder="Ngăn"
-          defaultValue={searchParams.get("slot")?.toString()}
-          onChange={(event) => handleTextFilter("slot", event.target.value)}
-          className="h-9"
-        />
+        <div className="flex items-center gap-2 pl-2 md:border-l">
+          <span className="text-xs text-muted-foreground mr-1 hidden sm:inline-block">Lưu trữ:</span>
+          <Input
+            placeholder="Kho"
+            defaultValue={searchParams.get("warehouse")?.toString()}
+            onChange={(event) => handleTextFilter("warehouse", event.target.value)}
+            className="h-8 w-[100px]"
+          />
+          <Input
+            placeholder="Dãy"
+            defaultValue={searchParams.get("line")?.toString()}
+            onChange={(event) => handleTextFilter("line", event.target.value)}
+            className="h-8 w-[100px]"
+          />
+          <Input
+            placeholder="Kệ"
+            defaultValue={searchParams.get("shelf")?.toString()}
+            onChange={(event) => handleTextFilter("shelf", event.target.value)}
+            className="h-8 w-[100px]"
+          />
+          <Input
+            placeholder="Ngăn"
+            defaultValue={searchParams.get("slot")?.toString()}
+            onChange={(event) => handleTextFilter("slot", event.target.value)}
+            className="h-8 w-[100px]"
+          />
+        </div>
       </div>
     </div>
   );

@@ -234,55 +234,24 @@ Hệ thống không cho tạo yêu cầu mới nếu hồ sơ đang:
 
 Nhờ vậy mỗi hồ sơ chỉ có tối đa một luồng mượn hoạt động tại một thời điểm.
 
-## 5. QR code khai thác hồ sơ an toàn
+## 5. Mã QR hồ sơ phục vụ in ấn và tra cứu nhanh
 
 ### Đã nâng cấp
 
-Hệ thống đã có cơ chế QR token ký số:
+Thay vì gọi API để sinh URL an toàn, hệ thống hiện tại đã:
 
-- QR không chứa trực tiếp ID hồ sơ.
-- Token có scope đọc hồ sơ.
-- Token được ký bằng `JWT_SECRET`.
-- Token có hạn sử dụng.
-- Khi mở QR, hệ thống vẫn kiểm tra đăng nhập và phân quyền.
+- Sử dụng trực tiếp mã hồ sơ (`file.code`) làm dữ liệu QR Code.
+- Tích hợp thư viện `qrcode.react` sinh mã QR ngay tại Frontend (không cần gọi API, không có độ trễ).
+- Mã QR được hiển thị cố định ở góc trái trên cùng trang chi tiết hồ sơ.
+- **Tính năng In mã QR (Vip Pro):** Hỗ trợ nút in riêng, mở popup format sẵn chuyên dụng để in tem nhãn/bìa cứng, hoặc xuất sang PDF.
 
-API mới:
-
-```text
-POST /api/files/:id/qr-token
-GET  /api/qr/files/:token
-```
-
-Frontend mới:
-
-```text
-/qr/files/[token]
-```
-
-### Cách tạo QR/link khai thác hồ sơ
+### Cách tạo và in QR hồ sơ
 
 1. Vào chi tiết một hồ sơ.
-2. Bấm nút `Tạo QR`.
-3. Hệ thống tạo liên kết QR an toàn.
-4. Nếu trình duyệt cho phép, liên kết được sao chép vào clipboard.
-5. Có thể dùng liên kết này để tạo mã QR bằng công cụ in tem/nhãn bên ngoài hoặc tích hợp thêm thư viện sinh QR ở bước sau.
-
-### Cách mở hồ sơ bằng QR
-
-1. Người dùng quét QR hoặc mở liên kết dạng:
-
-```text
-/qr/files/<token>
-```
-
-2. Nếu chưa đăng nhập, cần đăng nhập trước.
-3. Hệ thống kiểm tra quyền xem hồ sơ.
-4. Nếu hợp lệ, hiển thị thông tin hồ sơ và nút mở chi tiết.
-
-### Lưu ý bảo mật
-
-- Production nên chạy HTTPS để camera API, cookie bảo mật và truyền tải dữ liệu hoạt động an toàn.
-- Token QR bị sửa hoặc hết hạn sẽ bị từ chối.
+2. Mã QR được hiển thị sẵn ở góc trái cạnh tên bản án. Có thể click chuột phải chọn Copy Image.
+3. Hoặc bấm nút `In mã QR` ở góc phải.
+4. Trình duyệt sẽ tự động bật cửa sổ in để xuất ra file PDF hoặc in trực tiếp ra máy in tem.
+5. Mã QR này khi được quét bằng máy quét mã vạch/QR sẽ tự động điền mã hồ sơ vào thanh tìm kiếm.
 
 ## 6. Báo cáo và kết xuất dữ liệu
 
@@ -503,9 +472,18 @@ Các phần dưới đây chưa phải lỗi, mà là bước tiếp theo để 
 
 - Thêm background scheduler/cron job thật cho backup tự động.
 - Thêm giao diện chọn loại báo cáo khi xuất: hồ sơ, mượn trả, audit.
-- Thêm thư viện sinh QR trực tiếp thành ảnh để in tem.
 - Thêm màn hình quét QR bằng camera trong web/mobile.
 - Cải thiện layout mobile cho các bảng lớn thành dạng card/list.
 - Thêm service worker cache sâu hơn nếu muốn offline một phần.
 - Chuẩn hóa dữ liệu cũ từ trạng thái `BORROWING` sang `EXPORTED` sau khi chạy migration trên production.
 
+## 12. Tối ưu UI/UX (Cập nhật bổ sung)
+
+### Màn hình mượn trả
+
+- **Màu sắc trạng thái**: Các tab trạng thái mượn trả nay được gắn màu riêng biệt (Chờ duyệt: Xám, Đã duyệt: Xanh dương, Đang mượn: Cam, Đã trả: Xanh lục, Quá hạn: Đỏ) giúp người dùng nhận diện nhanh chóng.
+- **Dọn dẹp bộ lọc thừa**: Loại bỏ bộ lọc "Trạng thái" dạng dropdown bên cạnh thanh tìm kiếm do chức năng đã trùng lặp với các Tab. Tăng thêm khoảng cách để giao diện thông thoáng.
+
+### Fix lỗi nhỏ
+
+- Sửa lỗi không hiển thị danh sách hồ sơ khi bấm xem chi tiết/sửa một phiếu mượn do lỗi dữ liệu khởi tạo.

@@ -10,11 +10,11 @@ export default function Home() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   return (
-    <div className="flex flex-col gap-4 md:gap-6">
+    <div className="flex flex-col gap-3 md:gap-4">
       <OverviewStats />
 
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold tracking-tight">Tra cứu Hồ sơ</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Tra cứu Hồ sơ</h1>
       </div>
 
 

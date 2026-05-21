@@ -142,6 +142,7 @@ export type AuditLogDto = {
   targetId?: string | null
   detail?: unknown
   ipAddress?: string | null
+  macAddress?: string | null
   userId?: string | null
   user?: UserDto | null
   createdAt: string | Date
@@ -162,6 +163,7 @@ export type UserAccessLogDto = {
   osVersion?: string | null
   browserName?: string | null
   browserVersion?: string | null
+  macAddress?: string | null
 }
 
 export type UserAccessLogSummaryDto = {

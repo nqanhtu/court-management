@@ -1,5 +1,7 @@
 'use client';
 
+import { QRCodeCanvas } from 'qrcode.react';
+
 import { apiFetch } from '@/lib/api/client';
 
 import { useState } from 'react'
@@ -13,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 
-import { Box, FileText, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, Users, QrCode } from 'lucide-react'
+import { Box, FileText, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, Users, QrCode, Printer } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useFile } from '@/lib/hooks/use-files'
@@ -45,24 +47,80 @@ export function FileDetailContent({ id }: { id: string }) {
     const { session } = useSession()
     const canManageFiles = can(session?.role, 'manageFiles')
     const canManageBorrow = can(session?.role, 'manageBorrow')
-    const [qrUrl, setQrUrl] = useState<string | null>(null)
-    const [isCreatingQr, setIsCreatingQr] = useState(false)
 
-    const handleCreateQr = async () => {
-        if (!file) return
-        setIsCreatingQr(true)
-        try {
-            const response = await apiFetch(`/api/files/${file.id}/qr-token`, { method: 'POST' })
-            const result = await response.json()
-            if (!response.ok || !result.success) throw new Error(result.message || 'Không thể tạo QR')
-            const url = `${window.location.origin}${result.url}`
-            setQrUrl(url)
-            await navigator.clipboard?.writeText(url).catch(() => undefined)
-            toast.success('Đã tạo liên kết QR', { description: 'Liên kết đã được sao chép nếu trình duyệt cho phép.' })
-        } catch (error) {
-            toast.error(error instanceof Error ? error.message : 'Không thể tạo QR')
-        } finally {
-            setIsCreatingQr(false)
+
+    const handlePrintQr = () => {
+        const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
+        if (!canvas) return;
+        
+        const dataUrl = canvas.toDataURL('image/png');
+        
+        const printWindow = window.open('', '_blank', 'width=600,height=600');
+        if (printWindow) {
+            printWindow.document.write(`
+                <html>
+                    <head>
+                        <title>In mã QR - ${file?.code}</title>
+                        <style>
+                            body {
+                                display: flex;
+                                flex-direction: column;
+                                align-items: center;
+                                justify-content: center;
+                                font-family: sans-serif;
+                                margin: 0;
+                                padding: 40px;
+                            }
+                            .qr-container {
+                                text-align: center;
+                                border: 2px dashed #000;
+                                padding: 20px;
+                                border-radius: 8px;
+                                max-width: 300px;
+                            }
+                            img {
+                                width: 150px;
+                                height: 150px;
+                            }
+                            h2 {
+                                margin: 15px 0 5px;
+                                font-size: 18px;
+                                font-weight: bold;
+                            }
+                            p {
+                                margin: 0;
+                                font-size: 14px;
+                                color: #333;
+                            }
+                            .hint {
+                                margin-top: 20px;
+                                font-size: 12px;
+                                color: #888;
+                            }
+                            @media print {
+                                .hint { display: none; }
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="qr-container">
+                            <img src="${dataUrl}" />
+                            <h2>${file?.code}</h2>
+                            <p>${file?.title}</p>
+                        </div>
+                        <div class="hint">Cửa sổ sẽ tự động đóng sau khi in.</div>
+                        <script>
+                            window.onload = () => {
+                                setTimeout(() => {
+                                    window.print();
+                                    window.close();
+                                }, 500);
+                            };
+                        </script>
+                    </body>
+                </html>
+            `);
+            printWindow.document.close();
         }
     }
 
@@ -116,8 +174,12 @@ export function FileDetailContent({ id }: { id: string }) {
         <div className="space-y-6">
             {/* Header Section */}
             <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{file.title}</h1>
+                <div className="flex items-start gap-6">
+                    <div className="shrink-0 bg-white p-2 border border-slate-200 rounded-lg shadow-sm flex flex-col items-center" title="Click chuột phải > Copy Image">
+                        <QRCodeCanvas id="qr-canvas" value={file.code} size={90} level="M" includeMargin={false} />
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-bold tracking-tight">{file.title}</h1>
                     <div className="flex items-center gap-4 mt-2 text-muted-foreground">
                         <div className="flex items-center gap-1">
                             <span className="font-semibold text-foreground">{file.code}</span>
@@ -133,10 +195,11 @@ export function FileDetailContent({ id }: { id: string }) {
                          {file.isLocked && <Badge variant="destructive" className="ml-2">Đã khóa</Badge>}
                     </div>
                 </div>
-                <div className="flex gap-2">
-                    <Button variant="outline" onClick={handleCreateQr} disabled={isCreatingQr}>
-                        {isCreatingQr ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
-                        Tạo QR
+                </div>
+                <div className="flex gap-2 shrink-0">
+                    <Button variant="outline" onClick={handlePrintQr}>
+                        <Printer className="h-4 w-4" />
+                        In mã QR
                     </Button>
                     {canManageFiles && (
                         <AlertDialog>
@@ -175,14 +238,7 @@ export function FileDetailContent({ id }: { id: string }) {
                 </div>
             </div>
 
-            {qrUrl && (
-                <Card className="border-blue-200 bg-blue-50/50">
-                    <CardContent className="pt-4">
-                        <p className="text-sm font-medium text-blue-900">Liên kết QR an toàn</p>
-                        <p className="mt-1 break-all font-mono text-xs text-blue-700">{qrUrl}</p>
-                    </CardContent>
-                </Card>
-            )}
+
 
             <Tabs defaultValue="general" className="w-full">
                 <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">

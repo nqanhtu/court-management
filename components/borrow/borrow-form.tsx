@@ -53,9 +53,11 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
 
   // File State
   const [fileQuery, setFileQuery] = useState("");
-  const [selectedFiles, setSelectedFiles] = useState<FileDto[]>(
-    initialFiles || initialData?.items.map((item) => item.file) || []
-  );
+  const [selectedFiles, setSelectedFiles] = useState<FileDto[]>(() => {
+    if (initialFiles && initialFiles.length > 0) return initialFiles;
+    if (initialData && initialData.items) return initialData.items.map((item) => item.file);
+    return [];
+  });
   const [isSearchingFile, setIsSearchingFile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

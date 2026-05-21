@@ -68,6 +68,11 @@ const columns: ColumnDef<UserAccessLogDto>[] = [
     cell: ({ row }) => <span className="font-mono text-xs">{row.original.ipAddress || "unknown"}</span>,
   },
   {
+    accessorKey: "macAddress",
+    header: ({ column }) => <DataTableColumnHeader column={column} title="MAC" />,
+    cell: ({ row }) => <span className="font-mono text-xs">{row.original.macAddress || "-"}</span>,
+  },
+  {
     accessorKey: "deviceType",
     header: ({ column }) => <DataTableColumnHeader column={column} title="Thiết bị" />,
     cell: ({ row }) => (

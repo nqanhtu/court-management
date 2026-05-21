@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -43,7 +45,7 @@ export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDo
         formData.append('fileId', fileId)
 
         try {
-            const response = await fetch('/api/files/import-child-docs', {
+            const response = await apiFetch('/api/files/import-child-docs', {
                 method: 'POST',
                 body: formData,
             })

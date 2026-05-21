@@ -13,7 +13,7 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { UserModel } from '@/generated/prisma/models';
+import type { UserDto } from '@/lib/api/types';
 import {
   Table,
   TableBody,
@@ -29,11 +29,11 @@ import { UserTableToolbar } from "@/components/users/user-table-toolbar";
 import { Loader2 } from "lucide-react";
 
 interface UserTableProps {
-  users: UserModel[];
+  users: UserDto[];
   isLoading?: boolean;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-  onToggleLock?: (user: UserModel) => void;
+  onToggleLock?: (user: UserDto) => void;
   onCreate?: () => void;
   currentUserRole?: string;
 }

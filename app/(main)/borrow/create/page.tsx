@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
 
 import { useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -42,7 +44,7 @@ function CreateBorrowContent() {
         // For this prototype, I'll pass a known ID or handle it in the action.
 
         try {
-            const response = await fetch('/api/borrow', {
+            const response = await apiFetch('/api/borrow', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

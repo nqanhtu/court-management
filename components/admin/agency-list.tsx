@@ -1,5 +1,7 @@
 "use client";
 
+import { apiFetch } from '@/lib/api/client';
+
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { 
@@ -51,7 +53,7 @@ export function AgencyList() {
   const fetchAgencies = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch("/api/admin/agency");
+      const response = await apiFetch("/api/admin/agency");
       const data = await response.json();
       setAgencies(Array.isArray(data) ? data : []);
     } catch (error) {
@@ -68,7 +70,7 @@ export function AgencyList() {
   const handleDelete = async () => {
     if (!agencyToDelete) return;
     try {
-      const response = await fetch(`/api/admin/agency/${agencyToDelete.id}`, {
+      const response = await apiFetch(`/api/admin/agency/${agencyToDelete.id}`, {
         method: "DELETE",
       });
       if (!response.ok) {

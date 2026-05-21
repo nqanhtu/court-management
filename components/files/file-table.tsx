@@ -1,3 +1,4 @@
+import { apiFetch } from '@/lib/api/client';
 import * as React from 'react'
 import {
   ColumnFiltersState,
@@ -105,7 +106,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
 
   const handleDeleteFile = React.useCallback(async (file: FileDocument) => {
     try {
-      const response = await fetch(`/api/files/${file.id}`, {
+      const response = await apiFetch(`/api/files/${file.id}`, {
         method: 'DELETE',
       })
       const result = await response.json()

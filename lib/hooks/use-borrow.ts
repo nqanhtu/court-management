@@ -1,7 +1,8 @@
+import { apiFetch } from '@/lib/api/client';
 import useSWR from 'swr'
 import { BorrowSlipWithDetails } from '@/lib/types/borrow'
 
-const fetcher = (url: string) => fetch(url).then(r => r.json())
+const fetcher = (url: string) => apiFetch(url).then(r => r.json())
 
 export function useBorrowSlips() {
     const { data, error, isLoading, mutate } = useSWR<BorrowSlipWithDetails[]>(

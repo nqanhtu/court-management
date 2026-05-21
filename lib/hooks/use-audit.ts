@@ -1,10 +1,11 @@
+import { apiFetch } from '@/lib/api/client';
 import useSWR from 'swr'
-import { AuditLogModel, UserModel } from '@/generated/prisma/models'
+import type { AuditLogDto, UserDto } from '@/lib/api/types'
 
-const fetcher = (url: string) => fetch(url).then(r => r.json())
+const fetcher = (url: string) => apiFetch(url).then(r => r.json())
 
-export type AuditLogWithUser = AuditLogModel & {
-    user: UserModel;
+export type AuditLogWithUser = AuditLogDto & {
+    user: UserDto;
 }
 
 interface UseAuditParams {

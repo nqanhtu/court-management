@@ -1,5 +1,7 @@
 "use client";
 
+import { apiFetch } from '@/lib/api/client';
+
 import { useState, useEffect } from "react";
 import { AlertTriangle, Clock, X, ChevronRight } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -15,7 +17,7 @@ export function BorrowAlertBanner() {
   // Only show on relevant pages or if there are alerts
   const fetchAlerts = async () => {
     try {
-      const response = await fetch("/api/borrow/alerts");
+      const response = await apiFetch("/api/borrow/alerts");
       const data = await response.json();
       setAlerts(data);
     } catch (error) {

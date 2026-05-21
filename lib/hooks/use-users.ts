@@ -1,10 +1,11 @@
+import { apiFetch } from '@/lib/api/client';
 import useSWR from 'swr'
-import { UserModel } from '@/generated/prisma/models'
+import type { UserDto } from '@/lib/api/types'
 
-const fetcher = (url: string) => fetch(url).then(r => r.json())
+const fetcher = (url: string) => apiFetch(url).then(r => r.json())
 
 export function useUsers() {
-    const { data, error, isLoading, mutate } = useSWR<UserModel[]>(
+    const { data, error, isLoading, mutate } = useSWR<UserDto[]>(
         '/api/users',
         fetcher
     )

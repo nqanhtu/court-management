@@ -33,3 +33,23 @@ This is a Next.js + Tailwind CSS prototype of the "Phần mềm quản lý hồ 
 -   **Responsive Layout**: Adapts to screen size, though optimized for desktop like the original app.
 -   **Persistent Footer**: The "Kho lưu trữ" section is always visible at the bottom.
 -   **Navigation**: Functional sidebar to switch between views.
+
+## Backend API
+
+The backend/API has been split into a separate Bun + Elysia service at `../court-management-api`.
+
+Set these frontend environment variables:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:3001
+JWT_SECRET=<same value as backend>
+```
+
+Run the backend separately with:
+
+```bash
+cd ../court-management-api
+bun install
+bun run db:generate
+bun run dev
+```

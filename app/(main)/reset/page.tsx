@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -51,7 +53,7 @@ export default function ResetPage() {
         setResult(null)
 
         try {
-            const res = await fetch('/api/reset', {
+            const res = await apiFetch('/api/reset', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ confirm: 'RESET' }),

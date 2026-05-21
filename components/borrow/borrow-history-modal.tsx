@@ -1,5 +1,7 @@
 "use client";
 
+import { apiFetch } from '@/lib/api/client';
+
 import { useState, useEffect } from "react";
 import {
     Loader2,
@@ -8,7 +10,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { BorrowSlipEventModel } from "@/generated/prisma/models";
+import type { BorrowSlipEventDto } from "@/lib/api/types";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import Modal from "@/components/modal";
@@ -20,7 +22,7 @@ interface BorrowHistoryModalProps {
 }
 
 export default function BorrowHistoryModal({ isOpen, onClose, slipId }: BorrowHistoryModalProps) {
-    const [borrowEvent, setBorrowEvent] = useState<(BorrowSlipEventModel & { creator: { fullName: string, username: string } | null })[]>([]);
+    const [borrowEvent, setBorrowEvent] = useState<(BorrowSlipEventDto & { creator: { fullName: string, username: string } | null })[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isAddingNote, setIsAddingNote] = useState(false);
     const [noteContent, setNoteContent] = useState("");
@@ -31,7 +33,7 @@ export default function BorrowHistoryModal({ isOpen, onClose, slipId }: BorrowHi
             const fetchBorrowEvent = async () => {
                 setIsLoading(true);
                 try {
-                    const res = await fetch(`/api/borrow/${slipId}/borrow-slip-event`);
+                    const res = await apiFetch(`/api/borrow/${slipId}/borrow-slip-event`);
                     if (res.ok) {
                         const data = await res.json();
                         setBorrowEvent(data);
@@ -54,7 +56,7 @@ export default function BorrowHistoryModal({ isOpen, onClose, slipId }: BorrowHi
 
         setIsSavingNote(true);
         try {
-            const response = await fetch(`/api/borrow/${slipId}/borrow-slip-event`, {
+            const response = await apiFetch(`/api/borrow/${slipId}/borrow-slip-event`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -72,7 +74,7 @@ export default function BorrowHistoryModal({ isOpen, onClose, slipId }: BorrowHi
                 setNoteContent("");
                 setIsAddingNote(false);
                 // Refresh events
-                const res = await fetch(`/api/borrow/${slipId}/borrow-slip-event`);
+                const res = await apiFetch(`/api/borrow/${slipId}/borrow-slip-event`);
                 if (res.ok) {
                     const data = await res.json();
                     setBorrowEvent(data);

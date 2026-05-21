@@ -1,5 +1,7 @@
 "use client";
 
+import { apiFetch } from '@/lib/api/client';
+
 import { useState, useEffect } from "react";
 import {
   Calendar,
@@ -19,16 +21,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { UserModel, FileModel, BorrowSlipModel, BorrowItemModel, BorrowSlipEventModel } from "@/generated/prisma/models";
+import type { BorrowItemDto, BorrowSlipDto, FileDto, UserDto } from "@/lib/api/types";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { History, FileText } from "lucide-react";
 import { Field, FieldLabel, FieldGroup } from "../ui/field";
 
 
-interface BorrowSlipWithDetails extends BorrowSlipModel {
-  lender: UserModel;
-  items: (BorrowItemModel & { file: FileModel })[];
+interface BorrowSlipWithDetails extends BorrowSlipDto {
+  lender: UserDto;
+  items: (BorrowItemDto & { file: FileDto })[];
 }
 
 interface BorrowFormProps {
@@ -36,11 +38,11 @@ interface BorrowFormProps {
   onCancel?: () => void;
   initialData?: BorrowSlipWithDetails;
   slipId?: string;
-  initialFiles?: FileModel[];
+  initialFiles?: FileDto[];
 }
 
 export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, initialFiles = [] }: BorrowFormProps) {
-  const [users, setUsers] = useState<UserModel[]>([]);
+  const [users, setUsers] = useState<UserDto[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
   // Form State
@@ -60,13 +62,13 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
 
   // File State
   const [fileQuery, setFileQuery] = useState("");
-  const [selectedFiles, setSelectedFiles] = useState<FileModel[]>(
+  const [selectedFiles, setSelectedFiles] = useState<FileDto[]>(
     initialFiles || initialData?.items.map((item) => item.file) || []
   );
   const [isSearchingFile, setIsSearchingFile] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const [fileSuggestions, setFileSuggestions] = useState<FileModel[]>([]);
+  const [fileSuggestions, setFileSuggestions] = useState<FileDto[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
     const fetchUsers = async () => {
       setIsLoadingUsers(true);
       try {
-        const res = await fetch('/api/users?purpose=borrower');
+        const res = await apiFetch('/api/users?purpose=borrower');
         if (res.ok) {
           const data = await res.json();
           setUsers(data);
@@ -103,7 +105,7 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
         return;
       }
       try {
-        const res = await fetch(`/api/files?q=${encodeURIComponent(fileQuery)}&limit=5`);
+        const res = await apiFetch(`/api/files?q=${encodeURIComponent(fileQuery)}&limit=5`);
         if (res.ok) {
           const result = await res.json();
           setFileSuggestions(result.files || []);
@@ -132,9 +134,9 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
 
     setIsSearchingFile(true);
     // Exact match search for adding
-    let result: { files: FileModel[] } = { files: [] };
+    let result: { files: FileDto[] } = { files: [] };
     try {
-      const res = await fetch(`/api/files?q=${encodeURIComponent(fileQuery)}&limit=1`);
+      const res = await apiFetch(`/api/files?q=${encodeURIComponent(fileQuery)}&limit=1`);
       if (res.ok) {
         result = await res.json();
       }
@@ -160,7 +162,7 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
     }
   };
 
-  const handleSelectSuggestion = (file: FileModel) => {
+  const handleSelectSuggestion = (file: FileDto) => {
     if (selectedFiles.some((f) => f.id === file.id)) {
       toast.warning("Đã thêm", {
         description: "Hồ sơ đã có trong danh sách",
@@ -204,7 +206,7 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
         fileIds: selectedFiles.map((f) => f.id),
       };
 
-      const response = await fetch(slipId ? `/api/borrow/${slipId}` : '/api/borrow', {
+      const response = await apiFetch(slipId ? `/api/borrow/${slipId}` : '/api/borrow', {
         method: method,
         headers: {
           'Content-Type': 'application/json',

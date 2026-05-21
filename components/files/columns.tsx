@@ -1,4 +1,6 @@
-"use client"
+"use client";
+
+import { apiFetch } from '@/lib/api/client';
 
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
@@ -20,11 +22,11 @@ import { toast } from 'sonner'
 import { Badge } from "@/components/ui/badge"
 
 
-import { File, StorageBox } from "@/generated/prisma/client"
+import type { FileDto, StorageBoxDto } from "@/lib/api/types"
 import { Checkbox } from "../ui/checkbox"
 
-export type FileWithBox = File & {
-  box: StorageBox | null
+export type FileWithBox = FileDto & {
+  box: StorageBoxDto | null
 }
 
 export type FileDocument = {
@@ -219,7 +221,7 @@ export const getColumns = (
                   <AlertDialogCancel>Hủy</AlertDialogCancel>
                   <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
                     try {
-                      const res = await fetch(`/api/documents/${doc.id}`, {
+                      const res = await apiFetch(`/api/documents/${doc.id}`, {
                         method: 'DELETE'
                       })
                       if (res.ok) {

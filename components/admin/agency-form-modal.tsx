@@ -1,5 +1,7 @@
 "use client";
 
+import { apiFetch } from '@/lib/api/client';
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -89,7 +91,7 @@ export function AgencyFormModal({
       const url = agency ? `/api/admin/agency/${agency.id}` : "/api/admin/agency";
       const method = agency ? "PATCH" : "POST";
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(values),

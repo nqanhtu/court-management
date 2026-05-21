@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
 
 import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
@@ -101,7 +103,7 @@ export function ChildDocumentFormModal({ fileId, document, trigger, onSuccess }:
             const url = isEdit ? `/api/documents/${formData.id}` : '/api/documents';
             const method = isEdit ? 'PUT' : 'POST';
             
-            const response = await fetch(url, {
+            const response = await apiFetch(url, {
                 method,
                 headers: {
                     'Content-Type': 'application/json',

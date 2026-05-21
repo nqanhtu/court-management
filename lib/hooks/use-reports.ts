@@ -1,11 +1,12 @@
+import { apiFetch } from '@/lib/api/client';
 import useSWR from 'swr'
-import { BorrowSlipModel, FileModel, BorrowItemModel } from '@/generated/prisma/models'
+import type { BorrowItemDto, BorrowSlipDto, FileDto } from '@/lib/api/types'
 
-const fetcher = (url: string) => fetch(url).then(r => r.json())
+const fetcher = (url: string) => apiFetch(url).then(r => r.json())
 
-type RecentBorrowSlip = BorrowSlipModel & {
-    items: (BorrowItemModel & {
-        file: FileModel;
+type RecentBorrowSlip = BorrowSlipDto & {
+    items: (BorrowItemDto & {
+        file: FileDto;
     })[];
 }
 

@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api/client';
+
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/hooks/use-auth";
@@ -80,7 +82,7 @@ export default function StorageBoxesPage() {
       if (search) params.append("search", search);
       if (yearFilter) params.append("year", yearFilter);
 
-      const response = await fetch(`/api/admin/boxes?${params.toString()}`);
+      const response = await apiFetch(`/api/admin/boxes?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
         setBoxes(Array.isArray(data) ? data : []);
@@ -113,7 +115,7 @@ export default function StorageBoxesPage() {
     }
 
     try {
-      const response = await fetch(`/api/admin/boxes/${boxToDelete.id}`, {
+      const response = await apiFetch(`/api/admin/boxes/${boxToDelete.id}`, {
         method: "DELETE",
       });
 

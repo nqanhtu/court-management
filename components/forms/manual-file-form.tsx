@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
@@ -9,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
-import { StorageBox } from '@/generated/prisma/client'
+import type { StorageBoxDto } from '@/lib/api/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { mutate } from 'swr'
 
@@ -20,7 +22,7 @@ interface ManualFileFormProps {
 export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     const [isLoading, setIsLoading] = useState(false)
     const router = useRouter()
-    const [boxes, setBoxes] = useState<StorageBox[]>([]);
+    const [boxes, setBoxes] = useState<StorageBoxDto[]>([]);
     const [formData, setFormData] = useState({
         code: '',
         title: '',
@@ -44,7 +46,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
         try {
             const splitToList = (str: string) => str ? str.split(',').map(s => s.trim()).filter(Boolean) : []
 
-            const response = await fetch('/api/files', {
+            const response = await apiFetch('/api/files', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -106,7 +108,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     const handleBoxbyYear = async (year: number) => {
         if (!year) return
         try {
-            const response = await fetch(`/api/admin/boxes?year=${year}`)
+            const response = await apiFetch(`/api/admin/boxes?year=${year}`)
             if (response.ok) {
                 const data = await response.json()
                 setBoxes(data)

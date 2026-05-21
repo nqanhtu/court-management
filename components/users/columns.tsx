@@ -4,19 +4,19 @@ import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, LockKeyhole, LockKeyholeOpen } from "lucide-react"
-import { UserModel } from '@/generated/prisma/models';
+import type { UserDto } from '@/lib/api/types';
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 import { toast } from "sonner"
 
 interface ColumnActions {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
-  onToggleLock?: (user: UserModel) => void;
+  onToggleLock?: (user: UserDto) => void;
   currentUserRole?: string;
   isAdmin: boolean;
 }
 
-export const getColumns = ({ onEdit, onDelete, onToggleLock, isAdmin }: ColumnActions): ColumnDef<UserModel>[] => [
+export const getColumns = ({ onEdit, onDelete, onToggleLock, isAdmin }: ColumnActions): ColumnDef<UserDto>[] => [
   {
     accessorKey: "username",
     header: ({ column }) => (

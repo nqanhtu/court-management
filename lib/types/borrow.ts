@@ -1,11 +1,6 @@
-import {
-  BorrowSlipModel,
-  UserModel,
-  BorrowItemModel,
-  FileModel,
-} from '@/generated/prisma/models';
+import type { BorrowItemDto, BorrowSlipDto, FileDto, UserDto } from '@/lib/api/types';
 
-export type BorrowSlipWithDetails = BorrowSlipModel & {
-  lender: UserModel;
-  items: (BorrowItemModel & { file: FileModel })[];
+export type BorrowSlipWithDetails = BorrowSlipDto & {
+  lender: UserDto;
+  items: (BorrowItemDto & { file: FileDto })[];
 };

@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
 
 import { useState } from 'react'
 import { toast } from 'sonner'
@@ -33,7 +35,7 @@ export function BorrowListSection() {
     if (!returnSlipId) return
 
     try {
-      const response = await fetch(`/api/borrow/${returnSlipId}/return`, {
+      const response = await apiFetch(`/api/borrow/${returnSlipId}/return`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),

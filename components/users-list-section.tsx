@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
 
 import { useState } from 'react'
 import { useUsers } from '@/lib/hooks/use-users'
@@ -46,7 +48,7 @@ export function UsersListSection() {
         if (!isSuperAdmin) return
         const newStatus = !user.status
         try {
-            const res = await fetch(`/api/users/${user.id}`, {
+            const res = await apiFetch(`/api/users/${user.id}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ status: newStatus })
@@ -66,7 +68,7 @@ export function UsersListSection() {
     const confirmDelete = async () => {
         if (!deleteUserId) return
         try {
-            const res = await fetch(`/api/users/${deleteUserId}`, {
+            const res = await apiFetch(`/api/users/${deleteUserId}`, {
                 method: 'DELETE'
             })
             if (res.ok) {

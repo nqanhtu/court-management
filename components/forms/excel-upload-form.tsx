@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
@@ -47,7 +49,7 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
     setPreview(null)
 
     try {
-      const response = await fetch('/api/upload/excel/preview', {
+      const response = await apiFetch('/api/upload/excel/preview', {
         method: 'POST',
         body: buildFormData(),
       })
@@ -76,7 +78,7 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
 
     setIsCommitting(true)
     try {
-      const response = await fetch('/api/upload/excel/commit', {
+      const response = await apiFetch('/api/upload/excel/commit', {
         method: 'POST',
         body: buildFormData(),
       })

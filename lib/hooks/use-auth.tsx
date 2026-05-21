@@ -1,5 +1,7 @@
 'use client';
 
+import { apiFetch } from '@/lib/api/client';
+
 import React, { createContext, useContext, useState } from 'react';
 
 export interface SessionData {
@@ -33,7 +35,7 @@ export function SessionProvider({
   const mutate = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch('/api/auth/session');
+      const res = await apiFetch('/api/auth/session');
       if (res.ok) {
         const data = await res.json();
         setSession(data);

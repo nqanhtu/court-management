@@ -1,4 +1,6 @@
+import { apiFetch } from '@/lib/api/client';
 import useSWR from 'swr'
+import type { FileDto } from '@/lib/api/types'
 export interface SearchParams {
   query?: string
   type?: string
@@ -13,9 +15,7 @@ export interface SearchParams {
   limit?: number
   offset?: number
 }
-import { Prisma } from '@/generated/prisma/client'
-
-const fetcher = (url: string) => fetch(url).then(r => r.json())
+const fetcher = (url: string) => apiFetch(url).then(r => r.json())
 
 export function useFiles(params: SearchParams) {
     const queryString = new URLSearchParams()
@@ -32,7 +32,7 @@ export function useFiles(params: SearchParams) {
     if (params.limit) queryString.set('limit', params.limit.toString())
     if (params.offset) queryString.set('offset', params.offset.toString())
 
-    const { data, error, isLoading, mutate } = useSWR<{ files: (Prisma.FileGetPayload<{ include: { box: true } }>)[], total: number }>(
+    const { data, error, isLoading, mutate } = useSWR<{ files: FileDto[], total: number }>(
         `/api/files?${queryString.toString()}`,
         fetcher
     )
@@ -47,7 +47,7 @@ export function useFiles(params: SearchParams) {
 }
 
 export function useFile(id: string) {
-    const { data, error, isLoading, mutate } = useSWR<Prisma.FileGetPayload<{ include: { box: { include: { agency: true } }, borrowItems: { include: { borrowSlip: true } }, documents: true, fileIndex: true } }>>(
+    const { data, error, isLoading, mutate } = useSWR<FileDto>(
         id ? `/api/files/${id}` : null,
         fetcher
     )

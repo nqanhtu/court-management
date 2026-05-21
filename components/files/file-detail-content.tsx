@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
 
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
@@ -45,7 +47,7 @@ export function FileDetailContent({ id }: { id: string }) {
         if (!file) return
 
         try {
-            const response = await fetch(`/api/files/${file.id}`, {
+            const response = await apiFetch(`/api/files/${file.id}`, {
                 method: 'DELETE',
             })
             const result = await response.json()
@@ -468,7 +470,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                                                 <AlertDialogCancel>Hủy</AlertDialogCancel>
                                                                 <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
                                                                     try {
-                                                                        const res = await fetch(`/api/documents/${doc.id}`, {
+                                                                        const res = await apiFetch(`/api/documents/${doc.id}`, {
                                                                             method: 'DELETE'
                                                                         })
                                                                         if (res.ok) {

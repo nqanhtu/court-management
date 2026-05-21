@@ -1,5 +1,7 @@
 "use client";
 
+import { apiFetch } from '@/lib/api/client';
+
 import { UserCircle, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 // cleaned import
@@ -18,7 +20,7 @@ export default function Header({ user }: HeaderProps) {
   if (pathname === "/login") return null;
 
   async function handleLogout() {
-    await fetch('/api/auth/logout', { method: 'POST' });
+    await apiFetch('/api/auth/logout', { method: 'POST' });
     router.refresh();
     router.push("/login");
   }

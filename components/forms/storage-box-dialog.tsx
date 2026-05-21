@@ -1,5 +1,7 @@
 "use client";
 
+import { apiFetch } from '@/lib/api/client';
+
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -91,7 +93,7 @@ export function StorageBoxDialog({
   useEffect(() => {
     async function fetchAgencies() {
       try {
-        const response = await fetch("/api/admin/agency");
+        const response = await apiFetch("/api/admin/agency");
         if (response.ok) {
           const data = await response.json();
           // The response might be wrapped in { success: true, data: [...] } or direct list
@@ -179,7 +181,7 @@ export function StorageBoxDialog({
         caseType: values.caseType === "none" ? null : values.caseType,
       };
 
-      const response = await fetch(url, {
+      const response = await apiFetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

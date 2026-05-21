@@ -1,4 +1,6 @@
-'use client'
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
 
 import { useState, useEffect } from 'react'
 import { User, Building2, Lock, KeyRound, Loader2 } from "lucide-react"
@@ -13,11 +15,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from 'sonner'
-import { UserModel } from '@/generated/prisma/models'
+import type { UserDto } from '@/lib/api/types'
 
 interface UserFormProps {
   userId?: string
-  initialData?: UserModel
+  initialData?: UserDto
   onSuccess?: () => void
   onCancel?: () => void
 }
@@ -95,7 +97,7 @@ export default function UserForm({ userId, initialData, onSuccess, onCancel }: U
         ? { ...formData, password: undefined }
         : formData
 
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

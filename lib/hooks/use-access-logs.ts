@@ -8,6 +8,11 @@ interface UseAccessLogsParams {
   query?: string
   userId?: string
   event?: string
+  from?: string
+  to?: string
+  deviceType?: string
+  browserName?: string
+  osName?: string
   limit?: number
   offset?: number
 }
@@ -30,6 +35,11 @@ export function useAccessLogs(params: UseAccessLogsParams) {
   if (params.query) queryString.set('q', params.query)
   if (params.userId && params.userId !== 'ALL') queryString.set('userId', params.userId)
   if (params.event && params.event !== 'ALL') queryString.set('event', params.event as UserAccessEvent)
+  if (params.from) queryString.set('from', params.from)
+  if (params.to) queryString.set('to', params.to)
+  if (params.deviceType) queryString.set('deviceType', params.deviceType)
+  if (params.browserName) queryString.set('browserName', params.browserName)
+  if (params.osName) queryString.set('osName', params.osName)
   if (params.limit) queryString.set('limit', params.limit.toString())
   if (params.offset) queryString.set('offset', params.offset.toString())
 

@@ -29,11 +29,21 @@ export function AuditList() {
   const page = Number(searchParams.get("page")) || 1;
   const searchTerm = searchParams.get("q") || "";
   const actionFilter = searchParams.get("action") || "ALL";
+  const userIdFilter = searchParams.get("userId") || "ALL";
+  const targetFilter = searchParams.get("target") || "";
+  const ipFilter = searchParams.get("ip") || "";
+  const fromFilter = searchParams.get("from") || "";
+  const toFilter = searchParams.get("to") || "";
   const pageSize = Number(searchParams.get("limit")) || 20;
 
   const { logs, total, isLoading } = useAudit({
     query: searchTerm,
     action: actionFilter,
+    userId: userIdFilter,
+    target: targetFilter,
+    ip: ipFilter,
+    from: fromFilter,
+    to: toFilter,
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
@@ -57,6 +67,14 @@ export function AuditList() {
     } else {
       params.delete("action");
     }
+    params.set("page", "1");
+    router.replace(`?${params.toString()}`);
+  };
+
+  const handleFilterChange = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams);
+    if (value && value !== "ALL") params.set(key, value);
+    else params.delete(key);
     params.set("page", "1");
     router.replace(`?${params.toString()}`);
   };
@@ -101,6 +119,12 @@ export function AuditList() {
         onSearchChange={handleSearchChange}
         actionFilter={actionFilter}
         onActionChange={handleActionChange}
+        userIdFilter={userIdFilter}
+        targetFilter={targetFilter}
+        ipFilter={ipFilter}
+        fromFilter={fromFilter}
+        toFilter={toFilter}
+        onFilterChange={handleFilterChange}
       />
       <div className="rounded-md border bg-white flex-1 overflow-auto min-h-0">
         <Table>

@@ -3,20 +3,24 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Pencil, RotateCcw, Trash2, History } from "lucide-react"
+import { Check, Pencil, RotateCcw, Send, Trash2, History, X } from "lucide-react"
 import { BorrowSlipWithDetails } from '@/lib/types/borrow';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
 interface ColumnActions {
   onReturn: (id: string) => void;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+  onExport: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onViewHistory: (id: string) => void;
   canManageBorrow?: boolean;
+  canApproveBorrow?: boolean;
 }
 
-export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManageBorrow = false }: ColumnActions): ColumnDef<BorrowSlipWithDetails>[] => [
+export const getColumns = ({ onReturn, onApprove, onReject, onExport, onEdit, onDelete, onViewHistory, canManageBorrow = false, canApproveBorrow = false }: ColumnActions): ColumnDef<BorrowSlipWithDetails>[] => [
   {
     accessorKey: "code",
     header: ({ column }) => (
@@ -60,8 +64,8 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManag
       const soonDate = new Date();
       soonDate.setDate(now.getDate() + 3);
 
-      const isReturned = slip.status === 'RETURNED';
-      const isOverdue = slip.status === 'OVERDUE' || (now > dueDate && !isReturned);
+      const isReturned = slip.status === 'RETURNED' || slip.status === 'REJECTED';
+      const isOverdue = slip.status === 'OVERDUE' || (now > dueDate && !isReturned && ['EXPORTED', 'PARTIAL_RETURN'].includes(slip.status));
       const isSoonOverdue = !isReturned && !isOverdue && dueDate <= soonDate;
 
       return (
@@ -114,6 +118,15 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManag
           </Badge>
         )
       }
+      if (slip.status === 'PENDING_APPROVAL') {
+        return <Badge variant="secondary">Chờ duyệt</Badge>
+      }
+      if (slip.status === 'APPROVED') {
+        return <Badge variant="success">Đã duyệt</Badge>
+      }
+      if (slip.status === 'REJECTED') {
+        return <Badge variant="destructive">Từ chối</Badge>
+      }
       if (isOverdue) {
         return (
           <Badge variant="destructive">
@@ -130,7 +143,7 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManag
       }
       return (
         <Badge variant="warning">
-          Đang mượn
+        {slip.status === 'PARTIAL_RETURN' ? 'Trả một phần' : 'Đang mượn'}
         </Badge>
       )
     },
@@ -143,9 +156,9 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManag
     header: "Hành động",
     cell: ({ row }) => {
       const slip = row.original;
-      const isReturned = slip.status === 'RETURNED';
+      const isReturned = slip.status === 'RETURNED' || slip.status === 'REJECTED';
 
-      if (!canManageBorrow) {
+      if (!canManageBorrow && !canApproveBorrow) {
         return (
           <Button
             variant="ghost"
@@ -162,6 +175,41 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManag
       return (
         <div className='flex items-center gap-1'>
           {!isReturned && (
+            <>
+              {canApproveBorrow && slip.status === 'PENDING_APPROVAL' && (
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onApprove(slip.id)}
+                    className='h-8 w-8 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50'
+                    title='Duyệt yêu cầu'
+                  >
+                    <Check className='w-4 h-4' />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onReject(slip.id)}
+                    className='h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10'
+                    title='Từ chối'
+                  >
+                    <X className='w-4 h-4' />
+                  </Button>
+                </>
+              )}
+              {canManageBorrow && slip.status === 'APPROVED' && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => onExport(slip.id)}
+                  className='h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+                  title='Xuất hồ sơ'
+                >
+                  <Send className='w-4 h-4' />
+                </Button>
+              )}
+              {canManageBorrow && ['EXPORTED', 'PARTIAL_RETURN', 'OVERDUE'].includes(slip.status) && (
             <Button
               variant="ghost"
               size="icon"
@@ -171,6 +219,8 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManag
             >
               <RotateCcw className='w-4 h-4' />
             </Button>
+              )}
+            </>
           )}
           <Button
             variant="ghost"
@@ -181,7 +231,8 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManag
           >
             <History className='w-4 h-4' />
           </Button>
-          <Button
+          {canManageBorrow && (
+            <Button
             variant="ghost"
             size="icon"
             onClick={() => onEdit(slip.id)}
@@ -190,7 +241,9 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManag
           >
             <Pencil className='w-4 h-4' />
           </Button>
-          <Button
+          )}
+          {canManageBorrow && (
+            <Button
             variant="ghost"
             size="icon"
             onClick={() => onDelete(slip.id)}
@@ -199,6 +252,7 @@ export const getColumns = ({ onReturn, onEdit, onDelete, onViewHistory, canManag
           >
             <Trash2 className='w-4 h-4' />
           </Button>
+          )}
         </div>
       )
     },

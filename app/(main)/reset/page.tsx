@@ -2,13 +2,15 @@
 
 import { apiFetch } from '@/lib/api/client';
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { ShieldAlert, Trash2, AlertTriangle, CheckCircle2, Loader2, DatabaseBackup, Download, Upload, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import type { BackupScheduleDto } from '@/lib/api/types'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -43,6 +45,30 @@ export default function ResetPage() {
     const [restoreConfirmText, setRestoreConfirmText] = useState('')
     const [restoreFile, setRestoreFile] = useState<File | null>(null)
     const [result, setResult] = useState<DeletedCounts | null>(null)
+    const [schedule, setSchedule] = useState<BackupScheduleDto>({
+        id: 'default',
+        enabled: false,
+        frequency: 'DAILY',
+        timeOfDay: '23:00',
+        retentionDays: 7,
+        target: 'local',
+    })
+    const [isSavingSchedule, setIsSavingSchedule] = useState(false)
+
+    useEffect(() => {
+        async function loadSchedule() {
+            if (session?.role !== 'SUPER_ADMIN') return
+            try {
+                const response = await apiFetch('/api/admin/database/backup-schedule')
+                if (!response.ok) return
+                const data = await response.json()
+                if (data.schedule) setSchedule(data.schedule)
+            } catch {
+                // The schedule panel is non-blocking.
+            }
+        }
+        loadSchedule()
+    }, [session?.role])
 
     // Chặn truy cập nếu không phải SUPER_ADMIN
     if (!isLoading && session?.role !== 'SUPER_ADMIN') {
@@ -89,6 +115,25 @@ export default function ResetPage() {
             toast.error(error instanceof Error ? error.message : 'Lỗi kết nối')
         } finally {
             setIsBackingUp(false)
+        }
+    }
+
+    const handleSaveSchedule = async () => {
+        setIsSavingSchedule(true)
+        try {
+            const response = await apiFetch('/api/admin/database/backup-schedule', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(schedule),
+            })
+            const data = await response.json()
+            if (!response.ok || !data.success) throw new Error(data.error || 'Không thể lưu lịch sao lưu')
+            setSchedule(data.schedule)
+            toast.success('Đã lưu lịch sao lưu')
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Lỗi kết nối')
+        } finally {
+            setIsSavingSchedule(false)
         }
     }
 
@@ -207,6 +252,55 @@ export default function ResetPage() {
                             </>
                         )}
                     </Button>
+                </CardContent>
+            </Card>
+
+            <Card className="border-slate-200 shadow-sm">
+                <CardHeader className="border-b bg-slate-50/70">
+                    <CardTitle className="text-slate-800">Lịch sao lưu tự động</CardTitle>
+                    <CardDescription>
+                        Web app chỉ cấu hình lịch; job thực tế chạy ở backend/server.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 pt-6 md:grid-cols-4">
+                    <Select value={schedule.enabled ? 'enabled' : 'disabled'} onValueChange={(value) => setSchedule((prev) => ({ ...prev, enabled: value === 'enabled' }))}>
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="enabled">Bật</SelectItem>
+                            <SelectItem value="disabled">Tắt</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Select value={schedule.frequency} onValueChange={(value) => setSchedule((prev) => ({ ...prev, frequency: value }))}>
+                        <SelectTrigger>
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="DAILY">Hằng ngày</SelectItem>
+                            <SelectItem value="WEEKLY">Hằng tuần</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Input
+                        type="time"
+                        value={schedule.timeOfDay}
+                        onChange={(event) => setSchedule((prev) => ({ ...prev, timeOfDay: event.target.value }))}
+                    />
+                    <Input
+                        type="number"
+                        min={1}
+                        value={schedule.retentionDays}
+                        onChange={(event) => setSchedule((prev) => ({ ...prev, retentionDays: Number(event.target.value) }))}
+                    />
+                    <div className="md:col-span-4 flex items-center justify-between rounded-lg border bg-muted/30 px-4 py-3 text-sm">
+                        <span>
+                            Lần chạy gần nhất: {schedule.lastRunAt ? new Date(schedule.lastRunAt).toLocaleString('vi-VN') : 'Chưa có'}
+                        </span>
+                        <Button onClick={handleSaveSchedule} disabled={isSavingSchedule}>
+                            {isSavingSchedule && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Lưu lịch sao lưu
+                        </Button>
+                    </div>
                 </CardContent>
             </Card>
 

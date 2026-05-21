@@ -14,17 +14,40 @@ import { can } from '@/lib/rbac'
 import { useSession } from '@/lib/hooks/use-auth'
 import { useBorrowSlips } from '@/lib/hooks/use-borrow'
 import { BorrowSlipWithDetails } from '@/lib/types/borrow'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export function BorrowListSection() {
   const { borrowSlips, isLoading, mutate } = useBorrowSlips()
   const { session } = useSession()
   const canManageBorrow = can(session?.role, 'manageBorrow')
+  const canApproveBorrow = session?.role === 'SUPER_ADMIN' || session?.role === 'ADMIN'
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
   const [editingSlipId, setEditingSlipId] = useState<string | null>(null)
   const [returnSlipId, setReturnSlipId] = useState<string | null>(null)
   const [historySlipId, setHistorySlipId] = useState<string | null>(null)
+
+  const mutateWithToast = async (id: string, action: 'approve' | 'reject' | 'export') => {
+    const labels = {
+      approve: 'Đã duyệt yêu cầu',
+      reject: 'Đã từ chối yêu cầu',
+      export: 'Đã xuất hồ sơ',
+    }
+    try {
+      const response = await apiFetch(`/api/borrow/${id}/${action}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: action === 'reject' ? JSON.stringify({ reason: 'Từ chối bởi quản trị viên' }) : JSON.stringify({}),
+      })
+      const result = await response.json()
+      if (!response.ok || !result.success) throw new Error(result.message || result.error || 'Thao tác thất bại')
+      toast.success(labels[action])
+      mutate()
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Lỗi kết nối')
+    }
+  }
 
   const confirmReturn = async (payload: {
     itemIds: string[]
@@ -71,21 +94,42 @@ export function BorrowListSection() {
         </div>
       </div>
 
-      <div className="min-h-0 flex-1">
-        <BorrowTable
-          borrowSlips={borrowSlips}
-          isLoading={isLoading}
-          onReturn={setReturnSlipId}
-          onEdit={(id) => {
-            setEditingSlipId(id)
-            setIsEditModalOpen(true)
-          }}
-          onDelete={(id) => console.log('Delete', id)}
-          onViewHistory={setHistorySlipId}
-          canManageBorrow={canManageBorrow}
-          onCreate={canManageBorrow ? () => setIsAddModalOpen(true) : undefined}
-        />
-      </div>
+      <Tabs defaultValue="pending" className="min-h-0 flex-1">
+        <TabsList className="flex flex-wrap">
+          <TabsTrigger value="pending">Chờ duyệt</TabsTrigger>
+          <TabsTrigger value="approved">Đã duyệt</TabsTrigger>
+          <TabsTrigger value="borrowing">Đang mượn</TabsTrigger>
+          <TabsTrigger value="returned">Đã trả</TabsTrigger>
+          <TabsTrigger value="closed">Từ chối/Quá hạn</TabsTrigger>
+        </TabsList>
+        {[
+          { value: 'pending', statuses: ['PENDING_APPROVAL'] },
+          { value: 'approved', statuses: ['APPROVED'] },
+          { value: 'borrowing', statuses: ['EXPORTED', 'PARTIAL_RETURN'] },
+          { value: 'returned', statuses: ['RETURNED'] },
+          { value: 'closed', statuses: ['REJECTED', 'OVERDUE'] },
+        ].map((tab) => (
+          <TabsContent key={tab.value} value={tab.value} className="min-h-0">
+            <BorrowTable
+              borrowSlips={borrowSlips.filter((slip) => tab.statuses.includes(slip.status))}
+              isLoading={isLoading}
+              onReturn={setReturnSlipId}
+              onApprove={(id) => mutateWithToast(id, 'approve')}
+              onReject={(id) => mutateWithToast(id, 'reject')}
+              onExport={(id) => mutateWithToast(id, 'export')}
+              onEdit={(id) => {
+                setEditingSlipId(id)
+                setIsEditModalOpen(true)
+              }}
+              onDelete={(id) => console.log('Delete', id)}
+              onViewHistory={setHistorySlipId}
+              canManageBorrow={canManageBorrow}
+              canApproveBorrow={canApproveBorrow}
+              onCreate={canManageBorrow ? () => setIsAddModalOpen(true) : undefined}
+            />
+          </TabsContent>
+        ))}
+      </Tabs>
 
       <Modal
         isOpen={isAddModalOpen}

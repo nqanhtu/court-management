@@ -98,6 +98,13 @@ export type BorrowSlipDto = {
   dueDate: string | Date
   returnedDate?: string | Date | null
   status: string
+  approvedById?: string | null
+  approvedAt?: string | Date | null
+  rejectedById?: string | null
+  rejectedAt?: string | Date | null
+  rejectReason?: string | null
+  exportedById?: string | null
+  exportedAt?: string | Date | null
   lenderId: string
   lender?: UserDto
   items?: BorrowItemDto[]
@@ -162,4 +169,16 @@ export type UserAccessLogSummaryDto = {
   totalLogouts: number
   activeUsers: number
   lastAccessAt: string | Date | null
+}
+
+export type BackupScheduleDto = {
+  id: string
+  enabled: boolean
+  frequency: string
+  timeOfDay: string
+  retentionDays: number
+  target: string
+  lastRunAt?: string | Date | null
+  lastStatus?: string | null
+  lastMessage?: string | null
 }

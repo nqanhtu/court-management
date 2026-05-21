@@ -97,11 +97,21 @@ export function AccessLogList() {
   const searchTerm = searchParams.get("q") || "";
   const eventFilter = searchParams.get("accessEvent") || "ALL";
   const userFilter = searchParams.get("userId") || "ALL";
+  const fromFilter = searchParams.get("from") || "";
+  const toFilter = searchParams.get("to") || "";
+  const deviceFilter = searchParams.get("deviceType") || "";
+  const browserFilter = searchParams.get("browserName") || "";
+  const osFilter = searchParams.get("osName") || "";
   const { users } = useUsers();
   const { logs, total, summary, isLoading } = useAccessLogs({
     query: searchTerm,
     event: eventFilter,
     userId: userFilter,
+    from: fromFilter,
+    to: toFilter,
+    deviceType: deviceFilter,
+    browserName: browserFilter,
+    osName: osFilter,
     limit: pageSize,
     offset: (page - 1) * pageSize,
   });
@@ -125,6 +135,11 @@ export function AccessLogList() {
     params.delete("q");
     params.delete("accessEvent");
     params.delete("userId");
+    params.delete("from");
+    params.delete("to");
+    params.delete("deviceType");
+    params.delete("browserName");
+    params.delete("osName");
     params.set("page", "1");
     router.replace(`?${params.toString()}`);
   };
@@ -152,7 +167,7 @@ export function AccessLogList() {
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const isFiltered = !!searchTerm || eventFilter !== "ALL" || userFilter !== "ALL";
+  const isFiltered = !!searchTerm || eventFilter !== "ALL" || userFilter !== "ALL" || !!fromFilter || !!toFilter || !!deviceFilter || !!browserFilter || !!osFilter;
   const userOptions = users.map((user) => ({ label: `${user.fullName} (@${user.username})`, value: user.id }));
 
   return (
@@ -192,6 +207,38 @@ export function AccessLogList() {
           options={userOptions}
           value={userFilter !== "ALL" ? [userFilter] : []}
           onFilter={(values) => updateParam("userId", values?.[0] || "ALL")}
+        />
+        <Input
+          type="date"
+          value={fromFilter}
+          onChange={(event) => updateParam("from", event.target.value)}
+          className="h-8 w-[145px]"
+          title="Từ ngày"
+        />
+        <Input
+          type="date"
+          value={toFilter}
+          onChange={(event) => updateParam("to", event.target.value)}
+          className="h-8 w-[145px]"
+          title="Đến ngày"
+        />
+        <Input
+          placeholder="Thiết bị"
+          defaultValue={deviceFilter}
+          onChange={(event) => debouncedSearchDevice(updateParam, event.target.value)}
+          className="h-8 w-[120px]"
+        />
+        <Input
+          placeholder="HĐH"
+          defaultValue={osFilter}
+          onChange={(event) => debouncedSearchOs(updateParam, event.target.value)}
+          className="h-8 w-[120px]"
+        />
+        <Input
+          placeholder="Trình duyệt"
+          defaultValue={browserFilter}
+          onChange={(event) => debouncedSearchBrowser(updateParam, event.target.value)}
+          className="h-8 w-[140px]"
         />
         {isFiltered && (
           <Button variant="ghost" onClick={resetFilters} className="h-8 px-2 lg:px-3">
@@ -271,4 +318,16 @@ function SummaryCard({
       </CardContent>
     </Card>
   );
+}
+
+const debouncedSearchDevice = debounceUrlParam("deviceType")
+const debouncedSearchOs = debounceUrlParam("osName")
+const debouncedSearchBrowser = debounceUrlParam("browserName")
+
+function debounceUrlParam(key: string) {
+  let timeout: ReturnType<typeof setTimeout> | null = null
+  return (updateParam: (key: string, value: string) => void, value: string) => {
+    if (timeout) clearTimeout(timeout)
+    timeout = setTimeout(() => updateParam(key, value), 300)
+  }
 }

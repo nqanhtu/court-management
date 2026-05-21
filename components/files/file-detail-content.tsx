@@ -2,6 +2,7 @@
 
 import { apiFetch } from '@/lib/api/client';
 
+import { useState } from 'react'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 
@@ -12,7 +13,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 
-import { Box, FileText, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, Users } from 'lucide-react'
+import { Box, FileText, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, Users, QrCode } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useFile } from '@/lib/hooks/use-files'
@@ -44,6 +45,26 @@ export function FileDetailContent({ id }: { id: string }) {
     const { session } = useSession()
     const canManageFiles = can(session?.role, 'manageFiles')
     const canManageBorrow = can(session?.role, 'manageBorrow')
+    const [qrUrl, setQrUrl] = useState<string | null>(null)
+    const [isCreatingQr, setIsCreatingQr] = useState(false)
+
+    const handleCreateQr = async () => {
+        if (!file) return
+        setIsCreatingQr(true)
+        try {
+            const response = await apiFetch(`/api/files/${file.id}/qr-token`, { method: 'POST' })
+            const result = await response.json()
+            if (!response.ok || !result.success) throw new Error(result.message || 'Không thể tạo QR')
+            const url = `${window.location.origin}${result.url}`
+            setQrUrl(url)
+            await navigator.clipboard?.writeText(url).catch(() => undefined)
+            toast.success('Đã tạo liên kết QR', { description: 'Liên kết đã được sao chép nếu trình duyệt cho phép.' })
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Không thể tạo QR')
+        } finally {
+            setIsCreatingQr(false)
+        }
+    }
 
     const handleDeleteFile = async () => {
         if (!file) return
@@ -113,6 +134,10 @@ export function FileDetailContent({ id }: { id: string }) {
                     </div>
                 </div>
                 <div className="flex gap-2">
+                    <Button variant="outline" onClick={handleCreateQr} disabled={isCreatingQr}>
+                        {isCreatingQr ? <Loader2 className="h-4 w-4 animate-spin" /> : <QrCode className="h-4 w-4" />}
+                        Tạo QR
+                    </Button>
                     {canManageFiles && (
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -149,6 +174,15 @@ export function FileDetailContent({ id }: { id: string }) {
                     )}
                 </div>
             </div>
+
+            {qrUrl && (
+                <Card className="border-blue-200 bg-blue-50/50">
+                    <CardContent className="pt-4">
+                        <p className="text-sm font-medium text-blue-900">Liên kết QR an toàn</p>
+                        <p className="mt-1 break-all font-mono text-xs text-blue-700">{qrUrl}</p>
+                    </CardContent>
+                </Card>
+            )}
 
             <Tabs defaultValue="general" className="w-full">
                 <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">

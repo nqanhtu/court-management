@@ -31,22 +31,30 @@ interface BorrowTableProps {
   borrowSlips: BorrowSlipWithDetails[];
   isLoading?: boolean;
   onReturn: (id: string) => void;
+  onApprove: (id: string) => void;
+  onReject: (id: string) => void;
+  onExport: (id: string) => void;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onViewHistory: (id: string) => void;
   onCreate?: () => void;
   canManageBorrow?: boolean;
+  canApproveBorrow?: boolean;
 }
 
 export default function BorrowTable({
   borrowSlips,
   isLoading,
   onReturn,
+  onApprove,
+  onReject,
+  onExport,
   onEdit,
   onDelete,
   onViewHistory,
   onCreate,
   canManageBorrow = false,
+  canApproveBorrow = false,
 }: BorrowTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
@@ -57,8 +65,8 @@ export default function BorrowTable({
   const [sorting, setSorting] = React.useState<SortingState>([])
 
   const columns = React.useMemo(
-    () => getColumns({ onReturn, onEdit, onDelete, onViewHistory, canManageBorrow }),
-    [onReturn, onEdit, onDelete, onViewHistory, canManageBorrow]
+    () => getColumns({ onReturn, onApprove, onReject, onExport, onEdit, onDelete, onViewHistory, canManageBorrow, canApproveBorrow }),
+    [onReturn, onApprove, onReject, onExport, onEdit, onDelete, onViewHistory, canManageBorrow, canApproveBorrow]
   );
 
   // eslint-disable-next-line react-hooks/incompatible-library

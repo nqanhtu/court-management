@@ -95,12 +95,12 @@ export function BorrowListSection() {
       </div>
 
       <Tabs defaultValue="pending" className="min-h-0 flex-1">
-        <TabsList className="flex flex-wrap">
-          <TabsTrigger value="pending">Chờ duyệt</TabsTrigger>
-          <TabsTrigger value="approved">Đã duyệt</TabsTrigger>
-          <TabsTrigger value="borrowing">Đang mượn</TabsTrigger>
-          <TabsTrigger value="returned">Đã trả</TabsTrigger>
-          <TabsTrigger value="closed">Từ chối/Quá hạn</TabsTrigger>
+        <TabsList className="flex flex-wrap mb-4">
+          <TabsTrigger value="pending" className="data-[state=active]:bg-slate-600 data-[state=active]:text-white">Chờ duyệt</TabsTrigger>
+          <TabsTrigger value="approved" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Đã duyệt</TabsTrigger>
+          <TabsTrigger value="borrowing" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Đang mượn</TabsTrigger>
+          <TabsTrigger value="returned" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Đã trả</TabsTrigger>
+          <TabsTrigger value="closed" className="data-[state=active]:bg-red-500 data-[state=active]:text-white">Từ chối/Quá hạn</TabsTrigger>
         </TabsList>
         {[
           { value: 'pending', statuses: ['PENDING_APPROVAL'] },

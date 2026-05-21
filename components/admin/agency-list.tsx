@@ -10,7 +10,8 @@ import {
   Plus, 
   Building2,
   MoreHorizontal,
-  Loader2
+  Loader2,
+  Printer
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -87,6 +88,84 @@ export function AgencyList() {
     }
   };
 
+  const handlePrintLabel = (agency: AgencyHistoryDto) => {
+    const printWindow = window.open('', '_blank', 'width=600,height=400');
+    if (printWindow) {
+        printWindow.document.write(`
+            <html>
+                <head>
+                    <title>In nhãn Phông - ${agency.name}</title>
+                    <style>
+                        body {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            font-family: Arial, sans-serif;
+                            margin: 0;
+                            padding: 40px;
+                        }
+                        .label-container {
+                            text-align: center;
+                            border: 3px solid #000;
+                            padding: 30px;
+                            border-radius: 4px;
+                            width: 400px;
+                            max-width: 100%;
+                        }
+                        h1 {
+                            margin: 0 0 10px 0;
+                            font-size: 24px;
+                            font-weight: bold;
+                            text-transform: uppercase;
+                            letter-spacing: 2px;
+                            border-bottom: 2px solid #000;
+                            padding-bottom: 10px;
+                        }
+                        h2 {
+                            margin: 20px 0 10px 0;
+                            font-size: 32px;
+                            font-weight: bold;
+                        }
+                        p {
+                            margin: 10px 0 0 0;
+                            font-size: 16px;
+                            color: #333;
+                            font-style: italic;
+                        }
+                        .hint {
+                            margin-top: 30px;
+                            font-size: 12px;
+                            color: #888;
+                        }
+                        @media print {
+                            .hint { display: none; }
+                            body { padding: 0; }
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="label-container">
+                        <h1>PHÔNG LƯU TRỮ</h1>
+                        <h2>${agency.name}</h2>
+                        <p>ID: ${agency.id.substring(0, 8).toUpperCase()}</p>
+                    </div>
+                    <div class="hint">Cửa sổ sẽ tự động đóng sau khi in.</div>
+                    <script>
+                        window.onload = () => {
+                            setTimeout(() => {
+                                window.print();
+                                window.close();
+                            }, 500);
+                        };
+                    </script>
+                </body>
+            </html>
+        `);
+        printWindow.document.close();
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -157,14 +236,23 @@ export function AgencyList() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => {
-                          setSelectedAgency(agency);
-                          setIsModalOpen(true);
-                        }}>
+                        <DropdownMenuItem 
+                          className="cursor-pointer focus:bg-blue-50 focus:text-blue-600 dark:focus:bg-blue-950/50 dark:focus:text-blue-400"
+                          onClick={() => handlePrintLabel(agency)}
+                        >
+                          <Printer className="mr-2 h-4 w-4" /> In nhãn
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          className="cursor-pointer focus:bg-amber-50 focus:text-amber-600 dark:focus:bg-amber-950/50 dark:focus:text-amber-400"
+                          onClick={() => {
+                            setSelectedAgency(agency);
+                            setIsModalOpen(true);
+                          }}
+                        >
                           <Pencil className="mr-2 h-4 w-4" /> Chỉnh sửa
                         </DropdownMenuItem>
                         <DropdownMenuItem 
-                          className="text-destructive"
+                          className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive dark:focus:bg-destructive/20"
                           onClick={() => setAgencyToDelete(agency)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" /> Xoá

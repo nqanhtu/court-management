@@ -379,6 +379,7 @@ export function AuditDetailCell({ log }: { log: AuditLogWithUser }) {
           <MetadataItem label="Tài khoản" value={`${userName} ${username}`.trim()} />
           <MetadataItem label="Thời gian" value={createdAt} />
           <MetadataItem label="Địa chỉ IP" value={log.ipAddress ?? "Không có"} />
+          <MetadataItem label="Địa chỉ MAC" value={log.macAddress ?? "Không có"} />
           <MetadataItem label="ID đối tượng" value={log.targetId ?? "Không có"} />
         </div>
 

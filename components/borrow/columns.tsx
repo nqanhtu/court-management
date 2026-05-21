@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Check, Pencil, RotateCcw, Send, Trash2, History, X } from "lucide-react"
+import { Check, Pencil, RotateCcw, Send, Trash2, History, X, Printer } from "lucide-react"
 import { BorrowSlipWithDetails } from '@/lib/types/borrow';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -16,11 +16,12 @@ interface ColumnActions {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onViewHistory: (id: string) => void;
+  onPrint: (slip: BorrowSlipWithDetails) => void;
   canManageBorrow?: boolean;
   canApproveBorrow?: boolean;
 }
 
-export const getColumns = ({ onReturn, onApprove, onReject, onExport, onEdit, onDelete, onViewHistory, canManageBorrow = false, canApproveBorrow = false }: ColumnActions): ColumnDef<BorrowSlipWithDetails>[] => [
+export const getColumns = ({ onReturn, onApprove, onReject, onExport, onEdit, onDelete, onViewHistory, onPrint, canManageBorrow = false, canApproveBorrow = false }: ColumnActions): ColumnDef<BorrowSlipWithDetails>[] => [
   {
     accessorKey: "code",
     header: ({ column }) => (
@@ -160,15 +161,26 @@ export const getColumns = ({ onReturn, onApprove, onReject, onExport, onEdit, on
 
       if (!canManageBorrow && !canApproveBorrow) {
         return (
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => onViewHistory(slip.id)}
-            className='h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50'
-            title='Nháº­t kÃ½'
-          >
-            <History className='w-4 h-4' />
-          </Button>
+          <div className='flex items-center gap-1'>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onPrint(slip)}
+              className='h-8 w-8 text-slate-600 hover:text-slate-700 hover:bg-slate-50'
+              title='In phiếu'
+            >
+              <Printer className='w-4 h-4' />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => onViewHistory(slip.id)}
+              className='h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50'
+              title='Nhật ký'
+            >
+              <History className='w-4 h-4' />
+            </Button>
+          </div>
         )
       }
 
@@ -222,6 +234,15 @@ export const getColumns = ({ onReturn, onApprove, onReject, onExport, onEdit, on
               )}
             </>
           )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onPrint(slip)}
+            className='h-8 w-8 text-slate-600 hover:text-slate-700 hover:bg-slate-50'
+            title='In phiếu'
+          >
+            <Printer className='w-4 h-4' />
+          </Button>
           <Button
             variant="ghost"
             size="icon"

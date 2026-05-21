@@ -15,6 +15,7 @@ import { useSession } from '@/lib/hooks/use-auth'
 import { useBorrowSlips } from '@/lib/hooks/use-borrow'
 import { BorrowSlipWithDetails } from '@/lib/types/borrow'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { printBorrowSlip } from '@/lib/borrow/print'
 
 export function BorrowListSection() {
   const { borrowSlips, isLoading, mutate } = useBorrowSlips()
@@ -123,6 +124,13 @@ export function BorrowListSection() {
               }}
               onDelete={(id) => console.log('Delete', id)}
               onViewHistory={setHistorySlipId}
+              onPrint={(slip) => {
+                if (!printBorrowSlip(slip)) {
+                  toast.error('Không mở được cửa sổ in', {
+                    description: 'Trình duyệt có thể đang chặn pop-up. Hãy cho phép pop-up cho trang này.',
+                  })
+                }
+              }}
               canManageBorrow={canManageBorrow}
               canApproveBorrow={canApproveBorrow}
               onCreate={canManageBorrow ? () => setIsAddModalOpen(true) : undefined}

@@ -37,6 +37,7 @@ interface BorrowTableProps {
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onViewHistory: (id: string) => void;
+  onPrint: (slip: BorrowSlipWithDetails) => void;
   onCreate?: () => void;
   canManageBorrow?: boolean;
   canApproveBorrow?: boolean;
@@ -52,6 +53,7 @@ export default function BorrowTable({
   onEdit,
   onDelete,
   onViewHistory,
+  onPrint,
   onCreate,
   canManageBorrow = false,
   canApproveBorrow = false,
@@ -65,8 +67,8 @@ export default function BorrowTable({
   const [sorting, setSorting] = React.useState<SortingState>([])
 
   const columns = React.useMemo(
-    () => getColumns({ onReturn, onApprove, onReject, onExport, onEdit, onDelete, onViewHistory, canManageBorrow, canApproveBorrow }),
-    [onReturn, onApprove, onReject, onExport, onEdit, onDelete, onViewHistory, canManageBorrow, canApproveBorrow]
+    () => getColumns({ onReturn, onApprove, onReject, onExport, onEdit, onDelete, onViewHistory, onPrint, canManageBorrow, canApproveBorrow }),
+    [onReturn, onApprove, onReject, onExport, onEdit, onDelete, onViewHistory, onPrint, canManageBorrow, canApproveBorrow]
   );
 
   // eslint-disable-next-line react-hooks/incompatible-library

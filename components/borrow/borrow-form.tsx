@@ -17,6 +17,8 @@ import {
 import type { BorrowItemDto, BorrowSlipDto, FileDto, UserDto } from "@/lib/api/types";
 import { toast } from "sonner";
 import { Field, FieldLabel, FieldGroup } from "../ui/field";
+import { useSession } from "@/lib/hooks/use-auth";
+import { buildBorrowSlipDraft, printBorrowSlip } from "@/lib/borrow/print";
 
 
 interface BorrowSlipWithDetails extends BorrowSlipDto {
@@ -33,6 +35,7 @@ interface BorrowFormProps {
 }
 
 export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, initialFiles = [] }: BorrowFormProps) {
+  const { session } = useSession();
   const [users, setUsers] = useState<UserDto[]>([]);
   const [isLoadingUsers, setIsLoadingUsers] = useState(false);
 
@@ -177,6 +180,46 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
     setSelectedFiles((prev) => prev.filter((f) => f.id !== id));
   };
 
+  const fetchSlipDetail = async (id: string) => {
+    const response = await apiFetch(`/api/borrow/${id}`);
+    if (!response.ok) return null;
+    return (await response.json()) as BorrowSlipWithDetails;
+  };
+
+  const handlePrintDraft = () => {
+    if (!selectedUser || selectedFiles.length === 0) {
+      toast.error("Chưa đủ dữ liệu in phiếu", {
+        description: "Vui lòng chọn người mượn và ít nhất 1 hồ sơ",
+      });
+      return;
+    }
+
+    const draft = buildBorrowSlipDraft({
+      borrowerName: selectedUser.fullName,
+      borrowerUnit: selectedUser.unit,
+      borrowerTitle,
+      reason,
+      borrowDate,
+      dueDate,
+      files: selectedFiles,
+      lender: session
+        ? {
+            id: session.id,
+            username: session.username,
+            fullName: session.fullName,
+            role: session.role,
+            status: true,
+          }
+        : null,
+    });
+
+    if (!printBorrowSlip(draft, "request")) {
+      toast.error("Không mở được cửa sổ in", {
+        description: "Trình duyệt có thể đang chặn pop-up. Hãy cho phép pop-up cho trang này.",
+      });
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedUserId || selectedFiles.length === 0) {
       toast.error("Thiếu thông tin", {
@@ -209,11 +252,16 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
 
       const result = await response.json();
 
-      setIsSubmitting(false);
-
       if (result.success) {
+        const createdSlip = result.slipId ? await fetchSlipDetail(result.slipId) : null;
         toast.success("Thành công", {
           description: slipId ? "Đã cập nhật phiếu mượn" : "Đã tạo phiếu mượn thành công",
+          action: createdSlip && !slipId
+            ? {
+                label: "In phiếu",
+                onClick: () => printBorrowSlip(createdSlip, "request"),
+              }
+            : undefined,
         });
         onSuccess?.();
       } else {
@@ -226,6 +274,8 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
       toast.error("Lỗi", {
         description: "Gặp lỗi khi gọi API",
       });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -325,10 +375,20 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
             <Button
               type="button"
               variant="outline"
-              onClick={onCancel}
+              onClick={handlePrintDraft}
+              disabled={!selectedUserId || selectedFiles.length === 0}
             >
               <Printer className="w-4 h-4" /> In phiếu
             </Button>
+            {onCancel && (
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onCancel}
+              >
+                Hủy
+              </Button>
+            )}
             <Button
               type="submit"
               disabled={

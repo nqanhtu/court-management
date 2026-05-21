@@ -1,5 +1,7 @@
 'use client';
 
+import { QRCodeCanvas } from 'qrcode.react';
+
 import { apiFetch } from '@/lib/api/client';
 
 import { useCallback, useState, useEffect } from "react";
@@ -18,7 +20,9 @@ import {
   Pencil, 
   Trash2, 
   Loader2,
-  FolderOpen
+  FolderOpen,
+  Printer,
+  QrCode
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,7 +44,9 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { StorageBoxDialog } from "@/components/forms/storage-box-dialog";
+import { printStorageBoxLabels, type StorageBoxLabelPrintItem } from "@/lib/storage-box/print-labels";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -64,6 +70,7 @@ export default function StorageBoxesPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedBox, setSelectedBox] = useState<StorageBoxDto | null>(null);
   const [boxToDelete, setBoxToDelete] = useState<StorageBoxDto | null>(null);
+  const [selectedBoxIds, setSelectedBoxIds] = useState<Set<string>>(new Set());
 
   // Authenticate SUPER_ADMIN
   useEffect(() => {
@@ -86,7 +93,9 @@ export default function StorageBoxesPage() {
       const response = await apiFetch(`/api/admin/boxes?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        setBoxes(Array.isArray(data) ? data : []);
+        const nextBoxes = Array.isArray(data) ? data : [];
+        setBoxes(nextBoxes);
+        setSelectedBoxIds((current) => new Set([...current].filter((id) => nextBoxes.some((box) => box.id === id))));
       } else {
         toast.error("Không thể tải danh sách hộp lưu trữ");
       }
@@ -134,6 +143,61 @@ export default function StorageBoxesPage() {
       setBoxToDelete(null);
     }
   };
+
+  const getBoxQrUrl = useCallback((box: StorageBoxDto) => {
+    if (typeof window === "undefined") return `/qr/boxes/${box.id}`;
+    return `${window.location.origin}/qr/boxes/${box.id}`;
+  }, []);
+
+  const getBoxQrDataUrl = (box: StorageBoxDto) => {
+    const canvas = document.getElementById(`storage-box-qr-${box.id}`) as HTMLCanvasElement | null;
+    return canvas?.toDataURL("image/png") || null;
+  };
+
+  const toPrintItems = (targetBoxes: StorageBoxDto[]) => {
+    const items: StorageBoxLabelPrintItem[] = [];
+    for (const box of targetBoxes) {
+      const qrDataUrl = getBoxQrDataUrl(box);
+      if (!qrDataUrl) continue;
+      items.push({ box, qrDataUrl, qrUrl: getBoxQrUrl(box) });
+    }
+    return items;
+  };
+
+  const handlePrintLabels = (targetBoxes: StorageBoxDto[], mode: "single" | "grid") => {
+    if (targetBoxes.length === 0) {
+      toast.warning("Chưa có hộp lưu trữ để in nhãn");
+      return;
+    }
+
+    const items = toPrintItems(targetBoxes);
+    if (items.length === 0) {
+      toast.error("Chưa tạo được ảnh QR", {
+        description: "Vui lòng thử lại sau khi danh sách hộp tải xong.",
+      });
+      return;
+    }
+
+    if (!printStorageBoxLabels(items, mode)) {
+      toast.error("Không mở được cửa sổ in", {
+        description: "Trình duyệt có thể đang chặn pop-up. Hãy cho phép pop-up cho trang này.",
+      });
+    }
+  };
+
+  const toggleBoxSelection = (boxId: string, checked: boolean) => {
+    setSelectedBoxIds((current) => {
+      const next = new Set(current);
+      if (checked) next.add(boxId);
+      else next.delete(boxId);
+      return next;
+    });
+  };
+
+  const visibleBoxIds = boxes.map((box) => box.id);
+  const selectedVisibleBoxes = boxes.filter((box) => selectedBoxIds.has(box.id));
+  const allVisibleSelected = visibleBoxIds.length > 0 && visibleBoxIds.every((id) => selectedBoxIds.has(id));
+  const someVisibleSelected = visibleBoxIds.some((id) => selectedBoxIds.has(id));
 
   if (isSessionLoading) {
     return (
@@ -208,6 +272,19 @@ export default function StorageBoxesPage() {
                 Xóa bộ lọc
               </Button>
             )}
+            <Button
+              variant="outline"
+              onClick={() => handlePrintLabels(selectedVisibleBoxes.length > 0 ? selectedVisibleBoxes : boxes, "grid")}
+              disabled={boxes.length === 0}
+              className="h-9.5 rounded-lg"
+              title={selectedVisibleBoxes.length > 0 ? "In các hộp đã chọn" : "In tất cả hộp trong kết quả lọc"}
+            >
+              <Printer className="h-4 w-4" />
+              In nhiều nhãn
+              {selectedVisibleBoxes.length > 0 && (
+                <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px]">{selectedVisibleBoxes.length}</span>
+              )}
+            </Button>
           </div>
 
           {/* Data Table */}
@@ -216,6 +293,20 @@ export default function StorageBoxesPage() {
               <Table>
                 <TableHeader className="bg-muted/40">
                   <TableRow>
+                    <TableHead className="w-10">
+                      <Checkbox
+                        checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
+                        onCheckedChange={(checked) => {
+                          setSelectedBoxIds((current) => {
+                            const next = new Set(current);
+                            if (Boolean(checked)) visibleBoxIds.forEach((id) => next.add(id));
+                            else visibleBoxIds.forEach((id) => next.delete(id));
+                            return next;
+                          });
+                        }}
+                        aria-label="Chọn tất cả hộp đang hiển thị"
+                      />
+                    </TableHead>
                     <TableHead className="font-semibold text-foreground py-3">Mã QR / Hộp</TableHead>
                     <TableHead className="font-semibold text-foreground">Vị trí vật lý</TableHead>
                     <TableHead className="font-semibold text-foreground">Phông lưu trữ</TableHead>
@@ -228,7 +319,7 @@ export default function StorageBoxesPage() {
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="h-32 text-center">
+                      <TableCell colSpan={8} className="h-32 text-center">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <Loader2 className="h-6 w-6 animate-spin text-primary" />
                           <span className="text-xs text-muted-foreground">Đang tải danh sách hộp lưu trữ...</span>
@@ -237,7 +328,7 @@ export default function StorageBoxesPage() {
                     </TableRow>
                   ) : boxes.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={7} className="h-32 text-center">
+                      <TableCell colSpan={8} className="h-32 text-center">
                         <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground">
                           <Archive className="h-8 w-8 opacity-40 mb-1" />
                           <span className="text-sm font-medium">Không tìm thấy hộp lưu trữ nào</span>
@@ -250,6 +341,13 @@ export default function StorageBoxesPage() {
                       const filesCount = box._count?.files || 0;
                       return (
                         <TableRow key={box.id} className="hover:bg-muted/30 transition-colors group">
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedBoxIds.has(box.id)}
+                              onCheckedChange={(checked) => toggleBoxSelection(box.id, Boolean(checked))}
+                              aria-label={`Chọn hộp ${box.code}`}
+                            />
+                          </TableCell>
                           {/* Code / QR Code */}
                           <TableCell className="py-4">
                             <div className="flex flex-col gap-1">
@@ -346,6 +444,18 @@ export default function StorageBoxesPage() {
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-[160px] rounded-xl shadow-lg border">
                                 <DropdownMenuLabel className="text-xs text-muted-foreground">Lựa chọn</DropdownMenuLabel>
+                                <DropdownMenuItem
+                                  onClick={() => handlePrintLabels([box], "single")}
+                                  className="text-xs cursor-pointer flex items-center gap-2"
+                                >
+                                  <Printer className="h-3.5 w-3.5" /> In nhãn
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => window.open(getBoxQrUrl(box), "_blank")}
+                                  className="text-xs cursor-pointer flex items-center gap-2"
+                                >
+                                  <QrCode className="h-3.5 w-3.5" /> Mở QR
+                                </DropdownMenuItem>
                                 <DropdownMenuItem 
                                   onClick={() => {
                                     setSelectedBox(box);
@@ -384,6 +494,19 @@ export default function StorageBoxesPage() {
           </div>
         </div>
       </main>
+
+      <div className="pointer-events-none fixed -left-[9999px] top-0 opacity-0" aria-hidden="true">
+        {boxes.map((box) => (
+          <QRCodeCanvas
+            key={box.id}
+            id={`storage-box-qr-${box.id}`}
+            value={getBoxQrUrl(box)}
+            size={192}
+            level="M"
+            includeMargin
+          />
+        ))}
+      </div>
 
       {/* Form Dialog for Creating and Editing Boxes */}
       <StorageBoxDialog 

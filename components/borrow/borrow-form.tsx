@@ -3,14 +3,7 @@
 import { apiFetch } from '@/lib/api/client';
 
 import { useState, useEffect } from "react";
-import {
-  Calendar,
-  FileStack,
-  Plus,
-  Trash2,
-  Printer,
-  Loader2,
-} from "lucide-react";
+import { Calendar, FileStack, Plus, Trash2, Printer, Loader2, FileText } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -23,8 +16,6 @@ import {
 } from "@/components/ui/select"
 import type { BorrowItemDto, BorrowSlipDto, FileDto, UserDto } from "@/lib/api/types";
 import { toast } from "sonner";
-import { format } from "date-fns";
-import { History, FileText } from "lucide-react";
 import { Field, FieldLabel, FieldGroup } from "../ui/field";
 
 
@@ -228,7 +219,7 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
           description: result.message || "Có lỗi xảy ra",
         });
       }
-    } catch (error) {
+    } catch {
       setIsSubmitting(false);
       toast.error("Lỗi", {
         description: "Gặp lỗi khi gọi API",

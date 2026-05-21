@@ -56,12 +56,12 @@ export default function BorrowTable({
   )
   const [sorting, setSorting] = React.useState<SortingState>([])
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   const columns = React.useMemo(
     () => getColumns({ onReturn, onEdit, onDelete, onViewHistory, canManageBorrow }),
     [onReturn, onEdit, onDelete, onViewHistory, canManageBorrow]
   );
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: borrowSlips,
     columns,

@@ -69,6 +69,7 @@ export function AuditList() {
     pageSize: pageSize,
   };
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: logs,
     columns,

@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { ExcelImportPreview } from '@/lib/validation/import'
 import { mutate } from 'swr'
+import type { Key } from 'swr'
 
 interface ExcelUploadFormProps {
   onSuccess: () => void
@@ -88,7 +89,7 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
         toast.success(`Đã nhập ${result.data?.stats.success ?? 0} hồ sơ`)
         // Clear cached requests related to files so components fetch fresh data
         mutate(
-          (key: any) => typeof key === 'string' && key.startsWith('/api/files'),
+          (key: Key) => typeof key === 'string' && key.startsWith('/api/files'),
           undefined,
           { revalidate: true }
         )

@@ -14,6 +14,7 @@ import { Loader2 } from 'lucide-react'
 import type { StorageBoxDto } from '@/lib/api/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { mutate } from 'swr'
+import type { Key } from 'swr'
 
 interface ManualFileFormProps {
     onSuccess: () => void
@@ -72,7 +73,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
             if (response.ok && result.success) {
                 toast.success('Tạo hồ sơ thành công')
                 mutate(
-                    (key: any) => typeof key === 'string' && key.startsWith('/api/files'),
+                    (key: Key) => typeof key === 'string' && key.startsWith('/api/files'),
                     undefined,
                     { revalidate: true }
                 )
@@ -250,7 +251,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                         <SelectValue placeholder="Chọn hộp..." />
                     </SelectTrigger>
                     <SelectContent>
-                        {boxes.map((b: any) => (
+                        {boxes.map((b) => (
                             <SelectItem key={b.id} value={b.id}>
                                 {b.code} (Kệ: {b.shelf}) {b.agency?.name ? `- Phông: ${b.agency.name}` : ''}
                             </SelectItem>

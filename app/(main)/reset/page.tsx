@@ -5,7 +5,7 @@ import { apiFetch } from '@/lib/api/client';
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { ShieldAlert, Trash2, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
+import { ShieldAlert, Trash2, AlertTriangle, CheckCircle2, Loader2, DatabaseBackup, Download, Upload, RotateCcw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -36,7 +36,12 @@ export default function ResetPage() {
 
     const [confirmText, setConfirmText] = useState('')
     const [showDialog, setShowDialog] = useState(false)
+    const [showRestoreDialog, setShowRestoreDialog] = useState(false)
     const [isResetting, setIsResetting] = useState(false)
+    const [isBackingUp, setIsBackingUp] = useState(false)
+    const [isRestoring, setIsRestoring] = useState(false)
+    const [restoreConfirmText, setRestoreConfirmText] = useState('')
+    const [restoreFile, setRestoreFile] = useState<File | null>(null)
     const [result, setResult] = useState<DeletedCounts | null>(null)
 
     // Chặn truy cập nếu không phải SUPER_ADMIN
@@ -46,6 +51,46 @@ export default function ResetPage() {
     }
 
     const canConfirm = confirmText === 'RESET'
+    const canRestore = restoreConfirmText === 'RESTORE' && Boolean(restoreFile)
+
+    const handleBackup = async () => {
+        setIsBackingUp(true)
+
+        try {
+            const response = await apiFetch('/api/admin/database/backup', {
+                method: 'POST',
+            })
+
+            if (!response.ok) {
+                let message = 'Không thể tạo bản sao lưu cơ sở dữ liệu'
+                try {
+                    const data = await response.json()
+                    if (data?.error) message = data.error
+                } catch {
+                    // Response is not JSON; keep the default user-facing message.
+                }
+                throw new Error(message)
+            }
+
+            const blob = await response.blob()
+            const filename = getDownloadFilename(response.headers.get('content-disposition'))
+            const url = URL.createObjectURL(blob)
+            const link = document.createElement('a')
+
+            link.href = url
+            link.download = filename
+            document.body.appendChild(link)
+            link.click()
+            link.remove()
+            URL.revokeObjectURL(url)
+
+            toast.success('Đã tạo bản sao lưu cơ sở dữ liệu')
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Lỗi kết nối')
+        } finally {
+            setIsBackingUp(false)
+        }
+    }
 
     const handleReset = async () => {
         setShowDialog(false)
@@ -75,6 +120,39 @@ export default function ResetPage() {
         }
     }
 
+    const handleRestore = async () => {
+        if (!restoreFile) return
+
+        setShowRestoreDialog(false)
+        setIsRestoring(true)
+
+        try {
+            const formData = new FormData()
+            formData.set('confirm', 'RESTORE')
+            formData.set('file', restoreFile)
+
+            const res = await apiFetch('/api/admin/database/restore', {
+                method: 'POST',
+                body: formData,
+            })
+
+            const data = await res.json()
+
+            if (!res.ok || !data.success) {
+                throw new Error(data.error || 'Khôi phục cơ sở dữ liệu thất bại')
+            }
+
+            setRestoreConfirmText('')
+            setRestoreFile(null)
+            toast.success(`Đã khôi phục cơ sở dữ liệu từ ${data.filename}`)
+            router.refresh()
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : 'Lỗi kết nối')
+        } finally {
+            setIsRestoring(false)
+        }
+    }
+
     if (isLoading) {
         return (
             <div className="flex items-center justify-center h-full">
@@ -95,6 +173,111 @@ export default function ResetPage() {
                     </p>
                 </div>
             </div>
+
+            <Card className="border-blue-200 shadow-sm">
+                <CardHeader className="border-b border-blue-100 bg-blue-50/50">
+                    <div className="flex items-center gap-2">
+                        <DatabaseBackup className="w-5 h-5 text-blue-600" />
+                        <CardTitle className="text-blue-800">Sao lưu cơ sở dữ liệu</CardTitle>
+                    </div>
+                    <CardDescription className="text-blue-600/80">
+                        Tải xuống bản sao lưu PostgreSQL hiện tại dưới dạng file .dump. Nên thực hiện trước các thao tác bảo trì hoặc reset dữ liệu.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-4">
+                    <div className="rounded-lg border border-blue-100 bg-blue-50/40 px-4 py-3 text-sm text-slate-600">
+                        File sao lưu được tạo trực tiếp từ cơ sở dữ liệu và chỉ dành cho quản trị toàn hệ thống.
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        className="w-full border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
+                        disabled={isBackingUp || isResetting || isRestoring}
+                        onClick={handleBackup}
+                    >
+                        {isBackingUp ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Đang tạo bản sao lưu...
+                            </>
+                        ) : (
+                            <>
+                                <Download className="w-4 h-4 mr-2" />
+                                Tải xuống bản sao lưu
+                            </>
+                        )}
+                    </Button>
+                </CardContent>
+            </Card>
+
+            <Card className="border-amber-200 shadow-sm">
+                <CardHeader className="border-b border-amber-100 bg-amber-50/50">
+                    <div className="flex items-center gap-2">
+                        <RotateCcw className="w-5 h-5 text-amber-600" />
+                        <CardTitle className="text-amber-800">Khôi phục cơ sở dữ liệu</CardTitle>
+                    </div>
+                    <CardDescription className="text-amber-700/80">
+                        Tải lên file .dump được tạo từ chức năng sao lưu để khôi phục PostgreSQL. Thao tác này có thể ghi đè dữ liệu hiện tại.
+                    </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-6 space-y-5">
+                    <div className="rounded-lg border border-amber-100 bg-amber-50/40 px-4 py-3 text-sm text-slate-600">
+                        Chỉ dùng file backup đáng tin cậy. Sau khi khôi phục, dữ liệu trong hệ thống sẽ theo nội dung của file được tải lên.
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                            <Upload className="w-4 h-4 text-amber-600" />
+                            File sao lưu PostgreSQL
+                        </label>
+                        <Input
+                            type="file"
+                            accept=".dump"
+                            disabled={isRestoring || isResetting || isBackingUp}
+                            onChange={(event) => setRestoreFile(event.target.files?.[0] ?? null)}
+                            className="border-amber-200 focus-visible:ring-amber-400"
+                        />
+                        {restoreFile && (
+                            <p className="text-xs text-muted-foreground">
+                                Đã chọn: <span className="font-medium text-foreground">{restoreFile.name}</span>
+                            </p>
+                        )}
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+                            <AlertTriangle className="w-4 h-4 text-amber-500" />
+                            Nhập <code className="bg-slate-100 px-1.5 py-0.5 rounded text-amber-700 font-mono">RESTORE</code> để xác nhận
+                        </label>
+                        <Input
+                            value={restoreConfirmText}
+                            onChange={(e) => setRestoreConfirmText(e.target.value)}
+                            placeholder="Nhập RESTORE..."
+                            className="border-amber-200 focus-visible:ring-amber-400 font-mono"
+                            disabled={isRestoring || isResetting || isBackingUp}
+                        />
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        className="w-full border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                        disabled={!canRestore || isRestoring || isResetting || isBackingUp}
+                        onClick={() => setShowRestoreDialog(true)}
+                    >
+                        {isRestoring ? (
+                            <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Đang khôi phục cơ sở dữ liệu...
+                            </>
+                        ) : (
+                            <>
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                Khôi phục từ bản sao lưu
+                            </>
+                        )}
+                    </Button>
+                </CardContent>
+            </Card>
 
             {/* Card reset */}
             <Card className="border-red-200 shadow-sm">
@@ -148,7 +331,7 @@ export default function ResetPage() {
                     <Button
                         variant="destructive"
                         className="w-full"
-                        disabled={!canConfirm || isResetting}
+                        disabled={!canConfirm || isResetting || isRestoring}
                         onClick={() => setShowDialog(true)}
                     >
                         {isResetting ? (
@@ -219,6 +402,41 @@ export default function ResetPage() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <AlertDialog open={showRestoreDialog} onOpenChange={setShowRestoreDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2 text-amber-700">
+                            <ShieldAlert className="w-5 h-5" />
+                            Xác nhận khôi phục cơ sở dữ liệu?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Hành động này sẽ chạy restore PostgreSQL từ file <strong>{restoreFile?.name}</strong>.
+                            Dữ liệu hiện tại có thể bị ghi đè hoặc xóa theo nội dung bản sao lưu.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel>Hủy bỏ</AlertDialogCancel>
+                        <AlertDialogAction
+                            className="bg-amber-600 hover:bg-amber-700"
+                            onClick={handleRestore}
+                        >
+                            Tôi hiểu, tiến hành khôi phục
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     )
+}
+
+function getDownloadFilename(contentDisposition: string | null) {
+    const fallback = `court-management-${new Date().toISOString().replace(/[:.]/g, '-')}.dump`
+    if (!contentDisposition) return fallback
+
+    const utf8Match = contentDisposition.match(/filename\*=UTF-8''([^;]+)/i)
+    if (utf8Match?.[1]) return decodeURIComponent(utf8Match[1].replace(/["]/g, ''))
+
+    const filenameMatch = contentDisposition.match(/filename="?([^";]+)"?/i)
+    return filenameMatch?.[1] || fallback
 }

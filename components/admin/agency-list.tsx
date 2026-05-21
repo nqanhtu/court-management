@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { AgencyFormModal } from "./agency-form-modal";
+import type { AgencyHistoryDto } from "@/lib/api/types";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -44,11 +45,11 @@ import {
 import { toast } from "sonner";
 
 export function AgencyList() {
-  const [agencies, setAgencies] = useState<any[]>([]);
+  const [agencies, setAgencies] = useState<AgencyHistoryDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedAgency, setSelectedAgency] = useState<any>(null);
-  const [agencyToDelete, setAgencyToDelete] = useState<any>(null);
+  const [selectedAgency, setSelectedAgency] = useState<AgencyHistoryDto | null>(null);
+  const [agencyToDelete, setAgencyToDelete] = useState<AgencyHistoryDto | null>(null);
 
   const fetchAgencies = async () => {
     setIsLoading(true);
@@ -56,7 +57,7 @@ export function AgencyList() {
       const response = await apiFetch("/api/admin/agency");
       const data = await response.json();
       setAgencies(Array.isArray(data) ? data : []);
-    } catch (error) {
+    } catch {
       toast.error("Không thể tải danh sách phông lưu trữ");
     } finally {
       setIsLoading(false);
@@ -79,8 +80,8 @@ export function AgencyList() {
       }
       toast.success("Đã xoá phông lưu trữ");
       fetchAgencies();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể xoá");
     } finally {
       setAgencyToDelete(null);
     }

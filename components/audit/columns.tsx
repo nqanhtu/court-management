@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { AuditLogWithUser } from "@/lib/hooks/use-audit"
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
+import { AuditDetailCell } from "@/components/audit/audit-detail-dialog"
 
 export const columns: ColumnDef<AuditLogWithUser>[] = [
   {
@@ -71,12 +72,6 @@ export const columns: ColumnDef<AuditLogWithUser>[] = [
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title="Chi tiết" />
     ),
-    cell: ({ row }) => (
-      <div className="text-muted-foreground text-xs">
-        <div className="max-w-xs truncate bg-muted p-2 rounded border border-border font-mono" title={JSON.stringify(row.original.detail, null, 2)}>
-            {JSON.stringify(row.original.detail)}
-        </div>
-      </div>
-    ),
+    cell: ({ row }) => <AuditDetailCell log={row.original} />,
   },
 ]

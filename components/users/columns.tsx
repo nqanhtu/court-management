@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button"
 import { Pencil, Trash2, LockKeyhole, LockKeyholeOpen } from "lucide-react"
 import type { UserDto } from '@/lib/api/types';
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
-import { toast } from "sonner"
 
 interface ColumnActions {
   onEdit: (id: string) => void;

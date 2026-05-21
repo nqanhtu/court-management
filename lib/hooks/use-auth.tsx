@@ -14,7 +14,7 @@ export interface SessionData {
 interface SessionContextType {
   session: SessionData | null;
   isLoading: boolean;
-  isError: any;
+  isError: unknown;
   isAuthenticated: boolean;
   mutate: () => Promise<void>;
 }
@@ -30,7 +30,7 @@ export function SessionProvider({
 }) {
   const [session, setSession] = useState<SessionData | null>(initialSession);
   const [isLoading, setIsLoading] = useState(false);
-  const [isError, setIsError] = useState<any>(null);
+  const [isError, setIsError] = useState<unknown>(null);
 
   const mutate = async () => {
     setIsLoading(true);

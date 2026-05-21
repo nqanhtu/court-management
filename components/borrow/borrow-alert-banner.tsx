@@ -2,20 +2,22 @@
 
 import { apiFetch } from '@/lib/api/client';
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { AlertTriangle, Clock, X, ChevronRight } from "lucide-react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+
+type BorrowAlerts = {
+  overdueCount: number;
+  soonOverdueCount: number;
+}
 
 export function BorrowAlertBanner() {
-  const [alerts, setAlerts] = useState<any>(null);
+  const [alerts, setAlerts] = useState<BorrowAlerts | null>(null);
   const [isVisible, setIsVisible] = useState(true);
-  const pathname = usePathname();
 
   // Only show on relevant pages or if there are alerts
-  const fetchAlerts = async () => {
+  const fetchAlerts = useCallback(async () => {
     try {
       const response = await apiFetch("/api/borrow/alerts");
       const data = await response.json();
@@ -23,14 +25,15 @@ export function BorrowAlertBanner() {
     } catch (error) {
       console.error("Failed to fetch borrow alerts", error);
     }
-  };
+  }, []);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAlerts();
     // Refresh every 5 minutes
     const interval = setInterval(fetchAlerts, 5 * 60 * 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchAlerts]);
 
   if (!isVisible || !alerts) return null;
   if (alerts.overdueCount === 0 && alerts.soonOverdueCount === 0) return null;

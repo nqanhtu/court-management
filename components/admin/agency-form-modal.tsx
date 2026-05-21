@@ -34,6 +34,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import type { AgencyHistoryDto } from "@/lib/api/types";
 
 const formSchema = z.object({
   name: z.string().min(2, "Tên cơ quan phải có ít nhất 2 ký tự"),
@@ -49,7 +50,7 @@ interface AgencyFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  agency?: any; // If editing
+  agency?: AgencyHistoryDto | null; // If editing
 }
 
 export function AgencyFormModal({
@@ -105,8 +106,8 @@ export function AgencyFormModal({
       toast.success(agency ? "Cập nhật thành công" : "Thêm mới thành công");
       onSuccess();
       onClose();
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Có lỗi xảy ra");
     } finally {
       setIsLoading(false);
     }

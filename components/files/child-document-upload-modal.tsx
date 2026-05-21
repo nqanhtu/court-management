@@ -3,7 +3,6 @@
 import { apiFetch } from '@/lib/api/client';
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
@@ -28,7 +27,6 @@ export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDo
     const [open, setOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
     const [file, setFile] = useState<File | null>(null)
-    const router = useRouter()
     console.log("day: ", fileId)
 
     const handleUpload = async (e: React.FormEvent) => {

@@ -5,21 +5,23 @@ import { apiFetch } from '@/lib/api/client';
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 
-import { Box, FileText, MapPin, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, User, Users } from 'lucide-react'
+import { Box, FileText, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, Users } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useFile } from '@/lib/hooks/use-files'
 
 import { ChildDocumentUploadModal } from './child-document-upload-modal'
-import { getColumns } from './columns'
 import { ChildDocumentFormModal } from './child-document-form-modal'
+import type { BorrowItemDto, DocumentDto } from '@/lib/api/types'
+
+type BorrowItemWithSlip = BorrowItemDto & { borrowSlip: NonNullable<BorrowItemDto['borrowSlip']> }
 
 import {
     AlertDialog,
@@ -72,7 +74,7 @@ export function FileDetailContent({ id }: { id: string }) {
         if (!date) return '-'
         try {
             return format(new Date(date), includeTime ? 'dd/MM/yyyy HH:mm' : 'dd/MM/yyyy', { locale: vi })
-        } catch (e) {
+        } catch {
             return '-'
         }
     }
@@ -363,7 +365,7 @@ export function FileDetailContent({ id }: { id: string }) {
                             </CardHeader>
                             <CardContent>
                                 <div className="space-y-4">
-                                    {file.borrowItems.map((item: any) => (
+                                    {(file.borrowItems as BorrowItemWithSlip[]).map((item) => (
                                         <div key={item.id} className="p-4 bg-white dark:bg-slate-950 rounded-lg border shadow-sm">
                                             <div className="grid grid-cols-2 gap-4">
                                                 <div>
@@ -424,7 +426,7 @@ export function FileDetailContent({ id }: { id: string }) {
                             </TableHeader>
                             <TableBody>
                                 {file.documents && file.documents.length > 0 ? (
-                                    file.documents.map((doc: any, index: number) => (
+                                    file.documents.map((doc: DocumentDto, index: number) => (
                                         <TableRow key={doc.id}>
                                             <TableCell>{doc.order || index + 1}</TableCell>
                                             <TableCell className="font-medium max-w-[400px]">
@@ -439,7 +441,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                             <TableCell>{doc.year || '-'}</TableCell>
                                             <TableCell className="text-right">{doc.pageCount}</TableCell>
 
-                                            <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note}>{doc.note}</TableCell>
+                                            <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note ?? undefined}>{doc.note}</TableCell>
                                             {canManageFiles && <TableCell>
                                                 <div className="flex items-center">
                                                     <ChildDocumentFormModal
@@ -479,7 +481,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                                                         } else {
                                                                             toast.error('Gặp lỗi khi xóa')
                                                                         }
-                                                                    } catch (e) {
+                                                                    } catch {
                                                                         toast.error('Gặp lỗi khi xóa')
                                                                     }
                                                                 }}>Xóa</AlertDialogAction>

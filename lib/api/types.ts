@@ -139,3 +139,27 @@ export type AuditLogDto = {
   user?: UserDto | null
   createdAt: string | Date
 }
+
+export type UserAccessEvent = 'LOGIN' | 'LOGOUT'
+
+export type UserAccessLogDto = {
+  id: string
+  userId: string
+  user?: UserDto | null
+  event: UserAccessEvent | string
+  occurredAt: string | Date
+  ipAddress?: string | null
+  userAgent?: string | null
+  deviceType?: string | null
+  osName?: string | null
+  osVersion?: string | null
+  browserName?: string | null
+  browserVersion?: string | null
+}
+
+export type UserAccessLogSummaryDto = {
+  totalLogins: number
+  totalLogouts: number
+  activeUsers: number
+  lastAccessAt: string | Date | null
+}

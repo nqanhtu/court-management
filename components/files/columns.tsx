@@ -4,7 +4,7 @@ import { apiFetch } from '@/lib/api/client';
 
 import Link from "next/link"
 import { ColumnDef } from "@tanstack/react-table"
-import { ArrowUpDown, Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ChildDocumentFormModal } from "./child-document-form-modal"
 import {
@@ -230,7 +230,7 @@ export const getColumns = (
                       } else {
                         toast.error('Xóa thất bại')
                       }
-                    } catch (e) {
+                    } catch {
                       toast.error('Xóa thất bại')
                     }
                   }}>Xóa</AlertDialogAction>

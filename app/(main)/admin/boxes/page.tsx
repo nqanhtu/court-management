@@ -2,9 +2,10 @@
 
 import { apiFetch } from '@/lib/api/client';
 
-import { useState, useEffect } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "@/lib/hooks/use-auth";
+import type { StorageBoxDto } from "@/lib/api/types";
 import { 
   Archive, 
   MapPin, 
@@ -55,14 +56,14 @@ export default function StorageBoxesPage() {
   const router = useRouter();
   const { session, isLoading: isSessionLoading } = useSession();
 
-  const [boxes, setBoxes] = useState<any[]>([]);
+  const [boxes, setBoxes] = useState<StorageBoxDto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("");
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [selectedBox, setSelectedBox] = useState<any>(null);
-  const [boxToDelete, setBoxToDelete] = useState<any>(null);
+  const [selectedBox, setSelectedBox] = useState<StorageBoxDto | null>(null);
+  const [boxToDelete, setBoxToDelete] = useState<StorageBoxDto | null>(null);
 
   // Authenticate SUPER_ADMIN
   useEffect(() => {
@@ -75,7 +76,7 @@ export default function StorageBoxesPage() {
     }
   }, [session, isSessionLoading, router]);
 
-  const fetchBoxes = async () => {
+  const fetchBoxes = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -95,13 +96,13 @@ export default function StorageBoxesPage() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [search, yearFilter]);
 
   useEffect(() => {
     if (session && session.role === "SUPER_ADMIN") {
       fetchBoxes();
     }
-  }, [session, search, yearFilter]);
+  }, [session, fetchBoxes]);
 
   const handleDelete = async () => {
     if (!boxToDelete) return;
@@ -127,8 +128,8 @@ export default function StorageBoxesPage() {
 
       toast.success("Xóa hộp lưu trữ thành công");
       fetchBoxes();
-    } catch (error: any) {
-      toast.error(error.message || "Xóa thất bại. Vui lòng thử lại");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Xóa thất bại. Vui lòng thử lại");
     } finally {
       setBoxToDelete(null);
     }

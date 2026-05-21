@@ -3,7 +3,7 @@
 import { ColumnDef } from "@tanstack/react-table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Book, Pencil, RotateCcw, Trash2, History } from "lucide-react"
+import { Pencil, RotateCcw, Trash2, History } from "lucide-react"
 import { BorrowSlipWithDetails } from '@/lib/types/borrow';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';

@@ -131,6 +131,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
     [onCreate, handleDeleteFile]
   )
 
+  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data: files,
     columns,

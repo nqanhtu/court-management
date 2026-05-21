@@ -3,7 +3,7 @@
 import { apiFetch } from '@/lib/api/client';
 
 import { useState, useEffect } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Loader2 } from "lucide-react";
@@ -35,6 +35,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import type { AgencyHistoryDto, StorageBoxDto } from "@/lib/api/types";
 
 const formSchema = z.object({
   warehouse: z.string().min(1, "Kho không được để trống"),
@@ -58,7 +59,7 @@ interface StorageBoxDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  box?: any; // If editing
+  box?: StorageBoxDto | null; // If editing
 }
 
 export function StorageBoxDialog({
@@ -68,10 +69,10 @@ export function StorageBoxDialog({
   box,
 }: StorageBoxDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const [agencies, setAgencies] = useState<any[]>([]);
+  const [agencies, setAgencies] = useState<AgencyHistoryDto[]>([]);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema) as any,
+    resolver: zodResolver(formSchema) as Resolver<FormValues>,
     defaultValues: {
       warehouse: "",
       line: "",
@@ -196,8 +197,8 @@ export function StorageBoxDialog({
       toast.success(box ? "Cập nhật hộp lưu trữ thành công" : "Thêm mới hộp lưu trữ thành công");
       onSuccess();
       onClose();
-    } catch (error: any) {
-      toast.error(error.message || "Lưu thất bại. Vui lòng kiểm tra lại");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Lưu thất bại. Vui lòng kiểm tra lại");
     } finally {
       setIsLoading(false);
     }

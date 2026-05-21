@@ -31,9 +31,21 @@ export interface DocumentFormData {
     contentIndex?: string
 }
 
+type EditableDocument = {
+    id: string
+    title?: string | null
+    code?: string | null
+    year?: number | null
+    pageCount?: number | null
+    order?: number | null
+    note?: string | null
+    preservationTime?: string | null
+    contentIndex?: string | null
+}
+
 interface ChildDocumentFormModalProps {
     fileId: string
-    document?: any
+    document?: EditableDocument
     trigger?: React.ReactNode
     onSuccess?: () => void
 }
@@ -86,7 +98,7 @@ export function ChildDocumentFormModal({ fileId, document, trigger, onSuccess }:
         }
     }, [open, document, fileId])
 
-    const handleChange = (field: keyof DocumentFormData, value: any) => {
+    const handleChange = (field: keyof DocumentFormData, value: string | number | undefined) => {
         setFormData(prev => ({ ...prev, [field]: value }))
     }
 

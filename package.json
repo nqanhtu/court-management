@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "next dev",
+    "dev:local": "node scripts/dev-backend.mjs local",
+    "dev:server": "node scripts/dev-backend.mjs server",
     "build": "next build",
     "start": "next start",
     "lint": "eslint . --ext .ts,.tsx",

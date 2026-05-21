@@ -16,7 +16,7 @@ This is a Next.js + Tailwind CSS prototype of the "Phần mềm quản lý hồ 
 
 3.  Run the development server:
     ```bash
-    npm run dev
+    pnpm dev:local
     ```
 
 4.  Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
@@ -38,12 +38,19 @@ This is a Next.js + Tailwind CSS prototype of the "Phần mềm quản lý hồ 
 
 The backend/API has been split into a separate Bun + Elysia service at `../court-management-api`.
 
-Set these frontend environment variables:
+Run frontend against the local backend:
 
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001
-JWT_SECRET=<same value as backend>
+```bash
+pnpm dev:local
 ```
+
+Run frontend against the deployed backend:
+
+```bash
+pnpm dev:server
+```
+
+Both commands keep browser requests on `http://localhost:3000/api/...` and use the Next.js rewrite proxy. Override the targets with `LOCAL_BACKEND_API_URL` or `SERVER_BACKEND_API_URL` when needed.
 
 Run the backend separately with:
 

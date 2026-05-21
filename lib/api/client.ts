@@ -1,8 +1,9 @@
-const DEFAULT_API_URL = 'http://localhost:3001'
+const SAME_ORIGIN = 'same-origin'
 
 export function apiUrl(path: string) {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || DEFAULT_API_URL
   if (/^https?:\/\//.test(path)) return path
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || SAME_ORIGIN
+  if (baseUrl === SAME_ORIGIN) return path
   return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`
 }
 

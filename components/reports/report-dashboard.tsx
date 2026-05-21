@@ -29,6 +29,7 @@ export function ReportDashboard() {
         (stats?.recentBorrows || []) as RecentBorrow[],
         [stats]);
 
+    // eslint-disable-next-line react-hooks/incompatible-library
     const table = useReactTable({
         data: recentBorrows,
         columns,

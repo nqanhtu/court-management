@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from '@/src/lib/router'
 
 interface PaginationControlsProps {
     hasNextPage: boolean

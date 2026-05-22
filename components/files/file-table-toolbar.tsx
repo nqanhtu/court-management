@@ -2,7 +2,7 @@
 
 import { Table } from "@tanstack/react-table";
 import { Search, X } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from '@/src/lib/router';
 import { useDebouncedCallback } from "use-debounce";
 
 import { Button } from "@/components/ui/button";

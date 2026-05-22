@@ -51,7 +51,7 @@ export default function UserTable({ users, isLoading, onEdit, onDelete, onToggle
 
   const columns = React.useMemo(() => getColumns({ onEdit, onDelete, onToggleLock, isAdmin, currentUserRole }), [onEdit, onDelete, onToggleLock, isAdmin, currentUserRole]);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+   
   const table = useReactTable({
     data: users,
     columns,

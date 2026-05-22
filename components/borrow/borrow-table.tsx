@@ -71,7 +71,7 @@ export default function BorrowTable({
     [onReturn, onApprove, onReject, onExport, onEdit, onDelete, onViewHistory, onPrint, canManageBorrow, canApproveBorrow]
   );
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+   
   const table = useReactTable({
     data: borrowSlips,
     columns,

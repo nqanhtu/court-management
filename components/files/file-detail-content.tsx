@@ -4,7 +4,6 @@ import { QRCodeCanvas } from 'qrcode.react';
 
 import { apiFetch } from '@/lib/api/client';
 
-import { useState } from 'react'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 
@@ -15,9 +14,9 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 
-import { Box, FileText, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, Users, QrCode, Printer } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { Box, FileText, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, Users, Printer } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useRouter } from '@/src/lib/router'
 import { useFile } from '@/lib/hooks/use-files'
 
 import { ChildDocumentUploadModal } from './child-document-upload-modal'
@@ -230,7 +229,7 @@ export function FileDetailContent({ id }: { id: string }) {
                     )}
                      {canManageBorrow && file.status !== 'BORROWED' && !file.isLocked && (
                         <Button asChild>
-                            <Link href={`/borrow/create?files=${file.id}`}>
+                            <Link to={`/borrow/create?files=${file.id}`}>
                                 Lập phiếu mượn
                             </Link>
                         </Button>

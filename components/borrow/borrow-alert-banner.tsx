@@ -5,7 +5,7 @@ import { apiFetch } from '@/lib/api/client';
 import { useCallback, useState, useEffect } from "react";
 import { AlertTriangle, Clock, X, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
+import { Link } from 'react-router-dom';
 
 type BorrowAlerts = {
   overdueCount: number;
@@ -28,7 +28,7 @@ export function BorrowAlertBanner() {
   }, []);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     fetchAlerts();
     // Refresh every 5 minutes
     const interval = setInterval(fetchAlerts, 5 * 60 * 1000);
@@ -61,7 +61,7 @@ export function BorrowAlertBanner() {
 
         <div className="flex items-center gap-2">
           <Button variant="link" size="sm" asChild className="h-8 text-muted-foreground hover:text-primary">
-            <Link href="/borrow" className="flex items-center gap-1">
+            <Link to="/borrow" className="flex items-center gap-1">
               Xem chi tiết <ChevronRight className="h-3 w-3" />
             </Link>
           </Button>

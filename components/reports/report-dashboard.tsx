@@ -29,7 +29,7 @@ export function ReportDashboard() {
         (stats?.recentBorrows || []) as RecentBorrow[],
         [stats]);
 
-    // eslint-disable-next-line react-hooks/incompatible-library
+     
     const table = useReactTable({
         data: recentBorrows,
         columns,
@@ -63,7 +63,7 @@ export function ReportDashboard() {
             </div>
 
             {/* Data Table Card */}
-            <Card className="flex-1 overflow-hidden flex flex-col">
+            <Card className="flex flex-col">
                 <CardHeader className="border-b bg-slate-50/50 py-4">
                     <CardTitle className="text-lg font-semibold flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-slate-400" />
@@ -71,7 +71,7 @@ export function ReportDashboard() {
                     </CardTitle>
                 </CardHeader>
 
-                <CardContent className="flex-1 overflow-auto p-0">
+                <CardContent className="p-0">
                     <Table>
                         <TableHeader className="bg-white sticky top-0 z-10">
                             {table.getHeaderGroups().map((headerGroup) => (

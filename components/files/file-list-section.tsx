@@ -1,11 +1,12 @@
 'use client'
 
-import { useSearchParams, useRouter } from 'next/navigation'
+import { useSearchParams, useRouter } from '@/src/lib/router'
 import { useFiles } from '@/lib/hooks/use-files'
 import { FileTable } from '@/components/files/file-table'
-import { useSWRConfig } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
 import { useSession } from '@/lib/hooks/use-auth'
 import { can } from '@/lib/rbac'
+import { queryKeys } from '@/src/lib/query-keys'
 
 interface FileListSectionProps {
     onCreate?: () => void
@@ -39,7 +40,7 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
         offset: (page - 1) * limit
     })
 
-    const { mutate: globalMutate } = useSWRConfig()
+    const queryClient = useQueryClient()
     const { session } = useSession()
     const canManageFiles = can(session?.role, 'manageFiles')
     const canManageBorrow = can(session?.role, 'manageBorrow')
@@ -67,7 +68,7 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
                 onPaginationChange={handlePaginationChange}
                 onRefresh={() => {
                     mutate();
-                    globalMutate('/api/files/stats');
+                    queryClient.invalidateQueries({ queryKey: queryKeys.files.stats });
                 }}
             />
         </div>

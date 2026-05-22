@@ -5,8 +5,6 @@ import { X } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { DataTableFacetedFilter } from "@/components/ui/data-table-faceted-filter"
-import { statuses } from "./data"
 
 interface BorrowTableToolbarProps<TData> {
   table: Table<TData>

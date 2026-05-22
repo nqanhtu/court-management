@@ -1,8 +1,7 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from 'react-router-dom'
 
-import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useSession } from '@/lib/hooks/use-auth'
@@ -81,7 +80,7 @@ export function OverviewStats() {
             return (
               <Link 
                 key={shortcut.href} 
-                href={shortcut.href}
+                to={shortcut.href}
                 className="group flex items-center justify-between rounded-md bg-white/60 dark:bg-black/20 px-2 py-1.5 text-sm text-emerald-800 dark:text-emerald-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-colors"
               >
                 <div className="flex items-center gap-2">

@@ -2,7 +2,7 @@
 "use no memo";
 
 import React from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from '@/src/lib/router';
 import { useAudit } from "@/lib/hooks/use-audit";
 import {
   flexRender,
@@ -87,7 +87,7 @@ export function AuditList() {
     pageSize: pageSize,
   };
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+   
   const table = useReactTable({
     data: logs,
     columns,
@@ -126,7 +126,7 @@ export function AuditList() {
         toFilter={toFilter}
         onFilterChange={handleFilterChange}
       />
-      <div className="rounded-md border bg-white flex-1 overflow-auto min-h-0">
+      <div className="rounded-md border bg-white">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

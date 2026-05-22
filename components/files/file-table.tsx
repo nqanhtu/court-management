@@ -15,7 +15,7 @@ import {
 
 import { toast } from "sonner"
 import { Columns3, Loader2 } from 'lucide-react'
-import { useRouter } from "next/navigation"
+import { useRouter } from '@/src/lib/router'
 
 import {
   Table,
@@ -131,7 +131,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
     [onCreate, handleDeleteFile]
   )
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+   
   const table = useReactTable({
     data: files,
     columns,
@@ -196,7 +196,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
             </DropdownMenuContent>
           </DropdownMenu>
         </div>
-        <div className="overflow-auto max-h-[calc(100vh-22rem)] min-h-[300px]">
+        <div className="min-h-[300px]">
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (

@@ -1,32 +1,23 @@
-import { apiFetch } from '@/lib/api/client';
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+
+import { apiJson } from '@/lib/api/client'
 import { BorrowSlipWithDetails } from '@/lib/types/borrow'
-
-const fetcher = async (url: string) => {
-    const response = await apiFetch(url)
-    const data = await response.json().catch(() => null)
-
-    if (!response.ok) {
-        throw new Error(data?.error || data?.message || `API request failed with status ${response.status}`)
-    }
-
-    if (!Array.isArray(data)) {
-        throw new Error(data?.error || data?.message || 'Borrow API did not return a list')
-    }
-
-    return data as BorrowSlipWithDetails[]
-}
+import { queryKeys } from '@/src/lib/query-keys'
 
 export function useBorrowSlips() {
-    const { data, error, isLoading, mutate } = useSWR<BorrowSlipWithDetails[]>(
-        '/api/borrow',
-        fetcher
-    )
+  const query = useQuery({
+    queryKey: queryKeys.borrow.list,
+    queryFn: async () => {
+      const data = await apiJson<unknown>('/api/borrow')
+      if (!Array.isArray(data)) throw new Error('Borrow API did not return a list')
+      return data as BorrowSlipWithDetails[]
+    },
+  })
 
-    return {
-        borrowSlips: Array.isArray(data) ? data : [],
-        isLoading,
-        isError: error,
-        mutate
-    }
+  return {
+    borrowSlips: Array.isArray(query.data) ? query.data : [],
+    isLoading: query.isLoading,
+    isError: query.error,
+    mutate: query.refetch,
+  }
 }

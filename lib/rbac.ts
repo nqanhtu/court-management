@@ -1,4 +1,3 @@
-import { NextResponse } from 'next/server'
 import type { SessionPayload } from '@/lib/session'
 
 export const USER_ROLES = ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR'] as const
@@ -33,11 +32,11 @@ export function requirePermission(
   permission: Permission
 ) {
   if (!session?.id) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    return { error: 'Unauthorized', status: 401 }
   }
 
   if (!can(session.role, permission)) {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    return { error: 'Forbidden', status: 403 }
   }
 
   return null

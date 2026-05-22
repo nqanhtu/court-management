@@ -2,7 +2,7 @@
 "use no memo";
 
 import React from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from '@/src/lib/router';
 import { format } from "date-fns";
 import {
   ColumnDef,
@@ -154,7 +154,7 @@ export function AccessLogList() {
     pageSize,
   };
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+   
   const table = useReactTable({
     data: logs,
     columns,
@@ -253,7 +253,7 @@ export function AccessLogList() {
         )}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto rounded-md border bg-white">
+      <div className="rounded-md border bg-white">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

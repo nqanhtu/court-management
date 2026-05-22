@@ -1,6 +1,6 @@
 # Phần mềm quản lý hồ sơ (UI Prototype)
 
-This is a Next.js + Tailwind CSS prototype of the "Phần mềm quản lý hồ sơ" application.
+This is a Vite + React + Tailwind CSS prototype of the "Phần mềm quản lý hồ sơ" application.
 
 ## Getting Started
 
@@ -19,7 +19,7 @@ This is a Next.js + Tailwind CSS prototype of the "Phần mềm quản lý hồ 
     pnpm dev:local
     ```
 
-4.  Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+4.  Open the local URL printed by Vite with your browser to see the result.
 
 ## Pages Implemented
 
@@ -50,7 +50,8 @@ Run frontend against the deployed backend:
 pnpm dev:server
 ```
 
-Both commands keep browser requests on `http://localhost:3000/api/...` and use the Next.js rewrite proxy. Override the targets with `LOCAL_BACKEND_API_URL` or `SERVER_BACKEND_API_URL` when needed.
+`pnpm dev` and `pnpm dev:local` use the local backend from `.env`.
+`pnpm dev:server` runs `vite --mode server` and uses `.env.server` to proxy `/api` to `https://court-management-api.onrender.com`.
 
 Run the backend separately with:
 

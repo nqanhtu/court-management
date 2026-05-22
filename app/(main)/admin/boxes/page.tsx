@@ -446,13 +446,13 @@ export default function StorageBoxesPage() {
                                 <DropdownMenuLabel className="text-xs text-muted-foreground">Lựa chọn</DropdownMenuLabel>
                                 <DropdownMenuItem
                                   onClick={() => handlePrintLabels([box], "single")}
-                                  className="text-xs cursor-pointer flex items-center gap-2"
+                                  className="text-xs cursor-pointer flex items-center gap-2 focus:bg-blue-50 focus:text-blue-600 dark:focus:bg-blue-950/50 dark:focus:text-blue-400"
                                 >
                                   <Printer className="h-3.5 w-3.5" /> In nhãn
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => window.open(getBoxQrUrl(box), "_blank")}
-                                  className="text-xs cursor-pointer flex items-center gap-2"
+                                  className="text-xs cursor-pointer flex items-center gap-2 focus:bg-emerald-50 focus:text-emerald-600 dark:focus:bg-emerald-950/50 dark:focus:text-emerald-400"
                                 >
                                   <QrCode className="h-3.5 w-3.5" /> Mở QR
                                 </DropdownMenuItem>
@@ -461,7 +461,7 @@ export default function StorageBoxesPage() {
                                     setSelectedBox(box);
                                     setIsDialogOpen(true);
                                   }}
-                                  className="text-xs cursor-pointer flex items-center gap-2"
+                                  className="text-xs cursor-pointer flex items-center gap-2 focus:bg-amber-50 focus:text-amber-600 dark:focus:bg-amber-950/50 dark:focus:text-amber-400"
                                 >
                                   <Pencil className="h-3.5 w-3.5" /> Chỉnh sửa
                                 </DropdownMenuItem>
@@ -469,7 +469,7 @@ export default function StorageBoxesPage() {
                                   className={`text-xs cursor-pointer flex items-center gap-2 ${
                                     filesCount > 0 
                                       ? "text-muted-foreground opacity-50 cursor-not-allowed" 
-                                      : "text-destructive hover:text-destructive"
+                                      : "text-destructive focus:bg-destructive/10 focus:text-destructive dark:focus:bg-destructive/20"
                                   }`}
                                   onClick={() => {
                                     if (filesCount > 0) {

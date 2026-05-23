@@ -56,8 +56,10 @@ export function AppSidebar({ user }: AppSidebarProps) {
               { name: "Phông lưu trữ", href: "/admin/agency", icon: Building2 },
               { name: "Hộp lưu trữ", href: "/admin/boxes", icon: Archive },
               { name: "Nhật ký", href: "/admin/audit", icon: HistoryIcon },
-              { name: "Reset dữ liệu", href: "/reset", icon: RotateCcw },
             ]
+          : []),
+        ...(can(role, "manageMaintenance")
+          ? [{ name: "Reset dữ liệu", href: "/reset", icon: RotateCcw }]
           : []),
       ],
     },

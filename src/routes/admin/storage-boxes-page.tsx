@@ -2,12 +2,11 @@
 
 import { QRCodeCanvas } from 'qrcode.react';
 
-import { apiFetch } from '@/lib/api/client';
-
 import { useCallback, useState, useEffect } from "react";
 import { useRouter } from '@/src/lib/router';
 import { useSession } from "@/lib/hooks/use-auth";
 import type { StorageBoxDto } from "@/lib/api/types";
+import { useDeleteStorageBox, useStorageBoxes } from "@/lib/hooks/use-storage-boxes";
 import { 
   Archive, 
   MapPin, 
@@ -73,10 +72,11 @@ export default function StorageBoxesPage() {
   const router = useRouter();
   const { session, isLoading: isSessionLoading } = useSession();
 
-  const [boxes, setBoxes] = useState<StorageBoxDto[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [yearFilter, setYearFilter] = useState("");
+  const canLoadBoxes = session?.role === "SUPER_ADMIN";
+  const { boxes, isLoading } = useStorageBoxes({ search, year: yearFilter }, canLoadBoxes);
+  const deleteStorageBox = useDeleteStorageBox();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedBox, setSelectedBox] = useState<StorageBoxDto | null>(null);
@@ -95,35 +95,9 @@ export default function StorageBoxesPage() {
     }
   }, [session, isSessionLoading, router]);
 
-  const fetchBoxes = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (search) params.append("search", search);
-      if (yearFilter) params.append("year", yearFilter);
-
-      const response = await apiFetch(`/api/admin/boxes?${params.toString()}`);
-      if (response.ok) {
-        const data = await response.json();
-        const nextBoxes = Array.isArray(data) ? data : [];
-        setBoxes(nextBoxes);
-        setSelectedBoxIds((current) => new Set([...current].filter((id) => nextBoxes.some((box) => box.id === id))));
-      } else {
-        toast.error("Không thể tải danh sách hộp lưu trữ");
-      }
-    } catch (error) {
-      console.error("Error fetching boxes:", error);
-      toast.error("Đã xảy ra lỗi khi tải danh sách");
-    } finally {
-      setIsLoading(false);
-    }
-  }, [search, yearFilter]);
-
   useEffect(() => {
-    if (session && session.role === "SUPER_ADMIN") {
-      fetchBoxes();
-    }
-  }, [session, fetchBoxes]);
+    setSelectedBoxIds((current) => new Set([...current].filter((id) => boxes.some((box) => box.id === id))));
+  }, [boxes]);
 
   const handleDelete = async () => {
     if (!boxToDelete) return;
@@ -137,18 +111,8 @@ export default function StorageBoxesPage() {
     }
 
     try {
-      const response = await apiFetch(`/api/admin/boxes/${boxToDelete.id}`, {
-        method: "DELETE",
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Không thể xoá hộp lưu trữ");
-      }
-
+      await deleteStorageBox.mutateAsync(boxToDelete.id);
       toast.success("Xóa hộp lưu trữ thành công");
-      fetchBoxes();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Xóa thất bại. Vui lòng thử lại");
     } finally {
@@ -553,7 +517,7 @@ export default function StorageBoxesPage() {
       <StorageBoxDialog 
         isOpen={isDialogOpen}
         onClose={() => setIsDialogOpen(false)}
-        onSuccess={fetchBoxes}
+        onSuccess={() => setIsDialogOpen(false)}
         box={selectedBox}
       />
 
@@ -573,8 +537,10 @@ export default function StorageBoxesPage() {
             <AlertDialogCancel className="rounded-xl h-9">Hủy</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleDelete} 
+              disabled={deleteStorageBox.isPending}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-xl h-9"
             >
+              {deleteStorageBox.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Xác nhận xóa
             </AlertDialogAction>
           </AlertDialogFooter>

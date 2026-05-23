@@ -58,7 +58,6 @@ export function ChildDocumentUploadModal({ fileId, trigger, onSuccess }: ChildDo
                 }
                 setOpen(false)
                 setFile(null)
-                // router.refresh()
                 if (onSuccess) onSuccess()
             } else {
                 toast.error(result.error || 'Tải lên thất bại')

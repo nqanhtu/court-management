@@ -56,4 +56,18 @@ describe('route guards', () => {
 
     expect(screen.getByText('Forbidden')).toBeInTheDocument()
   })
+
+  it('protects maintenance routes with SUPER_ADMIN-only permission', () => {
+    sessionState.value.session = { id: 'u2', username: 'admin', fullName: 'Admin', role: 'ADMIN' }
+
+    renderWithRouter(
+      <Routes>
+        <Route path="/reset" element={<PermissionRoute permission="manageMaintenance"><div>Reset</div></PermissionRoute>} />
+        <Route path="/forbidden" element={<div>Forbidden</div>} />
+      </Routes>,
+      ['/reset']
+    )
+
+    expect(screen.getByText('Forbidden')).toBeInTheDocument()
+  })
 })

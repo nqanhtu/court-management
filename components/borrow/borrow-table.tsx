@@ -26,6 +26,7 @@ import { getColumns } from "@/components/borrow/columns";
 import { BorrowTableToolbar } from "@/components/borrow/borrow-table-toolbar";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { Loader2 } from "lucide-react";
+import { TableSurface } from '@/components/common/data-page-shell';
 
 interface BorrowTableProps {
   borrowSlips: BorrowSlipWithDetails[];
@@ -95,7 +96,7 @@ export default function BorrowTable({
   return (
     <div className="space-y-4">
       <BorrowTableToolbar table={table} onCreate={onCreate} />
-      <div className="rounded-md border">
+      <TableSurface>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -155,7 +156,7 @@ export default function BorrowTable({
             )}
           </TableBody>
         </Table>
-      </div>
+      </TableSurface>
       <DataTablePagination table={table} />
     </div>
   )

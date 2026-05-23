@@ -1,7 +1,8 @@
 "use client";
 
 import { Table } from "@tanstack/react-table";
-import { Search, X } from "lucide-react";
+import { SlidersHorizontal, Search, X } from "lucide-react";
+import { useState } from "react";
 import { useRouter, useSearchParams } from '@/src/lib/router';
 import { useDebouncedCallback } from "use-debounce";
 
@@ -48,10 +49,7 @@ export function FileTableToolbar<TData>({
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const isFiltered = [
-    "q",
-    "type",
-    "status",
+  const advancedFilterKeys = [
     "year",
     "judgmentNumber",
     "party",
@@ -59,6 +57,15 @@ export function FileTableToolbar<TData>({
     "line",
     "shelf",
     "slot",
+  ];
+  const hasAdvancedFilters = advancedFilterKeys.some((key) => !!searchParams.get(key));
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(hasAdvancedFilters);
+
+  const isFiltered = [
+    "q",
+    "type",
+    "status",
+    ...advancedFilterKeys,
   ].some((key) => !!searchParams.get(key)) || table.getState().columnFilters.length > 0;
 
   const setUrlParam = (key: string, value: string) => {
@@ -101,15 +108,15 @@ export function FileTableToolbar<TData>({
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-start justify-between gap-2">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
         <div className="flex flex-1 flex-wrap items-center gap-2">
-          <div className="relative">
+          <div className="relative w-full sm:w-auto">
             <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
               placeholder="Tìm hồ sơ, mã, tiêu đề..."
               defaultValue={searchParams.get("q")?.toString()}
               onChange={(event) => handleSearch(event.target.value)}
-              className="h-8 w-56 pl-8 lg:w-72"
+              className="h-8 w-full pl-8 sm:w-56 lg:w-72"
             />
           </div>
 
@@ -127,6 +134,16 @@ export function FileTableToolbar<TData>({
             onFilter={(values) => setUrlParam("status", values?.[0] || "all")}
           />
 
+          <Button
+            type="button"
+            variant={showAdvancedFilters ? "secondary" : "outline"}
+            onClick={() => setShowAdvancedFilters((value) => !value)}
+            className="h-8 px-2 lg:px-3"
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            Bộ lọc
+          </Button>
+
           {isFiltered && (
             <Button variant="ghost" onClick={handleReset} className="h-8 px-2 lg:px-3">
               Đặt lại
@@ -135,7 +152,7 @@ export function FileTableToolbar<TData>({
           )}
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex shrink-0 flex-wrap items-center gap-2">
           <Select
             value={density}
             onValueChange={(value) => onDensityChange?.(value as "compact" | "comfortable")}
@@ -166,7 +183,7 @@ export function FileTableToolbar<TData>({
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
+      {showAdvancedFilters && <div className="flex flex-wrap items-center gap-2 rounded-lg border bg-muted/20 p-2">
         <Input
           placeholder="Năm"
           defaultValue={searchParams.get("year")?.toString()}
@@ -185,7 +202,7 @@ export function FileTableToolbar<TData>({
           onChange={(event) => handleTextFilter("party", event.target.value)}
           className="h-8 w-[180px]"
         />
-        <div className="flex items-center gap-2 pl-2 md:border-l">
+        <div className="flex flex-wrap items-center gap-2 pl-0 md:border-l md:pl-2">
           <span className="text-xs text-muted-foreground mr-1 hidden sm:inline-block">Lưu trữ:</span>
           <Input
             placeholder="Kho"
@@ -212,7 +229,7 @@ export function FileTableToolbar<TData>({
             className="h-8 w-[100px]"
           />
         </div>
-      </div>
+      </div>}
     </div>
   );
 }

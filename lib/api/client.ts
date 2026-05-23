@@ -25,13 +25,13 @@ export function apiUrl(path: string) {
   return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`
 }
 
-function getDeviceMacAddress() {
-  if (typeof window === 'undefined') return null; // Prevent SSR errors
+function getMockDeviceMacAddress() {
+  if (typeof window === 'undefined') return null
   
   try {
     let mac = localStorage.getItem('deviceMacAddress');
     if (!mac) {
-      // Generate a pseudo-MAC address for browser identification
+      // Browser clients cannot read a real MAC address; production uses this stable mock device id.
       const hex = () => Math.floor(Math.random() * 256).toString(16).padStart(2, '0');
       mac = `02:${hex()}:${hex()}:${hex()}:${hex()}:${hex()}`.toUpperCase();
       localStorage.setItem('deviceMacAddress', mac);
@@ -43,7 +43,7 @@ function getDeviceMacAddress() {
 }
 
 export function apiFetch(input: string, init?: RequestInit) {
-  const macAddress = getDeviceMacAddress();
+  const macAddress = getMockDeviceMacAddress();
   const defaultHeaders: HeadersInit = macAddress ? { 'x-mac-address': macAddress } : {};
 
   return fetch(apiUrl(input), {

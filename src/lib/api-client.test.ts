@@ -25,6 +25,22 @@ describe('api client', () => {
     }))
   })
 
+  it('reuses the same mock device id across requests', async () => {
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await apiJson('/api/one')
+    await apiJson('/api/two')
+
+    const firstHeaders = fetchMock.mock.calls[0][1].headers
+    const secondHeaders = fetchMock.mock.calls[1][1].headers
+    expect(firstHeaders['x-mac-address']).toBe(secondHeaders['x-mac-address'])
+    expect(localStorage.getItem('deviceMacAddress')).toBe(firstHeaders['x-mac-address'])
+  })
+
   it('throws typed errors for failed JSON responses', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: false,

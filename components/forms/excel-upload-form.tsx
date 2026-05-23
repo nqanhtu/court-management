@@ -3,7 +3,6 @@
 import { apiFetch } from '@/lib/api/client';
 
 import { useState } from 'react'
-import { useRouter } from '@/src/lib/router'
 import { AlertCircle, CheckCircle2, FileSpreadsheet, Loader2, UploadCloud } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -31,7 +30,6 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
   const [isCommitting, setIsCommitting] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<ExcelImportPreview | null>(null)
-  const router = useRouter()
 
   const buildFormData = () => {
     const formData = new FormData()
@@ -88,9 +86,9 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
       if (response.ok && result.success) {
         toast.success(`Đã nhập ${result.data?.stats.success ?? 0} hồ sơ`)
         queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
+        queryClient.invalidateQueries({ queryKey: queryKeys.files.stats })
         queryClient.invalidateQueries({ queryKey: queryKeys.boxes.all })
         onSuccess()
-        router.refresh()
         return
       }
 

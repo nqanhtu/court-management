@@ -26,6 +26,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
 import type { BackupScheduleDto } from '@/lib/api/types'
+import { queryClient } from '@/src/lib/query-client'
+import { queryKeys } from '@/src/lib/query-keys'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -97,6 +99,16 @@ export default function ResetPage() {
     const lastRunText = schedule.lastRunAt ? new Date(schedule.lastRunAt).toLocaleString('vi-VN') : 'Chưa có'
     const scheduleFrequencyText = schedule.frequency === 'WEEKLY' ? 'Hằng tuần' : 'Hằng ngày'
 
+    const invalidateMaintenanceDomains = () => {
+        queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
+        queryClient.invalidateQueries({ queryKey: queryKeys.files.stats })
+        queryClient.invalidateQueries({ queryKey: queryKeys.boxes.all })
+        queryClient.invalidateQueries({ queryKey: queryKeys.borrow.all })
+        queryClient.invalidateQueries({ queryKey: queryKeys.audit.all })
+        queryClient.invalidateQueries({ queryKey: queryKeys.reports.stats })
+        queryClient.invalidateQueries({ queryKey: queryKeys.backup.schedule })
+    }
+
     const handleBackup = async () => {
         setIsBackingUp(true)
 
@@ -147,6 +159,7 @@ export default function ResetPage() {
             const data = await response.json()
             if (!response.ok || !data.success) throw new Error(data.error || 'Không thể lưu lịch sao lưu')
             setSchedule(data.schedule)
+            queryClient.invalidateQueries({ queryKey: queryKeys.backup.schedule })
             toast.success('Đã lưu lịch sao lưu')
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Lỗi kết nối')
@@ -172,6 +185,7 @@ export default function ResetPage() {
             if (res.ok && data.success) {
                 setResult(data.deletedCounts)
                 setConfirmText('')
+                invalidateMaintenanceDomains()
                 toast.success('Reset dữ liệu thành công')
             } else {
                 toast.error(data.error || 'Reset thất bại')
@@ -208,7 +222,7 @@ export default function ResetPage() {
             setRestoreConfirmText('')
             setRestoreFile(null)
             toast.success(`Đã khôi phục cơ sở dữ liệu từ ${data.filename}`)
-            router.refresh()
+            invalidateMaintenanceDomains()
         } catch (error) {
             toast.error(error instanceof Error ? error.message : 'Lỗi kết nối')
         } finally {

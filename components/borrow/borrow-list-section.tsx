@@ -16,6 +16,8 @@ import { useBorrowSlips } from '@/lib/hooks/use-borrow'
 import { BorrowSlipWithDetails } from '@/lib/types/borrow'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { printBorrowSlip } from '@/lib/borrow/print'
+import { queryClient } from '@/src/lib/query-client'
+import { queryKeys } from '@/src/lib/query-keys'
 
 export function BorrowListSection() {
   const { borrowSlips, isLoading, mutate } = useBorrowSlips()
@@ -44,6 +46,8 @@ export function BorrowListSection() {
       const result = await response.json()
       if (!response.ok || !result.success) throw new Error(result.message || result.error || 'Thao tác thất bại')
       toast.success(labels[action])
+      queryClient.invalidateQueries({ queryKey: queryKeys.borrow.all })
+      queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
       mutate()
     } catch (error) {
       toast.error(error instanceof Error ? error.message : 'Lỗi kết nối')
@@ -68,6 +72,9 @@ export function BorrowListSection() {
 
       if (response.ok && result.success) {
         toast.success(result.message || 'Đã trả hồ sơ thành công')
+        queryClient.invalidateQueries({ queryKey: queryKeys.borrow.all })
+        queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
+        queryClient.invalidateQueries({ queryKey: queryKeys.files.stats })
         mutate()
         setReturnSlipId(null)
         return
@@ -148,6 +155,8 @@ export function BorrowListSection() {
         <BorrowForm
           onSuccess={() => {
             setIsAddModalOpen(false)
+            queryClient.invalidateQueries({ queryKey: queryKeys.borrow.all })
+            queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
             mutate()
           }}
         />
@@ -168,6 +177,8 @@ export function BorrowListSection() {
           onSuccess={() => {
             setIsEditModalOpen(false)
             setEditingSlipId(null)
+            queryClient.invalidateQueries({ queryKey: queryKeys.borrow.all })
+            queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
             mutate()
           }}
         />

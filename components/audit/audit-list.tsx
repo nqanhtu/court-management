@@ -22,6 +22,7 @@ import { Loader2 } from "lucide-react";
 import { columns } from "@/components/audit/columns";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { AuditTableToolbar } from "@/components/audit/audit-table-toolbar";
+import { TableSurface } from "@/components/common/data-page-shell";
 
 export function AuditList() {
   const router = useRouter();
@@ -126,7 +127,7 @@ export function AuditList() {
         toFilter={toFilter}
         onFilterChange={handleFilterChange}
       />
-      <div className="rounded-md border bg-white">
+      <TableSurface>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -186,7 +187,7 @@ export function AuditList() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </TableSurface>
 
       <DataTablePagination table={table} totalRows={total} />
     </>

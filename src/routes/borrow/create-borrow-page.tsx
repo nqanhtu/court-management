@@ -89,7 +89,7 @@ function CreateBorrowContent() {
                             <Input id="borrowerName" name="borrowerName" required placeholder="Họ và tên" />
                         </div>
 
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div className="space-y-2">
                                 <Label htmlFor="borrowerUnit">Đơn vị / Phòng ban</Label>
                                 <Input id="borrowerUnit" name="borrowerUnit" placeholder="Tòa Hình sự..." />

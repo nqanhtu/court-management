@@ -20,6 +20,7 @@ import {
     useReactTable,
 } from '@tanstack/react-table';
 import { columns, RecentBorrow } from "@/components/reports/columns";
+import { TableSurface } from "@/components/common/data-page-shell";
 
 export function ReportDashboard() {
     const { stats, isLoading } = useReportStats();
@@ -63,7 +64,7 @@ export function ReportDashboard() {
             </div>
 
             {/* Data Table Card */}
-            <Card className="flex flex-col">
+            <Card className="flex flex-col overflow-hidden rounded-lg">
                 <CardHeader className="border-b bg-slate-50/50 py-4">
                     <CardTitle className="text-lg font-semibold flex items-center gap-2">
                         <BarChart3 className="w-5 h-5 text-slate-400" />
@@ -72,6 +73,7 @@ export function ReportDashboard() {
                 </CardHeader>
 
                 <CardContent className="p-0">
+                    <TableSurface className="rounded-none border-0">
                     <Table>
                         <TableHeader className="bg-white sticky top-0 z-10">
                             {table.getHeaderGroups().map((headerGroup) => (
@@ -132,6 +134,7 @@ export function ReportDashboard() {
                             )}
                         </TableBody>
                     </Table>
+                    </TableSurface>
                 </CardContent>
 
                 {/* Pagination Footer */}

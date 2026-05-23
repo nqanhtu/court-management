@@ -60,8 +60,8 @@ export function SessionProvider({
 
   useEffect(() => {
     refreshSession()
-    window.addEventListener('app:refresh', refreshSession)
-    return () => window.removeEventListener('app:refresh', refreshSession)
+    window.addEventListener('app:refresh-session', refreshSession)
+    return () => window.removeEventListener('app:refresh-session', refreshSession)
   }, [refreshSession])
 
   return (

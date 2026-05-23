@@ -9,6 +9,7 @@ import { SessionProvider } from '@/lib/hooks/use-auth'
 import { queryClient } from '@/src/lib/query-client'
 import { MainLayout } from '@/src/layouts/main-layout'
 import { LoginRoute, PermissionRoute, ProtectedRoute } from '@/src/routes/guards'
+import { RouteErrorBoundary } from '@/src/routes/route-error-boundary'
 import type { Permission } from '@/lib/rbac'
 
 const Home = lazy(() => import('@/src/routes/files/files-page'))
@@ -49,7 +50,7 @@ const mainRoutes: AppRoute[] = [
   { path: '/admin/audit', element: <AuditLogPage />, permission: 'viewAudit', layout: 'main', lazy: true },
   { path: '/admin/boxes', element: <StorageBoxesPage />, permission: 'manageStorage', layout: 'main', lazy: true },
   { path: '/reports', element: <Reports />, permission: 'viewReports', layout: 'main', lazy: true },
-  { path: '/reset', element: <ResetPage />, permission: 'manageAgencies', layout: 'main', lazy: true },
+  { path: '/reset', element: <ResetPage />, permission: 'manageMaintenance', layout: 'main', lazy: true },
 ]
 
 export function App() {
@@ -57,25 +58,27 @@ export function App() {
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <SessionProvider>
-          <Suspense fallback={<RouteSpinner />}>
-            <Routes>
-              <Route path="/login" element={<LoginRoute><LoginPage /></LoginRoute>} />
-              <Route path="/changelog" element={<ChangelogPage />} />
-              <Route element={<ProtectedRoute />}>
-                <Route element={<MainLayout />}>
-                  {mainRoutes.map((route) => (
-                    <Route
-                      key={route.path}
-                      path={route.path}
-                      element={<PermissionRoute permission={route.permission!}>{route.element}</PermissionRoute>}
-                    />
-                  ))}
-                  <Route path="/forbidden" element={<ForbiddenPage />} />
-                  <Route path="*" element={<Navigate to="/" replace />} />
+          <RouteErrorBoundary>
+            <Suspense fallback={<RouteSpinner />}>
+              <Routes>
+                <Route path="/login" element={<LoginRoute><LoginPage /></LoginRoute>} />
+                <Route path="/changelog" element={<ChangelogPage />} />
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<MainLayout />}>
+                    {mainRoutes.map((route) => (
+                      <Route
+                        key={route.path}
+                        path={route.path}
+                        element={<PermissionRoute permission={route.permission!}>{route.element}</PermissionRoute>}
+                      />
+                    ))}
+                    <Route path="/forbidden" element={<ForbiddenPage />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Route>
                 </Route>
-              </Route>
-            </Routes>
-          </Suspense>
+              </Routes>
+            </Suspense>
+          </RouteErrorBoundary>
           <Toaster />
         </SessionProvider>
       </BrowserRouter>

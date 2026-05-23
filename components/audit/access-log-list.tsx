@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/table";
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header";
 import { useDebouncedCallback } from "use-debounce";
+import { TableSurface } from "@/components/common/data-page-shell";
 
 const columns: ColumnDef<UserAccessLogDto>[] = [
   {
@@ -253,7 +254,7 @@ export function AccessLogList() {
         )}
       </div>
 
-      <div className="rounded-md border bg-white">
+      <TableSurface>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -294,7 +295,7 @@ export function AccessLogList() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </TableSurface>
 
       <DataTablePagination table={table} totalRows={total} />
     </div>

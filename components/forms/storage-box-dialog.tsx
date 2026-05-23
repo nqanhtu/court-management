@@ -1,8 +1,6 @@
 "use client";
 
-import { apiFetch } from '@/lib/api/client';
-
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -35,7 +33,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
-import type { AgencyHistoryDto, StorageBoxDto } from "@/lib/api/types";
+import type { StorageBoxDto } from "@/lib/api/types";
+import {
+  useAgencies,
+  useCreateStorageBox,
+  useUpdateStorageBox,
+  type StorageBoxPayload,
+} from "@/lib/hooks/use-storage-boxes";
 
 const formSchema = z.object({
   warehouse: z.string().min(1, "Kho không được để trống"),
@@ -68,8 +72,10 @@ export function StorageBoxDialog({
   onSuccess,
   box,
 }: StorageBoxDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [agencies, setAgencies] = useState<AgencyHistoryDto[]>([]);
+  const { agencies } = useAgencies(isOpen);
+  const createStorageBox = useCreateStorageBox();
+  const updateStorageBox = useUpdateStorageBox();
+  const isSaving = createStorageBox.isPending || updateStorageBox.isPending;
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema) as Resolver<FormValues>,
@@ -89,30 +95,6 @@ export function StorageBoxDialog({
       autoGenerateCode: true,
     },
   });
-
-  // Fetch agencies for select options
-  useEffect(() => {
-    async function fetchAgencies() {
-      try {
-        const response = await apiFetch("/api/admin/agency");
-        if (response.ok) {
-          const data = await response.json();
-          // The response might be wrapped in { success: true, data: [...] } or direct list
-          if (data && data.success && Array.isArray(data.data)) {
-            setAgencies(data.data);
-          } else if (Array.isArray(data)) {
-            setAgencies(data);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to fetch agencies:", error);
-      }
-    }
-
-    if (isOpen) {
-      fetchAgencies();
-    }
-  }, [isOpen]);
 
   // Set default values when box changes or dialog opens
   useEffect(() => {
@@ -171,27 +153,17 @@ export function StorageBoxDialog({
   }, [warehouse, line, shelf, slot, boxNumber, autoGenerateCode, form]);
 
   async function onSubmit(values: FormValues) {
-    setIsLoading(true);
     try {
-      const url = box ? `/api/admin/boxes/${box.id}` : "/api/admin/boxes";
-      const method = box ? "PUT" : "POST";
-
-      const payload = {
+      const payload: StorageBoxPayload = {
         ...values,
         agencyId: values.agencyId === "none" ? null : values.agencyId,
         caseType: values.caseType === "none" ? null : values.caseType,
       };
 
-      const response = await apiFetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Có lỗi xảy ra khi lưu hộp lưu trữ");
+      if (box) {
+        await updateStorageBox.mutateAsync({ id: box.id, payload });
+      } else {
+        await createStorageBox.mutateAsync(payload);
       }
 
       toast.success(box ? "Cập nhật hộp lưu trữ thành công" : "Thêm mới hộp lưu trữ thành công");
@@ -199,8 +171,6 @@ export function StorageBoxDialog({
       onClose();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Lưu thất bại. Vui lòng kiểm tra lại");
-    } finally {
-      setIsLoading(false);
     }
   }
 
@@ -238,7 +208,7 @@ export function StorageBoxDialog({
               <h4 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                 Tọa độ vị trí vật lý
               </h4>
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-5">
                 <FormField
                   control={form.control}
                   name="warehouse"
@@ -475,7 +445,7 @@ export function StorageBoxDialog({
             </div>
 
             {/* From - To Case File Codes */}
-            <div className="grid grid-cols-2 gap-4 border-t pt-4">
+            <div className="grid grid-cols-1 gap-4 border-t pt-4 md:grid-cols-2">
               <FormField
                 control={form.control}
                 name="fromFileCode"
@@ -510,8 +480,8 @@ export function StorageBoxDialog({
               <Button type="button" variant="outline" onClick={onClose} className="h-9">
                 Hủy
               </Button>
-              <Button type="submit" disabled={isLoading} className="h-9">
-                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              <Button type="submit" disabled={isSaving} className="h-9">
+                {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {box ? "Lưu thay đổi" : "Tạo hộp"}
               </Button>
             </DialogFooter>

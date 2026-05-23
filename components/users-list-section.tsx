@@ -19,6 +19,8 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { toast } from 'sonner'
+import { DataPageShell } from '@/components/common/data-page-shell'
+import { PageHeader } from '@/components/common/page-header'
 
 export function UsersListSection() {
     const { users, isLoading: isUsersLoading, mutate } = useUsers()
@@ -87,17 +89,15 @@ export function UsersListSection() {
     const editingUser = editingUserId ? users.find(u => u.id === editingUserId) : undefined
 
     return (
-        <div className="flex flex-col h-full space-y-4">
-            {/* Header */}
-            <div className="flex items-center justify-between shrink-0">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-800">Quản lý người dùng</h1>
-                    <p className="text-slate-500 text-sm mt-1">Danh sách cán bộ và người dùng hệ thống.</p>
-                </div>
-            </div>
-
-            {/* Main Table */}
-            <div className="flex-1 min-h-0">
+        <DataPageShell
+            header={
+                <PageHeader
+                    title="Quản lý người dùng"
+                    description="Danh sách cán bộ và người dùng hệ thống."
+                />
+            }
+        >
+            <div className="min-h-0 flex-1">
                 <UserTable
                     users={users}
                     isLoading={isLoading}
@@ -170,6 +170,6 @@ export function UsersListSection() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
-        </div>
+        </DataPageShell>
     )
 }

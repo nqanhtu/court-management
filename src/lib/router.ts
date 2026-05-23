@@ -15,7 +15,6 @@ export function useRouter() {
     replace: (href: string) => navigate(href, { replace: true }),
     back: () => navigate(-1),
     forward: () => navigate(1),
-    refresh: () => window.dispatchEvent(new Event('app:refresh')),
   }
 }
 

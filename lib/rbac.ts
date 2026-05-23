@@ -1,12 +1,12 @@
-import type { SessionPayload } from '@/lib/session'
-
 export const USER_ROLES = ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR'] as const
 
 export type UserRole = (typeof USER_ROLES)[number]
+export type PermissionSession = { id?: string | null; role?: unknown } | null
 
 export const permissions = {
   manageUsers: ['SUPER_ADMIN'],
   manageAgencies: ['SUPER_ADMIN'],
+  manageMaintenance: ['SUPER_ADMIN'],
   viewAudit: ['SUPER_ADMIN'],
   viewFiles: ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR'],
   manageFiles: ['SUPER_ADMIN', 'ADMIN'],
@@ -28,7 +28,7 @@ export function can(role: unknown, permission: Permission) {
 }
 
 export function requirePermission(
-  session: SessionPayload | null,
+  session: PermissionSession,
   permission: Permission
 ) {
   if (!session?.id) {

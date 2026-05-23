@@ -5,19 +5,24 @@ import { useState } from 'react'
 import { CreateFileDialog } from '@/components/create-file-dialog'
 import { OverviewStats } from '@/components/overview-stats'
 import { FileListSection } from '@/components/files/file-list-section'
+import { DataPageShell } from '@/components/common/data-page-shell'
+import { PageHeader } from '@/components/common/page-header'
 
 export default function Home() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   return (
-    <div className="flex flex-col gap-3 md:gap-4">
-      <OverviewStats />
-
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold tracking-tight">Tra cứu Hồ sơ</h1>
-      </div>
-
-
+    <DataPageShell
+      header={
+        <div className="space-y-3 md:space-y-4">
+          <OverviewStats />
+          <PageHeader
+            title="Tra cứu hồ sơ"
+            description="Tìm kiếm, lọc và thao tác với hồ sơ lưu trữ."
+          />
+        </div>
+      }
+    >
       <FileListSection onCreate={() => setIsCreateModalOpen(true)} />
 
       <CreateFileDialog
@@ -25,6 +30,6 @@ export default function Home() {
         onOpenChange={setIsCreateModalOpen}
         trigger={<span className="hidden" />}
       />
-    </div>
+    </DataPageShell>
   )
 }

@@ -3,6 +3,7 @@
 import { apiFetch } from '@/lib/api/client';
 
 import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useRouter } from '@/src/lib/router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +16,7 @@ import { useSession } from '@/lib/hooks/use-auth';
 
 export default function LoginPage() {
     const router = useRouter();
+    const location = useLocation();
     const { mutate } = useSession();
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
@@ -40,7 +42,8 @@ export default function LoginPage() {
             if (res.ok && data.success) {
                 toast.success('Đăng nhập thành công');
                 await mutate();
-                router.push('/');
+                const redirectTo = typeof location.state?.from === 'string' ? location.state.from : '/';
+                router.push(redirectTo);
             } else {
                 setError(data.message || 'Đăng nhập thất bại');
                 toast.error(data.message || 'Đăng nhập thất bại');

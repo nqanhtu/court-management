@@ -71,6 +71,6 @@ describe('QR pages', () => {
     )
 
     await waitFor(() => expect(apiFetch).toHaveBeenCalledWith('/api/qr/boxes/box-1'))
-    expect(await screen.findByText('Hồ sơ trong hộp')).toBeInTheDocument()
+    expect(await screen.findAllByText('Hồ sơ trong hộp')).toHaveLength(2)
   })
 })

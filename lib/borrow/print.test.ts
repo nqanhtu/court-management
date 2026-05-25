@@ -31,4 +31,41 @@ describe('print helpers', () => {
 
     expect(result).toBe(false)
   })
+
+  it('writes storage box label HTML when popup opens', () => {
+    const write = vi.fn()
+    const close = vi.fn()
+    const focus = vi.fn()
+    vi.spyOn(window, 'open').mockReturnValue({
+      document: { write, close },
+      focus,
+    } as unknown as Window)
+
+    const result = printStorageBoxLabels([
+      {
+        qrDataUrl: 'data:image/png;base64,qr',
+        qrUrl: 'https://example.test/qr/boxes/box-1',
+        box: {
+          id: 'box-1',
+          code: 'BOX-001',
+          warehouse: 'Kho B',
+          line: 'Dãy 2',
+          shelf: 'Kệ 4',
+          slot: 'Ô 8',
+          boxNumber: '008',
+          caseType: 'Lao động',
+          year: 2026,
+          retention: 'Vĩnh viễn',
+          agency: { id: 'agency-1', name: 'Phông A', startDate: '2026-01-01' },
+          _count: { files: 3 },
+        },
+      },
+    ], 'single')
+
+    expect(result).toBe(true)
+    expect(write).toHaveBeenCalledWith(expect.stringContaining('BOX-001'))
+    expect(write).toHaveBeenCalledWith(expect.stringContaining('data:image/png;base64,qr'))
+    expect(close).toHaveBeenCalled()
+    expect(focus).toHaveBeenCalled()
+  })
 })

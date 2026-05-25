@@ -418,14 +418,18 @@ export default function StorageBoxesPage() {
                           <TableCell className="text-right pr-6">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="h-8 w-8 p-0 rounded-lg group-hover:bg-muted/80">
+                                <Button
+                                  variant="ghost"
+                                  className="h-8 w-8 p-0 rounded-lg group-hover:bg-muted/80"
+                                  aria-label={`Mở thao tác hộp ${box.code}`}
+                                >
                                   <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-[160px] rounded-xl shadow-lg border">
                                 <DropdownMenuLabel className="text-xs text-muted-foreground">Lựa chọn</DropdownMenuLabel>
                                 <DropdownMenuItem
-                                  onClick={() => handlePrintLabels([box], "single")}
+                                  onClick={() => openLabelPreview([box])}
                                   className="text-xs cursor-pointer flex items-center gap-2 focus:bg-blue-50 focus:text-blue-600 dark:focus:bg-blue-950/50 dark:focus:text-blue-400"
                                 >
                                   <Printer className="h-3.5 w-3.5" /> In nhãn
@@ -476,29 +480,30 @@ export default function StorageBoxesPage() {
       </main>
 
       <Dialog open={labelPreviewBoxes.length > 0} onOpenChange={(open) => !open && setLabelPreviewBoxes([])}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="sm:max-w-3xl lg:max-w-4xl">
           <DialogHeader>
             <DialogTitle>Xem trước nhãn QR hộp lưu trữ</DialogTitle>
             <DialogDescription>
               Đang chuẩn bị {labelPreviewBoxes.length} nhãn. QR chỉ được render cho các hộp trong lần in này.
             </DialogDescription>
           </DialogHeader>
-          <div className="grid max-h-[60vh] gap-3 overflow-auto sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid max-h-[60vh] gap-4 overflow-auto pr-1 sm:grid-cols-2">
             {labelPreviewBoxes.map((box) => (
-              <div key={box.id} className="rounded-lg border p-3">
-                <div className="flex gap-3">
+              <div key={box.id} className="min-w-0 rounded-lg border bg-background p-4">
+                <div className="grid grid-cols-[112px_minmax(0,1fr)] gap-4">
                   <QRCodeCanvas
                     id={`storage-box-preview-qr-${box.id}`}
                     value={getBoxQrUrl(box)}
-                    size={96}
+                    size={112}
                     level="M"
                     includeMargin
+                    className="shrink-0 rounded bg-white"
                   />
-                  <div className="min-w-0 text-sm">
-                    <div className="font-mono font-bold">{box.code}</div>
-                    <div className="text-muted-foreground">{[box.warehouse, box.line, box.shelf, box.slot, box.boxNumber].filter(Boolean).join(" - ")}</div>
-                    <div className="mt-1 truncate">{box.agency?.name || "Chưa phân phối"}</div>
-                    <div className="text-xs text-muted-foreground">{box.caseType || "-"} · {box.year || "-"}</div>
+                  <div className="min-w-0 space-y-1 text-sm leading-5">
+                    <div className="break-words font-mono font-bold leading-5">{box.code}</div>
+                    <div className="break-words text-muted-foreground">{[box.warehouse, box.line, box.shelf, box.slot, box.boxNumber].filter(Boolean).join(" - ")}</div>
+                    <div className="break-words">{box.agency?.name || "Chưa phân phối"}</div>
+                    <div className="break-words text-xs text-muted-foreground">{box.caseType || "-"} · {box.year || "-"}</div>
                   </div>
                 </div>
               </div>

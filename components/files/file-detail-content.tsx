@@ -41,6 +41,7 @@ import { useSession } from '@/lib/hooks/use-auth'
 import { can } from '@/lib/rbac'
 import { queryClient } from '@/src/lib/query-client'
 import { queryKeys } from '@/src/lib/query-keys'
+import { getFileDetailQrUrl } from '@/lib/files/qr-url'
 
 export function FileDetailContent({ id }: { id: string }) {
     const { file, isLoading, mutate } = useFile(id)
@@ -55,6 +56,7 @@ export function FileDetailContent({ id }: { id: string }) {
         if (!canvas) return;
         
         const dataUrl = canvas.toDataURL('image/png');
+        const qrUrl = file ? getFileDetailQrUrl(file.id) : '';
         
         const printWindow = window.open('', '_blank', 'width=600,height=600');
         if (printWindow) {
@@ -93,6 +95,12 @@ export function FileDetailContent({ id }: { id: string }) {
                                 font-size: 14px;
                                 color: #333;
                             }
+                            .url {
+                                margin-top: 10px;
+                                font-size: 11px;
+                                color: #666;
+                                overflow-wrap: anywhere;
+                            }
                             .hint {
                                 margin-top: 20px;
                                 font-size: 12px;
@@ -108,6 +116,7 @@ export function FileDetailContent({ id }: { id: string }) {
                             <img src="${dataUrl}" />
                             <h2>${file?.code}</h2>
                             <p>${file?.title}</p>
+                            <div class="url">${qrUrl}</div>
                         </div>
                         <div class="hint">Cửa sổ sẽ tự động đóng sau khi in.</div>
                         <script>
@@ -174,21 +183,23 @@ export function FileDetailContent({ id }: { id: string }) {
         return <div className="text-center p-10 text-muted-foreground">Không tìm thấy hồ sơ</div>
     }
 
+    const fileQrUrl = getFileDetailQrUrl(file.id)
+
     return (
         <div className="space-y-6">
             {/* Header Section */}
-            <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                <div className="flex items-start gap-6">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="flex min-w-0 flex-col gap-4 sm:flex-row sm:items-start sm:gap-6">
                     <div className="shrink-0 bg-white p-2 border border-slate-200 rounded-lg shadow-sm flex flex-col items-center" title="Click chuột phải > Copy Image">
-                        <QRCodeCanvas id="qr-canvas" value={file.code} size={90} level="M" includeMargin={false} />
+                        <QRCodeCanvas id="qr-canvas" value={fileQrUrl} size={90} level="M" includeMargin={false} />
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">{file.title}</h1>
-                    <div className="flex items-center gap-4 mt-2 text-muted-foreground">
+                    <div className="min-w-0">
+                        <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">{file.title}</h1>
+                    <div className="mt-2 flex flex-wrap items-center gap-2 text-muted-foreground sm:gap-4">
                         <div className="flex items-center gap-1">
-                            <span className="font-semibold text-foreground">{file.code}</span>
+                            <span className="break-all font-semibold text-foreground">{file.code}</span>
                         </div>
-                        <Separator orientation="vertical" className="h-4" />
+                        <Separator orientation="vertical" className="hidden h-4 sm:block" />
                         <div className="flex items-center gap-1">
                             <CalendarDays className="h-4 w-4" />
                             <span>Năm: {file.year}</span>
@@ -200,15 +211,15 @@ export function FileDetailContent({ id }: { id: string }) {
                     </div>
                 </div>
                 </div>
-                <div className="flex gap-2 shrink-0">
-                    <Button variant="outline" onClick={handlePrintQr}>
+                <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap lg:justify-end">
+                    <Button variant="outline" onClick={handlePrintQr} className="w-full sm:w-auto">
                         <Printer className="h-4 w-4" />
                         In mã QR
                     </Button>
                     {canManageFiles && (
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button variant="outline" className="text-destructive hover:text-destructive">
+                                <Button variant="outline" className="w-full text-destructive hover:text-destructive sm:w-auto">
                                     <Trash2 className="h-4 w-4" />
                                     Xóa hồ sơ
                                 </Button>
@@ -233,7 +244,7 @@ export function FileDetailContent({ id }: { id: string }) {
                         </AlertDialog>
                     )}
                      {canManageBorrow && file.status !== 'BORROWED' && !file.isLocked && (
-                        <Button asChild>
+                        <Button asChild className="w-full sm:w-auto">
                             <Link to={`/borrow/create?files=${file.id}`}>
                                 Lập phiếu mượn
                             </Link>
@@ -245,11 +256,11 @@ export function FileDetailContent({ id }: { id: string }) {
 
 
             <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
-                    <TabsTrigger value="general">Thông tin chung</TabsTrigger>
-                    <TabsTrigger value="storage">Lưu trữ</TabsTrigger>
-                    <TabsTrigger value="index">Mục lục hồ sơ</TabsTrigger>
-                    <TabsTrigger value="borrow">Mượn trả</TabsTrigger>
+                <TabsList className="flex w-full justify-start overflow-x-auto lg:w-[600px]">
+                    <TabsTrigger value="general" className="min-w-max flex-1">Thông tin chung</TabsTrigger>
+                    <TabsTrigger value="storage" className="min-w-max flex-1">Lưu trữ</TabsTrigger>
+                    <TabsTrigger value="index" className="min-w-max flex-1">Mục lục hồ sơ</TabsTrigger>
+                    <TabsTrigger value="borrow" className="min-w-max flex-1">Mượn trả</TabsTrigger>
                 </TabsList>
 
                 {/* General Information Tab */}
@@ -264,19 +275,19 @@ export function FileDetailContent({ id }: { id: string }) {
                             </CardHeader>
                             <CardContent className="grid gap-4">
                                 <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                    <div>
+                                    <div className="min-w-0">
                                         <p className="text-sm font-medium text-muted-foreground">Loại án</p>
                                         <p className="font-medium">{file.type}</p>
                                     </div>
-                                     <div>
+                                     <div className="min-w-0">
                                         <p className="text-sm font-medium text-muted-foreground">Số bản án</p>
                                         <p className="font-medium">{file.judgmentNumber || '-'}</p>
                                     </div>
-                                    <div>
+                                    <div className="min-w-0">
                                         <p className="text-sm font-medium text-muted-foreground">Số tờ</p>
                                         <p className="font-medium">{file.pageCount || '-'}</p>
                                     </div>
-                                    <div>
+                                    <div className="min-w-0">
                                         <p className="text-sm font-medium text-muted-foreground">Thời hạn lưu trữ</p>
                                         <p className="font-medium">{file.retention || 'Vĩnh viễn'}</p>
                                     </div>
@@ -305,7 +316,7 @@ export function FileDetailContent({ id }: { id: string }) {
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {file.defendants && file.defendants.length > 0 && (
-                                    <div>
+                                    <div className="min-w-0">
                                         <p className="text-sm font-medium text-muted-foreground mb-2">Bị cáo / Bị đơn</p>
                                         <div className="flex flex-wrap gap-2">
                                             {file.defendants.map((name: string, i: number) => (
@@ -317,7 +328,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                     </div>
                                 )}
                                 {file.plaintiffs && file.plaintiffs.length > 0 && (
-                                    <div>
+                                    <div className="min-w-0">
                                         <Separator className="my-3"/>
                                         <p className="text-sm font-medium text-muted-foreground mb-2">Nguyên đơn</p>
                                          <div className="flex flex-wrap gap-2">
@@ -330,7 +341,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                     </div>
                                 )}
                                   {file.civilDefendants && file.civilDefendants.length > 0 && (
-                                    <div>
+                                    <div className="min-w-0">
                                         <Separator className="my-3"/>
                                         <p className="text-sm font-medium text-muted-foreground mb-2">Bị đơn dân sự</p>
                                          <div className="flex flex-wrap gap-2">
@@ -361,7 +372,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                 <div className="grid gap-6 md:grid-cols-2">
                                     <div className="space-y-4">
                                         <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50">
-                                            <div>
+                                            <div className="min-w-0">
                                                 <p className="text-sm text-muted-foreground">Hộp số</p>
                                                 <p className="text-2xl font-bold">{file.box.boxNumber}</p>
                                                 <p className="text-xs text-muted-foreground">{file.box.code}</p>
@@ -429,7 +440,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                     </div>
                                 </div>
                                 {file.fileIndex.attachments && file.fileIndex.attachments.length > 0 && (
-                                    <div>
+                                    <div className="min-w-0">
                                         <p className="text-sm font-medium mb-2">Tài liệu đính kèm</p>
                                         <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                                             {file.fileIndex.attachments.map((att: string, i: number) => (
@@ -462,12 +473,12 @@ export function FileDetailContent({ id }: { id: string }) {
                                     {(file.borrowItems as BorrowItemWithSlip[]).map((item) => (
                                         <div key={item.id} className="p-4 bg-white dark:bg-slate-950 rounded-lg border shadow-sm">
                                             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="text-xs text-muted-foreground uppercase">Người mượn</p>
                                                     <p className="font-semibold">{item.borrowSlip.borrowerName}</p>
                                                     <p className="text-sm text-muted-foreground">{item.borrowSlip.borrowerUnit}</p>
                                                 </div>
-                                                <div>
+                                                <div className="min-w-0">
                                                     <p className="text-xs text-muted-foreground uppercase">Ngày hẹn trả</p>
                                                     <p className="font-semibold text-red-600">{formatDate(item.borrowSlip.dueDate)}</p>
                                                 </div>
@@ -492,13 +503,13 @@ export function FileDetailContent({ id }: { id: string }) {
                 {/* Documents List - Always Visible */}
                 <Card>
                     <CardHeader>
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <CardTitle className="flex items-center text-lg">
                                 <FileText className="mr-2 h-5 w-5" />
                                 Mục lục văn bản ({file.documents?.length || 0})
                             </CardTitle>
                             {canManageFiles && (
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <ChildDocumentFormModal fileId={file.id} onSuccess={() => mutate()} />
                                     <ChildDocumentUploadModal fileId={file.id} onSuccess={() => mutate()} />
                                 </div>
@@ -506,7 +517,8 @@ export function FileDetailContent({ id }: { id: string }) {
                         </div>
                     </CardHeader>
                     <CardContent>
-                        <Table className="w-full">
+                        <div className="overflow-x-auto">
+                        <Table className="w-full min-w-[760px]">
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[80px]">TT</TableHead>
@@ -595,6 +607,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                 )}
                             </TableBody>
                         </Table>
+                        </div>
                     </CardContent>
                 </Card>
             </Tabs>

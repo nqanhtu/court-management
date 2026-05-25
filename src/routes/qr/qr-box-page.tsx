@@ -60,7 +60,7 @@ export default function QrBoxPage() {
 
   if (error || !box) {
     return (
-      <div className="mx-auto flex h-full max-w-lg items-center">
+      <div className="mx-auto flex h-full max-w-lg items-center px-4">
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-destructive">
@@ -85,15 +85,15 @@ export default function QrBoxPage() {
     : '-'
 
   return (
-    <div className="mx-auto w-full max-w-5xl space-y-6 py-6">
+    <div className="mx-auto w-full max-w-5xl space-y-4 px-4 py-4 sm:space-y-6 sm:py-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex flex-wrap items-center gap-3">
-            <span className="flex items-center gap-2">
+            <span className="flex min-w-0 items-center gap-2">
               <Archive className="h-5 w-5 text-primary" />
               Hộp lưu trữ từ QR
             </span>
-            <Badge variant="secondary" className="font-mono">{box.code}</Badge>
+            <Badge variant="secondary" className="max-w-full break-all font-mono">{box.code}</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
@@ -110,13 +110,40 @@ export default function QrBoxPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between gap-3 text-base">
+          <CardTitle className="flex flex-wrap items-center justify-between gap-3 text-base">
             <span>Danh sách hồ sơ trong hộp</span>
             <Badge variant="outline">{files?.length || 0} hồ sơ</Badge>
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto rounded-md border">
+          <div className="space-y-3 md:hidden">
+            {files && files.length > 0 ? (
+              files.map((file) => (
+                <div key={file.id} className="rounded-md border bg-background p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="break-all font-mono text-sm font-semibold">{file.code}</p>
+                      <h3 className="mt-1 break-words font-medium">{file.title}</h3>
+                    </div>
+                    <StatusBadge status={file.status} />
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <Info icon={<FileText className="h-4 w-4" />} label="Loại" value={file.type} />
+                    <Info icon={<Calendar className="h-4 w-4" />} label="Năm" value={file.year || '-'} />
+                  </div>
+                  <Button asChild size="sm" variant="outline" className="mt-3 w-full">
+                    <Link to={`/files/${file.id}`}>Chi tiết</Link>
+                  </Button>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-md border border-dashed p-6 text-center text-muted-foreground">
+                Hộp này chưa có hồ sơ.
+              </div>
+            )}
+          </div>
+
+          <div className="hidden overflow-x-auto rounded-md border md:block">
             <Table>
               <TableHeader>
                 <TableRow>

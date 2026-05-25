@@ -1,0 +1,12 @@
+{
+  "name": "bun-agy-image-generator",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "start": "bun run src/index.ts",
+    "test": "bun test"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}

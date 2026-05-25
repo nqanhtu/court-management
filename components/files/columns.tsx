@@ -2,7 +2,7 @@
 
 import { apiFetch } from '@/lib/api/client';
 
-import Link from "next/link"
+import { Link } from 'react-router-dom'
 import { ColumnDef } from "@tanstack/react-table"
 import { Pencil, Trash2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -91,7 +91,7 @@ export const getColumns = (
         <div className="font-medium max-w-100">
           {!fileId ? (
             <Link 
-              href={`/files/${row.original.id}`}
+              to={`/files/${row.original.id}`}
               className="hover:underline hover:text-primary transition-colors cursor-pointer"
             >
               {row.original.title}

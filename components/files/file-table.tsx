@@ -15,7 +15,6 @@ import {
 
 import { toast } from "sonner"
 import { Columns3, Loader2 } from 'lucide-react'
-import { useRouter } from "next/navigation"
 
 import {
   Table,
@@ -40,6 +39,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { queryClient } from '@/src/lib/query-client'
+import { queryKeys } from '@/src/lib/query-keys'
+import { TableSurface } from '@/components/common/data-page-shell'
 
 interface FileTableProps {
   files: FileWithBox[]
@@ -55,7 +57,6 @@ interface FileTableProps {
 }
 
 export function FileTable({ files, isLoading, canBorrow = false, onCreate, total, page = 1, pageSize = 10, onPaginationChange, onRefresh }: FileTableProps) {
-  const router = useRouter();
   const [rowSelection, setRowSelection] = React.useState({})
   const [isBorrowModalOpen, setIsBorrowModalOpen] = React.useState(false);
   const [borrowFiles, setBorrowFiles] = React.useState<FileWithBox[]>([]);
@@ -113,8 +114,10 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
 
       if (response.ok && result.success) {
         toast.success('Đã xóa hồ sơ')
+        queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
+        queryClient.invalidateQueries({ queryKey: queryKeys.files.stats })
+        queryClient.invalidateQueries({ queryKey: queryKeys.boxes.all })
         onRefresh?.()
-        router.refresh()
         return
       }
 
@@ -124,14 +127,14 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
     } catch {
       toast.error('Không thể xóa hồ sơ')
     }
-  }, [onRefresh, router]);
+  }, [onRefresh]);
 
   const columns = React.useMemo<ColumnDef<FileWithBox>[]>(
     () => getColumns(undefined, () => { }, !!onCreate, handleDeleteFile) as unknown as ColumnDef<FileWithBox>[],
     [onCreate, handleDeleteFile]
   )
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+   
   const table = useReactTable({
     data: files,
     columns,
@@ -169,8 +172,9 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
         density={density}
         onDensityChange={setDensity}
       />
-      <div className="overflow-hidden rounded-md border">
-        <div className="flex items-center justify-end gap-2 border-b bg-muted/30 px-2 py-2">
+      <TableSurface
+        toolbar={
+          <div className="flex items-center justify-end gap-2">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm">
@@ -195,8 +199,9 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
                 ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-        <div className="overflow-auto max-h-[calc(100vh-22rem)] min-h-[300px]">
+          </div>
+        }
+      >
         <Table>
           <TableHeader className="sticky top-0 z-10 bg-background">
             {table.getHeaderGroups().map((headerGroup) => (
@@ -256,8 +261,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
             )}
           </TableBody>
         </Table>
-        </div>
-      </div>
+      </TableSurface>
       <DataTablePagination table={table} totalRows={total} />
 
       <Modal
@@ -271,7 +275,9 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
           onSuccess={() => {
             setIsBorrowModalOpen(false);
             setRowSelection({});
-            router.refresh();
+            queryClient.invalidateQueries({ queryKey: queryKeys.files.all });
+            queryClient.invalidateQueries({ queryKey: queryKeys.files.stats });
+            queryClient.invalidateQueries({ queryKey: queryKeys.borrow.all });
             onRefresh?.();
           }}
         />

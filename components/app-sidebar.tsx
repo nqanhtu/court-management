@@ -11,7 +11,7 @@ import {
   RotateCcw,
   Archive,
 } from "lucide-react";
-import { usePathname } from "next/navigation";
+import { usePathname } from '@/src/lib/router';
 import type { User } from "@/lib/types/user";
 import {
   Sidebar,
@@ -25,7 +25,7 @@ import {
   SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar";
-import Link from "next/link";
+import { Link } from 'react-router-dom';
 import { can } from "@/lib/rbac";
 
 interface AppSidebarProps {
@@ -56,8 +56,10 @@ export function AppSidebar({ user }: AppSidebarProps) {
               { name: "Phông lưu trữ", href: "/admin/agency", icon: Building2 },
               { name: "Hộp lưu trữ", href: "/admin/boxes", icon: Archive },
               { name: "Nhật ký", href: "/admin/audit", icon: HistoryIcon },
-              { name: "Reset dữ liệu", href: "/reset", icon: RotateCcw },
             ]
+          : []),
+        ...(can(role, "manageMaintenance")
+          ? [{ name: "Reset dữ liệu", href: "/reset", icon: RotateCcw }]
           : []),
       ],
     },
@@ -98,7 +100,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
                       isActive={pathname === item.href}
                       tooltip={item.name}
                     >
-                      <Link href={item.href}>
+                      <Link to={item.href}>
                         <item.icon />
                         <span>{item.name}</span>
                       </Link>

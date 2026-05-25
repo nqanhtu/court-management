@@ -4,7 +4,6 @@ import { QRCodeCanvas } from 'qrcode.react';
 
 import { apiFetch } from '@/lib/api/client';
 
-import { useState } from 'react'
 import { format } from 'date-fns'
 import { vi } from 'date-fns/locale'
 
@@ -15,9 +14,9 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 
-import { Box, FileText, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, Users, QrCode, Printer } from 'lucide-react'
-import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { Box, FileText, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, Users, Printer } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useRouter } from '@/src/lib/router'
 import { useFile } from '@/lib/hooks/use-files'
 
 import { ChildDocumentUploadModal } from './child-document-upload-modal'
@@ -40,6 +39,8 @@ import {
 import { toast } from 'sonner'
 import { useSession } from '@/lib/hooks/use-auth'
 import { can } from '@/lib/rbac'
+import { queryClient } from '@/src/lib/query-client'
+import { queryKeys } from '@/src/lib/query-keys'
 
 export function FileDetailContent({ id }: { id: string }) {
     const { file, isLoading, mutate } = useFile(id)
@@ -135,8 +136,11 @@ export function FileDetailContent({ id }: { id: string }) {
 
             if (response.ok && result.success) {
                 toast.success('Đã xóa hồ sơ')
+                queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
+                queryClient.invalidateQueries({ queryKey: queryKeys.files.detail(file.id) })
+                queryClient.invalidateQueries({ queryKey: queryKeys.files.stats })
+                queryClient.invalidateQueries({ queryKey: queryKeys.boxes.all })
                 router.push('/')
-                router.refresh()
                 return
             }
 
@@ -230,7 +234,7 @@ export function FileDetailContent({ id }: { id: string }) {
                     )}
                      {canManageBorrow && file.status !== 'BORROWED' && !file.isLocked && (
                         <Button asChild>
-                            <Link href={`/borrow/create?files=${file.id}`}>
+                            <Link to={`/borrow/create?files=${file.id}`}>
                                 Lập phiếu mượn
                             </Link>
                         </Button>
@@ -259,7 +263,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="grid gap-4">
-                                <div className="grid grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                     <div>
                                         <p className="text-sm font-medium text-muted-foreground">Loại án</p>
                                         <p className="font-medium">{file.type}</p>
@@ -375,7 +379,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                             </div>
                                         )}
                                     </div>
-                                    <div className="grid grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div className="p-3 border rounded">
                                             <p className="text-xs text-muted-foreground uppercase">Kho</p>
                                             <p className="font-medium">{file.box.warehouse}</p>
@@ -457,7 +461,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                 <div className="space-y-4">
                                     {(file.borrowItems as BorrowItemWithSlip[]).map((item) => (
                                         <div key={item.id} className="p-4 bg-white dark:bg-slate-950 rounded-lg border shadow-sm">
-                                            <div className="grid grid-cols-2 gap-4">
+                                            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                                 <div>
                                                     <p className="text-xs text-muted-foreground uppercase">Người mượn</p>
                                                     <p className="font-semibold">{item.borrowSlip.borrowerName}</p>

@@ -1,19 +1,19 @@
-import { apiFetch } from '@/lib/api/client';
-import useSWR from 'swr'
-import type { UserDto } from '@/lib/api/types'
+import { useQuery } from '@tanstack/react-query'
 
-const fetcher = (url: string) => apiFetch(url).then(r => r.json())
+import { apiJson } from '@/lib/api/client'
+import type { UserDto } from '@/lib/api/types'
+import { queryKeys } from '@/src/lib/query-keys'
 
 export function useUsers() {
-    const { data, error, isLoading, mutate } = useSWR<UserDto[]>(
-        '/api/users',
-        fetcher
-    )
+  const query = useQuery({
+    queryKey: queryKeys.users.list(),
+    queryFn: () => apiJson<UserDto[]>('/api/users'),
+  })
 
-    return {
-        users: data || [],
-        isLoading,
-        isError: error,
-        mutate
-    }
+  return {
+    users: query.data || [],
+    isLoading: query.isLoading,
+    isError: query.error,
+    mutate: query.refetch,
+  }
 }

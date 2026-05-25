@@ -2,7 +2,7 @@
 "use no memo";
 
 import React from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useSearchParams, useRouter } from '@/src/lib/router';
 import { useAudit } from "@/lib/hooks/use-audit";
 import {
   flexRender,
@@ -22,6 +22,7 @@ import { Loader2 } from "lucide-react";
 import { columns } from "@/components/audit/columns";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { AuditTableToolbar } from "@/components/audit/audit-table-toolbar";
+import { TableSurface } from "@/components/common/data-page-shell";
 
 export function AuditList() {
   const router = useRouter();
@@ -87,7 +88,7 @@ export function AuditList() {
     pageSize: pageSize,
   };
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+   
   const table = useReactTable({
     data: logs,
     columns,
@@ -126,7 +127,7 @@ export function AuditList() {
         toFilter={toFilter}
         onFilterChange={handleFilterChange}
       />
-      <div className="rounded-md border bg-white flex-1 overflow-auto min-h-0">
+      <TableSurface>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -186,7 +187,7 @@ export function AuditList() {
             )}
           </TableBody>
         </Table>
-      </div>
+      </TableSurface>
 
       <DataTablePagination table={table} totalRows={total} />
     </>

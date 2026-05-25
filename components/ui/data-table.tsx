@@ -50,7 +50,7 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+   
   const table = useReactTable({
     data,
     columns,

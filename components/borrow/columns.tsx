@@ -8,6 +8,7 @@ import { BorrowSlipWithDetails } from '@/lib/types/borrow';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { DataTableColumnHeader } from "@/components/ui/data-table-column-header"
+import { getBorrowWorkflowActions } from "@/components/borrow/workflow-actions"
 interface ColumnActions {
   onReturn: (id: string) => void;
   onApprove: (id: string) => void;
@@ -158,6 +159,7 @@ export const getColumns = ({ onReturn, onApprove, onReject, onExport, onEdit, on
     cell: ({ row }) => {
       const slip = row.original;
       const isReturned = slip.status === 'RETURNED' || slip.status === 'REJECTED';
+      const actions = getBorrowWorkflowActions({ status: slip.status, canManageBorrow, canApproveBorrow });
 
       if (!canManageBorrow && !canApproveBorrow) {
         return (
@@ -188,7 +190,7 @@ export const getColumns = ({ onReturn, onApprove, onReject, onExport, onEdit, on
         <div className='flex items-center gap-1'>
           {!isReturned && (
             <>
-              {canApproveBorrow && slip.status === 'PENDING_APPROVAL' && (
+              {actions.canApprove && (
                 <>
                   <Button
                     variant="ghost"
@@ -210,7 +212,7 @@ export const getColumns = ({ onReturn, onApprove, onReject, onExport, onEdit, on
                   </Button>
                 </>
               )}
-              {canManageBorrow && slip.status === 'APPROVED' && (
+              {actions.canExport && (
                 <Button
                   variant="ghost"
                   size="icon"
@@ -221,7 +223,7 @@ export const getColumns = ({ onReturn, onApprove, onReject, onExport, onEdit, on
                   <Send className='w-4 h-4' />
                 </Button>
               )}
-              {canManageBorrow && ['EXPORTED', 'PARTIAL_RETURN', 'OVERDUE'].includes(slip.status) && (
+              {actions.canReturn && (
             <Button
               variant="ghost"
               size="icon"

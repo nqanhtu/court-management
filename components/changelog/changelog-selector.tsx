@@ -1,6 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/src/lib/router';
 
 interface ChangelogSelectorProps {
   files: {

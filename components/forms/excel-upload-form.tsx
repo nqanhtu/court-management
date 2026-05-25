@@ -3,7 +3,6 @@
 import { apiFetch } from '@/lib/api/client';
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { AlertCircle, CheckCircle2, FileSpreadsheet, Loader2, UploadCloud } from 'lucide-react'
 import { toast } from 'sonner'
 
@@ -12,8 +11,8 @@ import { DialogFooter } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import type { ExcelImportPreview } from '@/lib/validation/import'
-import { mutate } from 'swr'
-import type { Key } from 'swr'
+import { queryClient } from '@/src/lib/query-client'
+import { queryKeys } from '@/src/lib/query-keys'
 
 interface ExcelUploadFormProps {
   onSuccess: () => void
@@ -31,7 +30,6 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
   const [isCommitting, setIsCommitting] = useState(false)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<ExcelImportPreview | null>(null)
-  const router = useRouter()
 
   const buildFormData = () => {
     const formData = new FormData()
@@ -87,14 +85,10 @@ export function ExcelUploadForm({ onSuccess }: ExcelUploadFormProps) {
 
       if (response.ok && result.success) {
         toast.success(`Đã nhập ${result.data?.stats.success ?? 0} hồ sơ`)
-        // Clear cached requests related to files so components fetch fresh data
-        mutate(
-          (key: Key) => typeof key === 'string' && key.startsWith('/api/files'),
-          undefined,
-          { revalidate: true }
-        )
+        queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
+        queryClient.invalidateQueries({ queryKey: queryKeys.files.stats })
+        queryClient.invalidateQueries({ queryKey: queryKeys.boxes.all })
         onSuccess()
-        router.refresh()
         return
       }
 

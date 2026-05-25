@@ -9,7 +9,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from '@/src/lib/router';
 import { useDebouncedCallback } from 'use-debounce';
 
 export function AuditFilters() {

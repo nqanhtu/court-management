@@ -27,6 +27,7 @@ import { getColumns } from "@/components/users/columns";
 import { DataTablePagination } from "@/components/ui/data-table-pagination";
 import { UserTableToolbar } from "@/components/users/user-table-toolbar";
 import { Loader2 } from "lucide-react";
+import { TableSurface } from '@/components/common/data-page-shell';
 
 interface UserTableProps {
   users: UserDto[];
@@ -51,7 +52,7 @@ export default function UserTable({ users, isLoading, onEdit, onDelete, onToggle
 
   const columns = React.useMemo(() => getColumns({ onEdit, onDelete, onToggleLock, isAdmin, currentUserRole }), [onEdit, onDelete, onToggleLock, isAdmin, currentUserRole]);
 
-  // eslint-disable-next-line react-hooks/incompatible-library
+   
   const table = useReactTable({
     data: users,
     columns,
@@ -75,7 +76,7 @@ export default function UserTable({ users, isLoading, onEdit, onDelete, onToggle
   return (
     <div className="space-y-4">
       <UserTableToolbar table={table} onCreate={onCreate} />
-      <div className="rounded-md border">
+      <TableSurface>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
@@ -135,7 +136,7 @@ export default function UserTable({ users, isLoading, onEdit, onDelete, onToggle
             )}
           </TableBody>
         </Table>
-      </div>
+      </TableSurface>
       <DataTablePagination table={table} />
     </div>
   );

@@ -136,7 +136,7 @@ export default function UserForm({ userId, initialData, onSuccess, onCancel }: U
 
       {/* Main Fields */}
       <div className="flex-1 space-y-5">
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-sm font-medium text-slate-700">
               Họ và tên <span className="text-red-500">*</span>
@@ -167,7 +167,7 @@ export default function UserForm({ userId, initialData, onSuccess, onCancel }: U
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-sm font-medium text-slate-700">
               Tên đăng nhập <span className="text-red-500">*</span>
@@ -201,7 +201,7 @@ export default function UserForm({ userId, initialData, onSuccess, onCancel }: U
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-5">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="space-y-1.5">
             <Label className="text-sm font-medium text-slate-700">Vai trò</Label>
             <Select value={formData.role} onValueChange={(value) => handleChange('role', value)}>

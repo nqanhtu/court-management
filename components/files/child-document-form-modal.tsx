@@ -126,7 +126,6 @@ export function ChildDocumentFormModal({ fileId, document, trigger, onSuccess }:
             if (result.success) {
                 toast.success(isEdit ? 'Cập nhật thành công' : 'Thêm thành công')
                 setOpen(false)
-                // router.refresh()
                 if (onSuccess) onSuccess()
             } else {
                 toast.error(result.error || (isEdit ? 'Cập nhật thất bại' : 'Thêm thất bại'))
@@ -157,7 +156,7 @@ export function ChildDocumentFormModal({ fileId, document, trigger, onSuccess }:
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                         <div className="space-y-2 col-span-2">
                             <Label htmlFor="title" className="text-right">
                                 Trích yếu / Tên văn bản <span className="text-red-500">*</span>

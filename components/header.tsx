@@ -1,13 +1,11 @@
 "use client";
 
-import { apiFetch } from '@/lib/api/client';
-
 import { UserCircle, LogOut } from "lucide-react";
-import { usePathname, useRouter } from "next/navigation";
-// cleaned import
+import { usePathname, useRouter } from '@/src/lib/router';
 import type { User } from "@/lib/types/user";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "./ui/sidebar";
+import { useSession } from "@/lib/hooks/use-auth";
 
 interface HeaderProps {
   user?: User;
@@ -16,12 +14,12 @@ interface HeaderProps {
 export default function Header({ user }: HeaderProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { logout } = useSession();
 
   if (pathname === "/login") return null;
 
   async function handleLogout() {
-    await apiFetch('/api/auth/logout', { method: 'POST' });
-    router.refresh();
+    await logout();
     router.push("/login");
   }
 

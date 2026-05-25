@@ -3,7 +3,6 @@
 import { apiFetch } from '@/lib/api/client';
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -13,8 +12,8 @@ import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import type { StorageBoxDto } from '@/lib/api/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { mutate } from 'swr'
-import type { Key } from 'swr'
+import { queryClient } from '@/src/lib/query-client'
+import { queryKeys } from '@/src/lib/query-keys'
 
 interface ManualFileFormProps {
     onSuccess: () => void
@@ -22,7 +21,6 @@ interface ManualFileFormProps {
 
 export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     const [isLoading, setIsLoading] = useState(false)
-    const router = useRouter()
     const [boxes, setBoxes] = useState<StorageBoxDto[]>([]);
     const [formData, setFormData] = useState({
         code: '',
@@ -72,12 +70,9 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
 
             if (response.ok && result.success) {
                 toast.success('Tạo hồ sơ thành công')
-                mutate(
-                    (key: Key) => typeof key === 'string' && key.startsWith('/api/files'),
-                    undefined,
-                    { revalidate: true }
-                )
-                router.refresh()
+                queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
+                queryClient.invalidateQueries({ queryKey: queryKeys.files.stats })
+                queryClient.invalidateQueries({ queryKey: queryKeys.boxes.all })
                 // Reset form
                 setFormData({
                     code: '',
@@ -127,8 +122,9 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     }, [formData.year])
 
     return (
-        <form onSubmit={handleManualSubmit} className="space-y-4 py-4 max-h-[70vh] overflow-y-auto px-1">
-            <div className="grid grid-cols-3 gap-4">
+        <form onSubmit={handleManualSubmit} className="flex max-h-[70vh] flex-col overflow-hidden">
+            <div className="space-y-4 overflow-y-auto px-1 py-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="space-y-2">
                     <Label htmlFor="code" className="text-red-600 font-semibold">Mã hồ sơ *</Label>
                     <Input
@@ -171,7 +167,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
             </div>
 
             {/* Chi tiết án */}
-            <div className="grid grid-cols-2 gap-4 border p-4 rounded-md bg-muted/20">
+            <div className="grid grid-cols-1 gap-4 rounded-md border bg-muted/20 p-4 md:grid-cols-2">
                 <div className="space-y-2">
                     <Label htmlFor="judgmentNumber">Số bản án</Label>
                     <Input
@@ -190,7 +186,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                         onChange={(e) => setFormData({ ...formData, judgmentDate: e.target.value })}
                     />
                 </div>
-                <div className="space-y-2 col-span-2">
+                <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="defendants" className="text-red-600">Bị cáo (cách nhau bởi dấu phẩy)</Label>
                     <Input
                         id="defendants"
@@ -199,7 +195,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                         onChange={(e) => setFormData({ ...formData, defendants: e.target.value })}
                     />
                 </div>
-                <div className="space-y-2 col-span-2">
+                <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="plaintiffs" className="text-blue-600">Nguyên đơn (cách nhau bởi dấu phẩy)</Label>
                     <Input
                         id="plaintiffs"
@@ -208,7 +204,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                         onChange={(e) => setFormData({ ...formData, plaintiffs: e.target.value })}
                     />
                 </div>
-                <div className="space-y-2 col-span-2">
+                <div className="space-y-2 md:col-span-2">
                     <Label htmlFor="civilDefendants" className="text-orange-600">Bị đơn (cách nhau bởi dấu phẩy)</Label>
                     <Input
                         id="civilDefendants"
@@ -219,7 +215,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                     <Label htmlFor="retention">Bảo quản</Label>
                     <Input
@@ -269,7 +265,9 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                 />
             </div>
 
-            <DialogFooter>
+            </div>
+
+            <DialogFooter className="border-t bg-background px-1 py-3">
                 <Button type="submit" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Lưu hồ sơ

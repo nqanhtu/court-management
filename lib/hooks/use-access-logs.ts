@@ -1,8 +1,8 @@
-import { apiFetch } from '@/lib/api/client'
-import useSWR from 'swr'
-import type { UserAccessEvent, UserAccessLogDto, UserAccessLogSummaryDto } from '@/lib/api/types'
+import { useQuery } from '@tanstack/react-query'
 
-const fetcher = (url: string) => apiFetch(url).then((response) => response.json())
+import { apiJson } from '@/lib/api/client'
+import type { UserAccessEvent, UserAccessLogDto, UserAccessLogSummaryDto } from '@/lib/api/types'
+import { queryKeys } from '@/src/lib/query-keys'
 
 interface UseAccessLogsParams {
   query?: string
@@ -30,7 +30,7 @@ const emptySummary: UserAccessLogSummaryDto = {
   lastAccessAt: null,
 }
 
-export function useAccessLogs(params: UseAccessLogsParams) {
+function getAccessLogQueryString(params: UseAccessLogsParams) {
   const queryString = new URLSearchParams()
   if (params.query) queryString.set('q', params.query)
   if (params.userId && params.userId !== 'ALL') queryString.set('userId', params.userId)
@@ -42,18 +42,22 @@ export function useAccessLogs(params: UseAccessLogsParams) {
   if (params.osName) queryString.set('osName', params.osName)
   if (params.limit) queryString.set('limit', params.limit.toString())
   if (params.offset) queryString.set('offset', params.offset.toString())
+  return queryString.toString()
+}
 
-  const { data, error, isLoading, mutate } = useSWR<AccessLogsResponse>(
-    `/api/admin/access-logs?${queryString.toString()}`,
-    fetcher
-  )
+export function useAccessLogs(params: UseAccessLogsParams) {
+  const queryString = getAccessLogQueryString(params)
+  const query = useQuery({
+    queryKey: queryKeys.audit.accessLogs(queryString),
+    queryFn: () => apiJson<AccessLogsResponse>(`/api/admin/access-logs?${queryString}`),
+  })
 
   return {
-    logs: data?.logs || [],
-    total: data?.total || 0,
-    summary: data?.summary || emptySummary,
-    isLoading,
-    isError: error,
-    mutate,
+    logs: query.data?.logs || [],
+    total: query.data?.total || 0,
+    summary: query.data?.summary || emptySummary,
+    isLoading: query.isLoading,
+    isError: query.error,
+    mutate: query.refetch,
   }
 }

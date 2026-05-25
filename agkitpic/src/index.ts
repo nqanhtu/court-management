@@ -15,6 +15,15 @@ export function parseImagePath(text: string): string | null {
   return null;
 }
 
+export async function copyImageToDest(imagePath: string, destPath: string): Promise<boolean> {
+  const srcFile = Bun.file(imagePath);
+  if (await srcFile.exists()) {
+    await Bun.write(destPath, srcFile);
+    return true;
+  }
+  return false;
+}
+
 if (import.meta.main) {
   if (Bun.argv.length < 3) {
     console.error("Error: Please provide a prompt in quotes.");
@@ -44,9 +53,8 @@ if (import.meta.main) {
 
   const imagePath = parseImagePath(accumulatedStdout);
   if (imagePath) {
-    const srcFile = Bun.file(imagePath);
-    if (await srcFile.exists()) {
-      await Bun.write("output.png", srcFile);
+    const success = await copyImageToDest(imagePath, "output.png");
+    if (success) {
       console.log(`\n\x1b[32mSuccess: Image successfully saved to output.png\x1b[0m`);
     } else {
       console.error(`\nError: Image path parsed but file not found at: ${imagePath}`);

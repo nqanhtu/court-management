@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test";
-import { parseImagePath } from "../src/index";
+import { parseImagePath, copyImageToDest } from "../src/index";
+import { unlink } from "node:fs/promises";
 
 test("should fail when no prompt is provided", async () => {
   const process = Bun.spawn(["bun", "run", "src/index.ts"], {
@@ -22,3 +23,30 @@ test("parseImagePath should extract image URL from stdout", () => {
   const stdoutMock3 = "No image path here.";
   expect(parseImagePath(stdoutMock3)).toBeNull();
 });
+
+test("copyImageToDest should successfully copy a file", async () => {
+  const dummySrc = "dummy_src.png";
+  const dummyDest = "dummy_dest.png";
+  
+  // Write a dummy file
+  await Bun.write(dummySrc, "mock png content");
+
+  // Call copyImageToDest
+  const result = await copyImageToDest(dummySrc, dummyDest);
+  expect(result).toBe(true);
+
+  // Check if destination exists and has matching content
+  const destFile = Bun.file(dummyDest);
+  expect(await destFile.exists()).toBe(true);
+  expect(await destFile.text()).toBe("mock png content");
+
+  // Clean up
+  await unlink(dummySrc);
+  await unlink(dummyDest);
+});
+
+test("copyImageToDest should return false if source file does not exist", async () => {
+  const result = await copyImageToDest("nonexistent_file_12345.png", "dest.png");
+  expect(result).toBe(false);
+});
+

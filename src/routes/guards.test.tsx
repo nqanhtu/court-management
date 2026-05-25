@@ -21,7 +21,7 @@ vi.mock('@/lib/hooks/use-auth', () => ({
   }),
 }))
 
-import { PermissionRoute, ProtectedRoute } from '@/src/routes/guards'
+import { LoginRoute, PermissionRoute, ProtectedRoute } from '@/src/routes/guards'
 
 describe('route guards', () => {
   beforeEach(() => {
@@ -41,6 +41,22 @@ describe('route guards', () => {
     )
 
     expect(screen.getByText('Login page')).toBeInTheDocument()
+  })
+
+  it('returns authenticated login-route users to the originally requested page', () => {
+    sessionState.value.session = { id: 'u1', username: 'admin', fullName: 'Admin', role: 'ADMIN' }
+
+    renderWithRouter(
+      <Routes>
+        <Route path="/login" element={<LoginRoute><div>Login page</div></LoginRoute>} />
+        <Route path="/borrow" element={<div>Borrow page</div>} />
+        <Route path="/" element={<div>Dashboard</div>} />
+      </Routes>,
+      [{ pathname: '/login', state: { from: '/borrow' } }]
+    )
+
+    expect(screen.getByText('Borrow page')).toBeInTheDocument()
+    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
   })
 
   it('redirects users without permission to forbidden', () => {

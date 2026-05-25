@@ -6,8 +6,12 @@ import { can, type Permission } from '@/lib/rbac'
 
 export function LoginRoute({ children }: { children: React.ReactNode }) {
   const { session, isLoading } = useSession()
+  const location = useLocation()
   if (isLoading) return <FullPageSpinner />
-  if (session) return <Navigate to="/" replace />
+  if (session) {
+    const redirectTo = typeof location.state?.from === 'string' ? location.state.from : '/'
+    return <Navigate to={redirectTo} replace />
+  }
   return children
 }
 

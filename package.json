@@ -8,6 +8,7 @@
     "dev:local": "vite",
     "dev:server": "vite --mode server",
     "build": "tsc --noEmit && vite build",
+    "build:server": "tsc --noEmit && vite build --mode server",
     "start": "vite preview",
     "test": "vitest run",
     "test:watch": "vitest",

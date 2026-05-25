@@ -1,5 +1,3 @@
-const SAME_ORIGIN = 'same-origin'
-
 export type ApiError = {
   status: number
   message: string
@@ -20,8 +18,12 @@ export class ApiClientError extends Error {
 
 export function apiUrl(path: string) {
   if (/^https?:\/\//.test(path)) return path
-  const baseUrl = import.meta.env.VITE_API_URL || SAME_ORIGIN
-  if (baseUrl === SAME_ORIGIN) return path
+
+  const baseUrl = import.meta.env.VITE_API_URL
+  if (!baseUrl) {
+    throw new Error('VITE_API_URL is not configured')
+  }
+
   return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`
 }
 

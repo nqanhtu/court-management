@@ -4,6 +4,8 @@ describe('api client', () => {
   beforeEach(() => {
     localStorage.clear()
     vi.restoreAllMocks()
+    vi.unstubAllEnvs()
+    vi.stubEnv('VITE_API_URL', '')
   })
 
   it('parses JSON responses and sends credentials with generated device id', async () => {
@@ -39,6 +41,33 @@ describe('api client', () => {
     const secondHeaders = fetchMock.mock.calls[1][1].headers
     expect(firstHeaders['x-mac-address']).toBe(secondHeaders['x-mac-address'])
     expect(localStorage.getItem('deviceMacAddress')).toBe(firstHeaders['x-mac-address'])
+  })
+
+  it('uses configured backend origins outside production only', async () => {
+    vi.stubEnv('VITE_API_URL', 'https://api.example.com/')
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await apiJson('/api/health')
+
+    expect(fetchMock).toHaveBeenCalledWith('https://api.example.com/api/health', expect.any(Object))
+  })
+
+  it('keeps production API calls same-origin even when VITE_API_URL is present', async () => {
+    vi.stubEnv('PROD', true)
+    vi.stubEnv('VITE_API_URL', 'https://api.example.com/')
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: true,
+      json: async () => ({ ok: true }),
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    await apiJson('/api/health')
+
+    expect(fetchMock).toHaveBeenCalledWith('/api/health', expect.any(Object))
   })
 
   it('throws typed errors for failed JSON responses', async () => {

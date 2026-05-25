@@ -5,23 +5,23 @@
 - Run frontend against local backend: `pnpm dev` or `pnpm dev:local`
 - Run frontend against deployed backend: `pnpm dev:server`
 - Run backend separately on `http://localhost:3001`.
-- Vite proxies `/api` to `VITE_DEV_API_URL`, default `http://localhost:3001`.
+- In development, `VITE_API_URL` can point directly to a backend such as `http://localhost:3001`.
 
 ## Environment
 
 ```env
 VITE_API_URL=
-VITE_DEV_API_URL=http://localhost:3001
 ```
 
 `.env.server` is used by `pnpm dev:server`:
 
 ```env
-VITE_DEV_API_URL=https://court-management-api.onrender.com
+VITE_API_URL=https://court-management-api.onrender.com
 ```
 
-- Leave `VITE_API_URL` empty when the production host reverse-proxies `/api` to the backend.
-- Set `VITE_API_URL=https://your-api.example.com` only when calling a different backend origin.
+- Production builds call `/api` on the same origin. `vercel.json` rewrites `/api/*` to the backend before the SPA fallback.
+- Leave `VITE_API_URL` empty in production. It is only used outside production for direct local/dev calls.
+- Set `VITE_API_URL=https://your-api.example.com` only for local/dev modes that intentionally call a different backend origin.
 
 ## Production Hosting
 

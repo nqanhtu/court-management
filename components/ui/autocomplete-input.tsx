@@ -1,7 +1,5 @@
 import * as React from "react"
 import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from "@/components/ui/popover"
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 
 interface AutocompleteInputProps extends React.ComponentProps<"input"> {
@@ -19,6 +17,7 @@ export function AutocompleteInput({
 }: AutocompleteInputProps) {
   const [open, setOpen] = React.useState(false)
   const [inputValue, setInputValue] = React.useState(String(value || ""))
+  const [selectedIndex, setSelectedIndex] = React.useState(-1)
   const containerRef = React.useRef<HTMLDivElement>(null)
 
   React.useEffect(() => {
@@ -29,6 +28,8 @@ export function AutocompleteInput({
     const val = e.target.value
     setInputValue(val)
     onValueChange(val)
+    setSelectedIndex(-1)
+    setOpen(true)
     if (onChange) onChange(e)
   }
 
@@ -40,48 +41,60 @@ export function AutocompleteInput({
     )
   }, [suggestions, inputValue])
 
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!open || filteredSuggestions.length === 0) return
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev + 1) % filteredSuggestions.length)
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev - 1 + filteredSuggestions.length) % filteredSuggestions.length)
+    } else if (e.key === "Enter") {
+      if (selectedIndex >= 0 && selectedIndex < filteredSuggestions.length) {
+        e.preventDefault()
+        const selectedValue = filteredSuggestions[selectedIndex]
+        setInputValue(selectedValue)
+        onValueChange(selectedValue)
+        setOpen(false)
+      }
+    } else if (e.key === "Escape") {
+      setOpen(false)
+    }
+  }
+
   return (
-    <div className="relative w-full" ref={containerRef}>
-      <Popover open={open && filteredSuggestions.length > 0} onOpenChange={setOpen} modal={false}>
-        <PopoverAnchor asChild>
-          <Input
-            {...props}
-            value={inputValue}
-            onChange={handleInputChange}
-            onFocus={() => setOpen(true)}
-            onBlur={() => setTimeout(() => setOpen(false), 200)}
-            className={cn("w-full", className)}
-          />
-        </PopoverAnchor>
-        <PopoverContent
-          className="p-0 max-h-48 overflow-y-auto"
-          align="start"
-          onOpenAutoFocus={(e) => e.preventDefault()}
-          style={{
-            width: containerRef.current?.getBoundingClientRect().width,
-          }}
-        >
-          <Command>
-            <CommandList>
-              <CommandGroup>
-                {filteredSuggestions.map((item) => (
-                  <CommandItem
-                    key={item}
-                    value={item}
-                    onSelect={(currentValue) => {
-                      setInputValue(currentValue)
-                      onValueChange(currentValue)
-                      setOpen(false)
-                    }}
-                  >
-                    {item}
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+    <div className="relative w-full" ref={containerRef} onKeyDown={handleKeyDown}>
+      <Input
+        {...props}
+        value={inputValue}
+        onChange={handleInputChange}
+        onFocus={() => setOpen(true)}
+        onBlur={() => setTimeout(() => setOpen(false), 200)}
+        className={cn("w-full", className)}
+      />
+      {open && filteredSuggestions.length > 0 && (
+        <div className="absolute top-full left-0 right-0 z-50 mt-1 max-h-48 overflow-y-auto rounded-lg border bg-popover p-1 text-popover-foreground shadow-md outline-none">
+          <ul className="flex flex-col gap-0.5">
+            {filteredSuggestions.map((item, index) => (
+              <li
+                key={item}
+                onClick={() => {
+                  setInputValue(item)
+                  onValueChange(item)
+                  setOpen(false)
+                }}
+                className={cn(
+                  "relative flex cursor-default select-none items-center rounded-md px-3 py-2 text-sm outline-none transition-colors hover:bg-accent hover:text-accent-foreground cursor-pointer",
+                  index === selectedIndex && "bg-accent text-accent-foreground"
+                )}
+              >
+                {item}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }

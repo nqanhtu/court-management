@@ -19,7 +19,6 @@ import {
 import { toast } from 'sonner'
 import { Loader2, Pencil } from 'lucide-react'
 import type { StorageBoxDto } from '@/lib/api/types'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { queryClient } from '@/src/lib/query-client'
 import { queryKeys } from '@/src/lib/query-keys'
 import { AutocompleteInput } from '@/components/ui/autocomplete-input'
@@ -172,6 +171,21 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
         }
     }
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault()
+            handleSubmit(e)
+        }
+    }
+
+    const boxOptions = [
+        { value: 'none_clear', label: '--- Không xếp vào hộp ---' },
+        ...boxes.map((b) => ({
+            value: b.id,
+            label: `${b.code} (Kệ: ${b.shelf}) ${b.agency?.name ? `- Phông: ${b.agency.name}` : ''}`
+        }))
+    ]
+
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
@@ -187,7 +201,7 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
                         Cập nhật thông tin chi tiết cho hồ sơ này.
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+                <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="flex-1 flex flex-col overflow-hidden">
                     <div className="space-y-4 overflow-y-auto px-1 py-4 flex-1">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <div className="space-y-2">
@@ -306,23 +320,13 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
 
                         <div className="space-y-2">
                             <Label htmlFor="boxId">Hộp số (Mã hộp)</Label>
-                            <Select
-                                onValueChange={(value) => setFormData({ ...formData, boxId: value })}
-                                value={formData.boxId}
-                                disabled={isLoading}
-                            >
-                                <SelectTrigger id="boxId">
-                                    <SelectValue placeholder="Chọn hộp..." />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none_clear">--- Không xếp vào hộp ---</SelectItem>
-                                    {boxes.map((b) => (
-                                        <SelectItem key={b.id} value={b.id}>
-                                            {b.code} (Kệ: {b.shelf}) {b.agency?.name ? `- Phông: ${b.agency.name}` : ''}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <AutocompleteInput
+                                id="boxId"
+                                placeholder="Tìm kiếm hộp lưu trữ..."
+                                value={formData.boxId || ''}
+                                suggestions={boxOptions}
+                                onValueChange={(val) => setFormData({ ...formData, boxId: val })}
+                            />
                         </div>
 
                         <div className="space-y-2">

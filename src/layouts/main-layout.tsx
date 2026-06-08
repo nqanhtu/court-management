@@ -5,6 +5,7 @@ import { BorrowAlertBanner } from '@/components/borrow/borrow-alert-banner'
 import Header from '@/components/header'
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar'
 import { useSession } from '@/lib/hooks/use-auth'
+import { CommandPalette } from '@/components/command-palette'
 
 export function MainLayout() {
   const { session } = useSession()
@@ -30,6 +31,7 @@ export function MainLayout() {
           </div>
         </div>
       </SidebarInset>
+      <CommandPalette />
     </SidebarProvider>
   )
 }

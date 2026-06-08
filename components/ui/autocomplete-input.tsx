@@ -1,6 +1,6 @@
 import * as React from "react"
 import { Input } from "@/components/ui/input"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Popover, PopoverContent, PopoverTrigger, PopoverAnchor } from "@/components/ui/popover"
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command"
 import { cn } from "@/lib/utils"
 
@@ -42,8 +42,8 @@ export function AutocompleteInput({
 
   return (
     <div className="relative w-full" ref={containerRef}>
-      <Popover open={open && filteredSuggestions.length > 0} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
+      <Popover open={open && filteredSuggestions.length > 0} onOpenChange={setOpen} modal={false}>
+        <PopoverAnchor asChild>
           <Input
             {...props}
             value={inputValue}
@@ -52,7 +52,7 @@ export function AutocompleteInput({
             onBlur={() => setTimeout(() => setOpen(false), 200)}
             className={cn("w-full", className)}
           />
-        </PopoverTrigger>
+        </PopoverAnchor>
         <PopoverContent
           className="p-0 max-h-48 overflow-y-auto"
           align="start"

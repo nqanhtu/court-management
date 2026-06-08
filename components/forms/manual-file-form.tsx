@@ -13,7 +13,6 @@ import { DialogFooter } from '@/components/ui/dialog'
 import { toast } from 'sonner'
 import { Loader2 } from 'lucide-react'
 import type { StorageBoxDto } from '@/lib/api/types'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { queryClient } from '@/src/lib/query-client'
 import { queryKeys } from '@/src/lib/query-keys'
 import { AutocompleteInput } from '@/components/ui/autocomplete-input'
@@ -156,8 +155,20 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
         handleBoxbyYear(formData.year)
     }, [formData.year])
 
+    const boxOptions = boxes.map((b) => ({
+        value: b.id,
+        label: `${b.code} (Kệ: ${b.shelf}) ${b.agency?.name ? `- Phông: ${b.agency.name}` : ''}`
+    }))
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+            e.preventDefault()
+            handleManualSubmit(e)
+        }
+    }
+
     return (
-        <form onSubmit={handleManualSubmit} className="flex max-h-[70vh] flex-col overflow-hidden">
+        <form onSubmit={handleManualSubmit} onKeyDown={handleKeyDown} className="flex max-h-[70vh] flex-col overflow-hidden">
             <div className="space-y-4 overflow-y-auto px-1 py-4">
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                 <div className="space-y-2">
@@ -277,22 +288,13 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
 
             <div className="space-y-2">
                 <Label htmlFor="boxId">Hộp số (Mã hộp)</Label>
-                <Select
-                    onValueChange={(value) => setFormData({ ...formData, boxId: value })}
+                <AutocompleteInput
+                    id="boxId"
+                    placeholder="Tìm kiếm hộp lưu trữ..."
                     value={formData.boxId}
-                    disabled={isLoading}
-                >
-                    <SelectTrigger id="boxId">
-                        <SelectValue placeholder="Chọn hộp..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {boxes.map((b) => (
-                            <SelectItem key={b.id} value={b.id}>
-                                {b.code} (Kệ: {b.shelf}) {b.agency?.name ? `- Phông: ${b.agency.name}` : ''}
-                            </SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
+                    suggestions={boxOptions}
+                    onValueChange={(val) => setFormData({ ...formData, boxId: val })}
+                />
             </div>
 
             <div className="space-y-2">

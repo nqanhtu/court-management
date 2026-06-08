@@ -18,6 +18,9 @@ import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { toast } from 'sonner'
 import { Loader2, Plus } from 'lucide-react'
+import { AutocompleteInput } from '@/components/ui/autocomplete-input'
+import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions'
+
 export interface DocumentFormData {
     id?: string
     fileId: string
@@ -53,6 +56,7 @@ interface ChildDocumentFormModalProps {
 export function ChildDocumentFormModal({ fileId, document, trigger, onSuccess }: ChildDocumentFormModalProps) {
     const [open, setOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
+    const { suggestions } = useAutocompleteSuggestions()
     const isEdit = !!document
 
     const [formData, setFormData] = useState<DocumentFormData>({
@@ -161,12 +165,12 @@ export function ChildDocumentFormModal({ fileId, document, trigger, onSuccess }:
                             <Label htmlFor="title" className="text-right">
                                 Trích yếu / Tên văn bản <span className="text-red-500">*</span>
                             </Label>
-                            <Textarea
+                            <AutocompleteInput
                                 id="title"
                                 value={formData.title}
-                                onChange={(e) => handleChange('title', e.target.value)}
-                                placeholder="Nhập trích yếu văn bản..."
-                                className="min-h-[80px]"
+                                suggestions={suggestions.titles}
+                                onValueChange={(val) => handleChange('title', val)}
+                                placeholder="Nhập hoặc chọn trích yếu văn bản..."
                             />
                         </div>
                         <div className="space-y-2">
@@ -214,10 +218,11 @@ export function ChildDocumentFormModal({ fileId, document, trigger, onSuccess }:
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="preservationTime">Thời hạn bảo quản</Label>
-                            <Input
+                            <AutocompleteInput
                                 id="preservationTime"
-                                value={formData.preservationTime}
-                                onChange={(e) => handleChange('preservationTime', e.target.value)}
+                                value={formData.preservationTime || ''}
+                                suggestions={suggestions.retentions}
+                                onValueChange={(val) => handleChange('preservationTime', val)}
                                 placeholder="VD: Vĩnh viễn, 10 năm..."
                             />
                         </div>

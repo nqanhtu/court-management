@@ -14,6 +14,8 @@ import type { StorageBoxDto } from '@/lib/api/types'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { queryClient } from '@/src/lib/query-client'
 import { queryKeys } from '@/src/lib/query-keys'
+import { AutocompleteInput } from '@/components/ui/autocomplete-input'
+import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions'
 
 interface ManualFileFormProps {
     onSuccess: () => void
@@ -22,6 +24,8 @@ interface ManualFileFormProps {
 export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [boxes, setBoxes] = useState<StorageBoxDto[]>([]);
+    const { suggestions } = useAutocompleteSuggestions()
+
     const [formData, setFormData] = useState({
         code: '',
         title: '',
@@ -137,10 +141,11 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="type">Loại án</Label>
-                    <Input
+                    <AutocompleteInput
                         id="type"
                         value={formData.type}
-                        onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                        suggestions={suggestions.types}
+                        onValueChange={(val) => setFormData({ ...formData, type: val })}
                     />
                 </div>
                 <div className="space-y-2">
@@ -157,11 +162,12 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
 
             <div className="space-y-2">
                 <Label htmlFor="title" className="font-semibold">Tiêu đề / Trích yếu *</Label>
-                <Input
+                <AutocompleteInput
                     id="title"
                     placeholder="Về việc..."
                     value={formData.title}
-                    onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                    suggestions={suggestions.titles}
+                    onValueChange={(val) => setFormData({ ...formData, title: val })}
                     required
                 />
             </div>
@@ -218,11 +224,12 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="space-y-2">
                     <Label htmlFor="retention">Bảo quản</Label>
-                    <Input
+                    <AutocompleteInput
                         id="retention"
                         placeholder="10 năm"
                         value={formData.retention}
-                        onChange={(e) => setFormData({ ...formData, retention: e.target.value })}
+                        suggestions={suggestions.retentions}
+                        onValueChange={(val) => setFormData({ ...formData, retention: val })}
                     />
                 </div>
                 <div className="space-y-2">

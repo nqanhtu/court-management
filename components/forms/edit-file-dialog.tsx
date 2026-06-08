@@ -1,0 +1,343 @@
+'use client';
+
+import { apiFetch } from '@/lib/api/client';
+
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Textarea } from '@/components/ui/textarea'
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from '@/components/ui/dialog'
+import { toast } from 'sonner'
+import { Loader2, Pencil } from 'lucide-react'
+import type { StorageBoxDto } from '@/lib/api/types'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { queryClient } from '@/src/lib/query-client'
+import { queryKeys } from '@/src/lib/query-keys'
+
+interface FileData {
+    id: string
+    code: string
+    title: string
+    type: string
+    year?: number | null
+    retention?: string | null
+    note?: string | null
+    judgmentNumber?: string | null
+    judgmentDate?: string | Date | null
+    pageCount?: number | null
+    defendants?: string[] | null
+    plaintiffs?: string[] | null
+    civilDefendants?: string[] | null
+    boxId?: string | null
+}
+
+
+interface EditFileDialogProps {
+    file: FileData
+    onSuccess: () => void
+}
+
+export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
+    const [open, setOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(false)
+    const [boxes, setBoxes] = useState<StorageBoxDto[]>([]);
+    
+    const formatDateForInput = (dateVal: string | Date | null | undefined) => {
+        if (!dateVal) return ''
+        try {
+            return new Date(dateVal).toISOString().split('T')[0]
+        } catch {
+            return ''
+        }
+    }
+
+    const [formData, setFormData] = useState({
+        code: '',
+        title: '',
+        type: '',
+        year: new Date().getFullYear(),
+        retention: '',
+        note: '',
+        judgmentNumber: '',
+        judgmentDate: '',
+        pageCount: 0,
+        defendants: '',
+        plaintiffs: '',
+        civilDefendants: '',
+        boxId: ''
+    })
+
+    useEffect(() => {
+        if (open && file) {
+            setFormData({
+                code: file.code || '',
+                title: file.title || '',
+                type: file.type || 'Hình sự',
+                year: file.year || new Date().getFullYear(),
+                retention: file.retention || '10 năm',
+                note: file.note || '',
+                judgmentNumber: file.judgmentNumber || '',
+                judgmentDate: formatDateForInput(file.judgmentDate),
+                pageCount: file.pageCount || 0,
+                defendants: file.defendants ? file.defendants.join(', ') : '',
+                plaintiffs: file.plaintiffs ? file.plaintiffs.join(', ') : '',
+                civilDefendants: file.civilDefendants ? file.civilDefendants.join(', ') : '',
+                boxId: file.boxId || ''
+            })
+        }
+    }, [open, file])
+
+    const handleBoxbyYear = async (year: number) => {
+        if (!year) return
+        try {
+            const response = await apiFetch(`/api/admin/boxes?year=${year}`)
+            if (response.ok) {
+                const data = await response.json()
+                setBoxes(data)
+            } else {
+                setBoxes([])
+            }
+        } catch (error) {
+            console.error("Failed to fetch boxes", error)
+            setBoxes([])
+        }
+    }
+
+    useEffect(() => {
+        if (open) {
+            handleBoxbyYear(formData.year)
+        }
+    }, [formData.year, open])
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault()
+        setIsLoading(true)
+
+        try {
+            const splitToList = (str: string) => str ? str.split(',').map(s => s.trim()).filter(Boolean) : []
+
+            const response = await apiFetch(`/api/files/${file.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    code: formData.code,
+                    title: formData.title,
+                    type: formData.type,
+                    year: formData.year,
+                    retention: formData.retention,
+                    note: formData.note,
+                    datetime: new Date(),
+                    judgmentNumber: formData.judgmentNumber,
+                    judgmentDate: formData.judgmentDate ? new Date(formData.judgmentDate) : null,
+                    pageCount: formData.pageCount,
+                    defendants: splitToList(formData.defendants),
+                    plaintiffs: splitToList(formData.plaintiffs),
+                    civilDefendants: splitToList(formData.civilDefendants),
+                    boxId: formData.boxId === 'none_clear' || !formData.boxId ? null : formData.boxId
+                })
+            })
+
+            const result = await response.json();
+
+            if (response.ok && result.success) {
+                toast.success('Cập nhật hồ sơ thành công')
+                queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
+                queryClient.invalidateQueries({ queryKey: queryKeys.files.detail(file.id) })
+                queryClient.invalidateQueries({ queryKey: queryKeys.files.stats })
+                queryClient.invalidateQueries({ queryKey: queryKeys.boxes.all })
+                setOpen(false)
+                onSuccess()
+            } else {
+                toast.error('Cập nhật thất bại: ' + (result.error || 'Lỗi không xác định'))
+            }
+        } catch (error) {
+            console.error(error)
+            toast.error('Có lỗi xảy ra')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    return (
+        <Dialog open={open} onOpenChange={setOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline" className="w-full sm:w-auto">
+                    <Pencil className="h-4 w-4" />
+                    Chỉnh sửa
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[700px] max-h-[90vh] flex flex-col">
+                <DialogHeader>
+                    <DialogTitle>Chỉnh sửa hồ sơ</DialogTitle>
+                    <DialogDescription>
+                        Cập nhật thông tin chi tiết cho hồ sơ này.
+                    </DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit} className="flex-1 flex flex-col overflow-hidden">
+                    <div className="space-y-4 overflow-y-auto px-1 py-4 flex-1">
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                            <div className="space-y-2">
+                                <Label htmlFor="code" className="text-red-600 font-semibold">Mã hồ sơ *</Label>
+                                <Input
+                                    id="code"
+                                    placeholder="VD: HS-001"
+                                    value={formData.code}
+                                    onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="type">Loại án</Label>
+                                <Input
+                                    id="type"
+                                    value={formData.type}
+                                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="year">Năm</Label>
+                                <Input
+                                    id="year"
+                                    type="number"
+                                    value={formData.year}
+                                    onChange={(e) => setFormData({ ...formData, year: parseInt(e.target.value) || new Date().getFullYear() })}
+                                    required
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="title" className="font-semibold">Tiêu đề / Trích yếu *</Label>
+                            <Input
+                                id="title"
+                                placeholder="Về việc..."
+                                value={formData.title}
+                                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                                required
+                            />
+                        </div>
+
+                        {/* Chi tiết án */}
+                        <div className="grid grid-cols-1 gap-4 rounded-md border bg-muted/20 p-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="judgmentNumber">Số bản án</Label>
+                                <Input
+                                    id="judgmentNumber"
+                                    placeholder="01/2024/HSST"
+                                    value={formData.judgmentNumber}
+                                    onChange={(e) => setFormData({ ...formData, judgmentNumber: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="judgmentDate">Ngày xét xử</Label>
+                                <Input
+                                    id="judgmentDate"
+                                    type="date"
+                                    value={formData.judgmentDate}
+                                    onChange={(e) => setFormData({ ...formData, judgmentDate: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="defendants" className="text-red-600">Bị cáo (cách nhau bởi dấu phẩy)</Label>
+                                <Input
+                                    id="defendants"
+                                    placeholder="Nguyen Van A, Tran Van B"
+                                    value={formData.defendants}
+                                    onChange={(e) => setFormData({ ...formData, defendants: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="plaintiffs" className="text-blue-600">Nguyên đơn (cách nhau bởi dấu phẩy)</Label>
+                                <Input
+                                    id="plaintiffs"
+                                    placeholder="Le Thi C"
+                                    value={formData.plaintiffs}
+                                    onChange={(e) => setFormData({ ...formData, plaintiffs: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor="civilDefendants" className="text-orange-600">Bị đơn (cách nhau bởi dấu phẩy)</Label>
+                                <Input
+                                    id="civilDefendants"
+                                    placeholder="Cong ty X"
+                                    value={formData.civilDefendants}
+                                    onChange={(e) => setFormData({ ...formData, civilDefendants: e.target.value })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="retention">Bảo quản</Label>
+                                <Input
+                                    id="retention"
+                                    placeholder="10 năm"
+                                    value={formData.retention}
+                                    onChange={(e) => setFormData({ ...formData, retention: e.target.value })}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="pageCount">Số tờ</Label>
+                                <Input
+                                    id="pageCount"
+                                    type="number"
+                                    value={formData.pageCount}
+                                    onChange={(e) => setFormData({ ...formData, pageCount: parseInt(e.target.value) || 0 })}
+                                />
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="boxId">Hộp số (Mã hộp)</Label>
+                            <Select
+                                onValueChange={(value) => setFormData({ ...formData, boxId: value })}
+                                value={formData.boxId}
+                                disabled={isLoading}
+                            >
+                                <SelectTrigger id="boxId">
+                                    <SelectValue placeholder="Chọn hộp..." />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none_clear">--- Không xếp vào hộp ---</SelectItem>
+                                    {boxes.map((b) => (
+                                        <SelectItem key={b.id} value={b.id}>
+                                            {b.code} (Kệ: {b.shelf}) {b.agency?.name ? `- Phông: ${b.agency.name}` : ''}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="note">Ghi chú</Label>
+                            <Textarea
+                                id="note"
+                                value={formData.note}
+                                onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+                            />
+                        </div>
+                    </div>
+
+                    <DialogFooter className="border-t bg-background pt-3">
+                        <Button type="button" variant="outline" onClick={() => setOpen(false)}>
+                            Hủy
+                        </Button>
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Lưu thay đổi
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}

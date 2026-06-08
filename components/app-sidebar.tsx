@@ -10,6 +10,7 @@ import {
   Building2,
   RotateCcw,
   Archive,
+  Database,
 } from "lucide-react";
 import { usePathname } from '@/src/lib/router';
 import type { User } from "@/lib/types/user";
@@ -55,6 +56,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
               { name: "Người dùng", href: "/users", icon: Users },
               { name: "Phông lưu trữ", href: "/admin/agency", icon: Building2 },
               { name: "Hộp lưu trữ", href: "/admin/boxes", icon: Archive },
+              { name: "Sao lưu dữ liệu", href: "/admin/backup", icon: Database },
               { name: "Nhật ký", href: "/admin/audit", icon: HistoryIcon },
             ]
           : []),

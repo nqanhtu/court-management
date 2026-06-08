@@ -1,4 +1,4 @@
-export const USER_ROLES = ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR'] as const
+export const USER_ROLES = ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR', 'BASIC_VIEWER'] as const
 
 export type UserRole = (typeof USER_ROLES)[number]
 export type PermissionSession = { id?: string | null; role?: unknown } | null
@@ -8,13 +8,13 @@ export const permissions = {
   manageAgencies: ['SUPER_ADMIN'],
   manageMaintenance: ['SUPER_ADMIN'],
   viewAudit: ['SUPER_ADMIN'],
-  viewFiles: ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR'],
+  viewFiles: ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR', 'BASIC_VIEWER'],
   manageFiles: ['SUPER_ADMIN', 'ADMIN'],
   viewBorrow: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'],
   manageBorrow: ['SUPER_ADMIN', 'COORDINATOR'],
-  viewStorage: ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR'],
+  viewStorage: ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR', 'BASIC_VIEWER'],
   manageStorage: ['SUPER_ADMIN'],
-  viewReports: ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR'],
+  viewReports: ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR', 'BASIC_VIEWER'],
 } as const satisfies Record<string, readonly UserRole[]>
 
 export type Permission = keyof typeof permissions

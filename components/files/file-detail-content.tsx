@@ -22,6 +22,7 @@ import { useFile } from '@/lib/hooks/use-files'
 import { ChildDocumentUploadModal } from './child-document-upload-modal'
 import { ChildDocumentFormModal } from './child-document-form-modal'
 import type { BorrowItemDto, DocumentDto } from '@/lib/api/types'
+import { EditFileDialog } from '@/components/forms/edit-file-dialog'
 
 type BorrowItemWithSlip = BorrowItemDto & { borrowSlip: NonNullable<BorrowItemDto['borrowSlip']> }
 
@@ -49,6 +50,8 @@ export function FileDetailContent({ id }: { id: string }) {
     const { session } = useSession()
     const canManageFiles = can(session?.role, 'manageFiles')
     const canManageBorrow = can(session?.role, 'manageBorrow')
+    const showEditButton = (canManageFiles && !file?.isLocked) || session?.role === 'SUPER_ADMIN'
+    const isBasicViewer = session?.role === 'BASIC_VIEWER'
 
 
     const handlePrintQr = () => {
@@ -216,6 +219,9 @@ export function FileDetailContent({ id }: { id: string }) {
                         <Printer className="h-4 w-4" />
                         In mã QR
                     </Button>
+                    {showEditButton && (
+                        <EditFileDialog file={file} onSuccess={() => mutate()} />
+                    )}
                     {canManageFiles && (
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -258,7 +264,7 @@ export function FileDetailContent({ id }: { id: string }) {
             <Tabs defaultValue="general" className="w-full">
                 <TabsList className="flex w-full justify-start overflow-x-auto lg:w-[600px]">
                     <TabsTrigger value="general" className="min-w-max flex-1">Thông tin chung</TabsTrigger>
-                    <TabsTrigger value="storage" className="min-w-max flex-1">Lưu trữ</TabsTrigger>
+                    {!isBasicViewer && <TabsTrigger value="storage" className="min-w-max flex-1">Lưu trữ</TabsTrigger>}
                     <TabsTrigger value="index" className="min-w-max flex-1">Mục lục hồ sơ</TabsTrigger>
                     <TabsTrigger value="borrow" className="min-w-max flex-1">Mượn trả</TabsTrigger>
                 </TabsList>
@@ -359,6 +365,7 @@ export function FileDetailContent({ id }: { id: string }) {
                 </TabsContent>
 
                 {/* Storage Tab */}
+                {!isBasicViewer && (
                 <TabsContent value="storage" className="mt-6">
                      <Card>
                         <CardHeader>
@@ -417,6 +424,7 @@ export function FileDetailContent({ id }: { id: string }) {
                         </CardContent>
                     </Card>
                 </TabsContent>
+                )}
 
                 {/* Index Tab */}
                 <TabsContent value="index" className="mt-6">
@@ -501,6 +509,7 @@ export function FileDetailContent({ id }: { id: string }) {
                 </TabsContent>
 
                 {/* Documents List - Always Visible */}
+                {!isBasicViewer && (
                 <Card>
                     <CardHeader>
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -610,6 +619,7 @@ export function FileDetailContent({ id }: { id: string }) {
                         </div>
                     </CardContent>
                 </Card>
+                )}
             </Tabs>
         </div>
     )

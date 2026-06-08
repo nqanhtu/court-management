@@ -1,3 +1,4 @@
+import JsBarcode from 'jsbarcode'
 import type { StorageBoxDto } from '@/lib/api/types'
 
 export type StorageBoxLabelPrintMode = 'single' | 'grid'
@@ -16,6 +17,24 @@ export function printStorageBoxLabels(items: StorageBoxLabelPrintItem[], mode: S
   printWindow.document.close()
   printWindow.focus()
   return true
+}
+
+function generateBarcodeSvg(text: string): string {
+  if (typeof document === 'undefined') return ''
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+  try {
+    JsBarcode(svg, text, {
+      format: 'CODE39',
+      width: 1.5,
+      height: 40,
+      displayValue: false,
+      margin: 0,
+    })
+    return svg.outerHTML
+  } catch (err) {
+    console.error('Failed to generate barcode SVG:', err)
+    return ''
+  }
 }
 
 function buildStorageBoxLabelsHtml(items: StorageBoxLabelPrintItem[], mode: StorageBoxLabelPrintMode) {
@@ -57,12 +76,23 @@ function buildStorageBoxLabelsHtml(items: StorageBoxLabelPrintItem[], mode: Stor
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
     }
     .qr img {
       width: ${isSingle ? '160px' : '88px'};
       height: ${isSingle ? '160px' : '88px'};
       image-rendering: crisp-edges;
+    }
+    .barcode-container {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-top: 2px;
+    }
+    .barcode-container svg {
+      max-width: 100%;
+      height: ${isSingle ? '35px' : '20px'};
     }
     .code {
       max-width: 100%;
@@ -131,10 +161,15 @@ function buildLabelHtml({ box, qrDataUrl, qrUrl }: StorageBoxLabelPrintItem, isS
   const fileRange = box.fromFileCode || box.toFileCode
     ? `${box.fromFileCode || '?'} - ${box.toFileCode || '?'}`
     : '-'
+  
+  const barcodeSvg = generateBarcodeSvg(box.code)
 
   return `<section class="label">
     <div class="qr">
       <img src="${escapeHtml(qrDataUrl)}" alt="QR ${escapeHtml(box.code)}" />
+      <div class="barcode-container">
+        ${barcodeSvg}
+      </div>
       <div class="code">${escapeHtml(box.code)}</div>
     </div>
     <div>

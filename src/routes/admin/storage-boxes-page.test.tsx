@@ -1,4 +1,5 @@
 import { fireEvent, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 
 import { renderWithRouter } from '@/src/test/test-utils'
 import StorageBoxesPage from '@/src/routes/admin/storage-boxes-page'
@@ -32,6 +33,10 @@ vi.mock('@/components/forms/storage-box-dialog', () => ({
   StorageBoxDialog: () => null,
 }))
 
+vi.mock('@/components/storage-layout/storage-layout-canvas', () => ({
+  StorageLayoutCanvas: () => <div data-testid="storage-layout-canvas" />,
+}))
+
 vi.mock('@/lib/hooks/use-auth', () => ({
   useSession: () => ({
     session: { id: 'user-1', username: 'admin', fullName: 'Admin', role: 'SUPER_ADMIN' },
@@ -47,6 +52,13 @@ vi.mock('@/lib/hooks/use-storage-boxes', () => ({
   useDeleteStorageBox: () => ({
     mutateAsync: vi.fn(),
     isPending: false,
+  }),
+}))
+
+vi.mock('@/lib/hooks/use-storage-layout', () => ({
+  useStorageLayout: () => ({
+    layout: null,
+    isLoading: false,
   }),
 }))
 
@@ -66,5 +78,13 @@ describe('StorageBoxesPage', () => {
       expect.stringContaining('/qr/boxes/box-1')
     )
     expect(screen.getByText('Kho B - Dãy 2 - Kệ 4 - Ô 8 - 008')).toBeInTheDocument()
+  })
+
+  it('renders the storage layout canvas tab', async () => {
+    renderWithRouter(<StorageBoxesPage />)
+
+    await userEvent.click(screen.getByRole('tab', { name: 'Sơ đồ kho' }))
+
+    expect(screen.getByTestId('storage-layout-canvas')).toBeInTheDocument()
   })
 })

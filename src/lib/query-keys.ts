@@ -17,6 +17,7 @@ export const queryKeys = {
     all: ['boxes'] as const,
     list: (params?: string) => ['boxes', 'list', params || ''] as const,
     qr: (id: string) => ['boxes', 'qr', id] as const,
+    layout: ['boxes', 'layout'] as const,
   },
   agencies: {
     all: ['agencies'] as const,

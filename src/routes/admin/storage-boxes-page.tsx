@@ -21,7 +21,8 @@ import {
   Loader2,
   FolderOpen,
   Printer,
-  QrCode
+  QrCode,
+  Warehouse
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -48,7 +49,10 @@ import { PageHeader } from "@/components/common/page-header";
 import { DataToolbar } from "@/components/common/data-toolbar";
 import { PrintActionButton } from "@/components/common/print-action-button";
 import { StorageBoxDialog } from "@/components/forms/storage-box-dialog";
+import { StorageLayoutCanvas } from "@/components/storage-layout/storage-layout-canvas";
 import { printStorageBoxLabels, type StorageBoxLabelPrintItem } from "@/lib/storage-box/print-labels";
+import { useStorageLayout } from "@/lib/hooks/use-storage-layout";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -76,6 +80,8 @@ export default function StorageBoxesPage() {
   const [yearFilter, setYearFilter] = useState("");
   const canLoadBoxes = session?.role === "SUPER_ADMIN";
   const { boxes, isLoading } = useStorageBoxes({ search, year: yearFilter }, canLoadBoxes);
+  const { boxes: canvasBoxes, isLoading: isCanvasBoxesLoading } = useStorageBoxes({}, canLoadBoxes);
+  const { layout: storageLayout, isLoading: isLayoutLoading } = useStorageLayout(canLoadBoxes);
   const deleteStorageBox = useDeleteStorageBox();
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -267,215 +273,240 @@ export default function StorageBoxesPage() {
             </Button>
           </DataToolbar>
 
-          {/* Data Table */}
-          <div className="rounded-xl border bg-white dark:bg-card shadow-sm overflow-hidden transition-all duration-300">
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader className="bg-muted/40">
-                  <TableRow>
-                    <TableHead className="w-10">
-                      <Checkbox
-                        checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
-                        onCheckedChange={(checked) => {
-                          setSelectedBoxIds((current) => {
-                            const next = new Set(current);
-                            if (Boolean(checked)) visibleBoxIds.forEach((id) => next.add(id));
-                            else visibleBoxIds.forEach((id) => next.delete(id));
-                            return next;
-                          });
-                        }}
-                        aria-label="Chọn tất cả hộp đang hiển thị"
-                      />
-                    </TableHead>
-                    <TableHead className="font-semibold text-foreground py-3">Mã QR / Hộp</TableHead>
-                    <TableHead className="font-semibold text-foreground">Vị trí vật lý</TableHead>
-                    <TableHead className="font-semibold text-foreground">Phông lưu trữ</TableHead>
-                    <TableHead className="font-semibold text-foreground text-center">Năm</TableHead>
-                    <TableHead className="font-semibold text-foreground text-center">Thời hạn</TableHead>
-                    <TableHead className="font-semibold text-foreground text-center">Hồ sơ</TableHead>
-                    <TableHead className="font-semibold text-foreground text-right pr-6 w-[120px]">Thao tác</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {isLoading ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="h-32 text-center">
-                        <div className="flex flex-col items-center justify-center gap-2">
-                          <Loader2 className="h-6 w-6 animate-spin text-primary" />
-                          <span className="text-xs text-muted-foreground">Đang tải danh sách hộp lưu trữ...</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : boxes.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={8} className="h-32 text-center">
-                        <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground">
-                          <Archive className="h-8 w-8 opacity-40 mb-1" />
-                          <span className="text-sm font-medium">Không tìm thấy hộp lưu trữ nào</span>
-                          <span className="text-xs opacity-85">Thử thay đổi bộ lọc tìm kiếm hoặc thêm hộp mới.</span>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : (
-                    boxes.map((box) => {
-                      const filesCount = box._count?.files || 0;
-                      return (
-                        <TableRow key={box.id} className="hover:bg-muted/30 transition-colors group">
-                          <TableCell>
-                            <Checkbox
-                              checked={selectedBoxIds.has(box.id)}
-                              onCheckedChange={(checked) => toggleBoxSelection(box.id, Boolean(checked))}
-                              aria-label={`Chọn hộp ${box.code}`}
-                            />
-                          </TableCell>
-                          {/* Code / QR Code */}
-                          <TableCell className="py-4">
-                            <div className="flex flex-col gap-1">
-                              <span className="font-mono text-sm font-bold tracking-wide text-foreground group-hover:text-primary transition-colors">
-                                {box.code}
-                              </span>
-                              {box.caseType && (
-                                <span className="text-[10px] text-muted-foreground bg-muted/60 dark:bg-muted/20 px-1.5 py-0.5 rounded w-max font-medium">
-                                  {box.caseType}
-                                </span>
-                              )}
+          <Tabs defaultValue="list" className="space-y-4">
+            <TabsList className="rounded-xl">
+              <TabsTrigger value="list" className="gap-2">
+                <Archive className="h-4 w-4" />
+                Danh sách
+              </TabsTrigger>
+              <TabsTrigger value="layout" className="gap-2">
+                <Warehouse className="h-4 w-4" />
+                Sơ đồ kho
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="list">
+              {/* Data Table */}
+              <div className="rounded-xl border bg-white dark:bg-card shadow-sm overflow-hidden transition-all duration-300">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader className="bg-muted/40">
+                      <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox
+                            checked={allVisibleSelected ? true : someVisibleSelected ? "indeterminate" : false}
+                            onCheckedChange={(checked) => {
+                              setSelectedBoxIds((current) => {
+                                const next = new Set(current);
+                                if (Boolean(checked)) visibleBoxIds.forEach((id) => next.add(id));
+                                else visibleBoxIds.forEach((id) => next.delete(id));
+                                return next;
+                              });
+                            }}
+                            aria-label="Chọn tất cả hộp đang hiển thị"
+                          />
+                        </TableHead>
+                        <TableHead className="font-semibold text-foreground py-3">Mã QR / Hộp</TableHead>
+                        <TableHead className="font-semibold text-foreground">Vị trí vật lý</TableHead>
+                        <TableHead className="font-semibold text-foreground">Phông lưu trữ</TableHead>
+                        <TableHead className="font-semibold text-foreground text-center">Năm</TableHead>
+                        <TableHead className="font-semibold text-foreground text-center">Thời hạn</TableHead>
+                        <TableHead className="font-semibold text-foreground text-center">Hồ sơ</TableHead>
+                        <TableHead className="font-semibold text-foreground text-right pr-6 w-[120px]">Thao tác</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {isLoading ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="h-32 text-center">
+                            <div className="flex flex-col items-center justify-center gap-2">
+                              <Loader2 className="h-6 w-6 animate-spin text-primary" />
+                              <span className="text-xs text-muted-foreground">Đang tải danh sách hộp lưu trữ...</span>
                             </div>
-                          </TableCell>
-
-                          {/* Coordinates / Map Pin */}
-                          <TableCell>
-                            <div className="flex items-center gap-1.5">
-                              <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
-                              <div className="flex items-center gap-1 text-xs font-semibold text-foreground">
-                                <span className="bg-muted px-1.5 py-0.5 rounded text-[11px]" title="Kho">{box.warehouse}</span>
-                                <span className="text-muted-foreground font-normal">→</span>
-                                <span className="bg-muted px-1.5 py-0.5 rounded text-[11px]" title="Dãy">{box.line}</span>
-                                <span className="text-muted-foreground font-normal">→</span>
-                                <span className="bg-muted px-1.5 py-0.5 rounded text-[11px]" title="Kệ">{box.shelf}</span>
-                                <span className="text-muted-foreground font-normal">→</span>
-                                <span className="bg-muted px-1.5 py-0.5 rounded text-[11px]" title="Ngăn">{box.slot}</span>
-                                <span className="text-muted-foreground font-normal">→</span>
-                                <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[11px]" title="Hộp">{box.boxNumber}</span>
-                              </div>
-                            </div>
-                          </TableCell>
-
-                          {/* Linked Agency History */}
-                          <TableCell>
-                            {box.agency ? (
-                              <div className="flex items-center gap-1.5">
-                                <Building2 className="h-3.5 w-3.5 text-sky-600" />
-                                <span className="text-xs font-medium text-foreground max-w-[200px] truncate">
-                                  {box.agency.name}
-                                </span>
-                              </div>
-                            ) : (
-                              <span className="text-xs text-muted-foreground italic">Chưa phân phối</span>
-                            )}
-                          </TableCell>
-
-                          {/* Retention Year */}
-                          <TableCell className="text-center">
-                            <span className="text-xs font-medium text-foreground">
-                              {box.year || "—"}
-                            </span>
-                          </TableCell>
-
-                          {/* Retention Period Label */}
-                          <TableCell className="text-center">
-                            {box.retention ? (
-                              <Badge variant="outline" className="text-xs font-medium bg-muted/30 border-muted">
-                                {box.retention}
-                              </Badge>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-
-                          {/* File Counter and Range */}
-                          <TableCell className="text-center">
-                            <div className="flex flex-col items-center gap-1">
-                              <Badge 
-                                variant={filesCount > 0 ? "secondary" : "outline"} 
-                                className={`text-xs gap-1 ${
-                                  filesCount > 0 
-                                    ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 border-emerald-200 dark:border-emerald-900" 
-                                    : "text-muted-foreground"
-                                }`}
-                              >
-                                <FolderOpen className="h-3 w-3" />
-                                {filesCount}
-                              </Badge>
-                              {(box.fromFileCode || box.toFileCode) && (
-                                <span className="text-[10px] text-muted-foreground font-mono">
-                                  [{box.fromFileCode || "?"} - {box.toFileCode || "?"}]
-                                </span>
-                              )}
-                            </div>
-                          </TableCell>
-
-                          {/* Action drop-down menu */}
-                          <TableCell className="text-right pr-6">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  className="h-8 w-8 p-0 rounded-lg group-hover:bg-muted/80"
-                                  aria-label={`Mở thao tác hộp ${box.code}`}
-                                >
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end" className="w-[160px] rounded-xl shadow-lg border">
-                                <DropdownMenuLabel className="text-xs text-muted-foreground">Lựa chọn</DropdownMenuLabel>
-                                <DropdownMenuItem
-                                  onClick={() => openLabelPreview([box])}
-                                  className="text-xs cursor-pointer flex items-center gap-2 focus:bg-blue-50 focus:text-blue-600 dark:focus:bg-blue-950/50 dark:focus:text-blue-400"
-                                >
-                                  <Printer className="h-3.5 w-3.5" /> In nhãn
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => window.open(getBoxQrUrl(box), "_blank")}
-                                  className="text-xs cursor-pointer flex items-center gap-2 focus:bg-emerald-50 focus:text-emerald-600 dark:focus:bg-emerald-950/50 dark:focus:text-emerald-400"
-                                >
-                                  <QrCode className="h-3.5 w-3.5" /> Mở QR
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => {
-                                    setSelectedBox(box);
-                                    setIsDialogOpen(true);
-                                  }}
-                                  className="text-xs cursor-pointer flex items-center gap-2 focus:bg-amber-50 focus:text-amber-600 dark:focus:bg-amber-950/50 dark:focus:text-amber-400"
-                                >
-                                  <Pencil className="h-3.5 w-3.5" /> Chỉnh sửa
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  className={`text-xs cursor-pointer flex items-center gap-2 ${
-                                    filesCount > 0 
-                                      ? "text-muted-foreground opacity-50 cursor-not-allowed" 
-                                      : "text-destructive focus:bg-destructive/10 focus:text-destructive dark:focus:bg-destructive/20"
-                                  }`}
-                                  onClick={() => {
-                                    if (filesCount > 0) {
-                                      toast.warning(`Không thể xóa hộp lưu trữ vì đang có hồ sơ liên kết. Vui lòng di chuyển hồ sơ đi trước.`);
-                                      return;
-                                    }
-                                    setBoxToDelete(box);
-                                  }}
-                                >
-                                  <Trash2 className="h-3.5 w-3.5" /> Xoá hộp
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
                           </TableCell>
                         </TableRow>
-                      );
-                    })
-                  )}
-                </TableBody>
-              </Table>
-            </div>
-          </div>
+                      ) : boxes.length === 0 ? (
+                        <TableRow>
+                          <TableCell colSpan={8} className="h-32 text-center">
+                            <div className="flex flex-col items-center justify-center gap-1 text-muted-foreground">
+                              <Archive className="h-8 w-8 opacity-40 mb-1" />
+                              <span className="text-sm font-medium">Không tìm thấy hộp lưu trữ nào</span>
+                              <span className="text-xs opacity-85">Thử thay đổi bộ lọc tìm kiếm hoặc thêm hộp mới.</span>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ) : (
+                        boxes.map((box) => {
+                          const filesCount = box._count?.files || 0;
+                          return (
+                            <TableRow key={box.id} className="hover:bg-muted/30 transition-colors group">
+                              <TableCell>
+                                <Checkbox
+                                  checked={selectedBoxIds.has(box.id)}
+                                  onCheckedChange={(checked) => toggleBoxSelection(box.id, Boolean(checked))}
+                                  aria-label={`Chọn hộp ${box.code}`}
+                                />
+                              </TableCell>
+                              {/* Code / QR Code */}
+                              <TableCell className="py-4">
+                                <div className="flex flex-col gap-1">
+                                  <span className="font-mono text-sm font-bold tracking-wide text-foreground group-hover:text-primary transition-colors">
+                                    {box.code}
+                                  </span>
+                                  {box.caseType && (
+                                    <span className="text-[10px] text-muted-foreground bg-muted/60 dark:bg-muted/20 px-1.5 py-0.5 rounded w-max font-medium">
+                                      {box.caseType}
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+
+                              {/* Coordinates / Map Pin */}
+                              <TableCell>
+                                <div className="flex items-center gap-1.5">
+                                  <MapPin className="h-3.5 w-3.5 text-muted-foreground" />
+                                  <div className="flex items-center gap-1 text-xs font-semibold text-foreground">
+                                    <span className="bg-muted px-1.5 py-0.5 rounded text-[11px]" title="Kho">{box.warehouse}</span>
+                                    <span className="text-muted-foreground font-normal">→</span>
+                                    <span className="bg-muted px-1.5 py-0.5 rounded text-[11px]" title="Dãy">{box.line}</span>
+                                    <span className="text-muted-foreground font-normal">→</span>
+                                    <span className="bg-muted px-1.5 py-0.5 rounded text-[11px]" title="Kệ">{box.shelf}</span>
+                                    <span className="text-muted-foreground font-normal">→</span>
+                                    <span className="bg-muted px-1.5 py-0.5 rounded text-[11px]" title="Ngăn">{box.slot}</span>
+                                    <span className="text-muted-foreground font-normal">→</span>
+                                    <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded text-[11px]" title="Hộp">{box.boxNumber}</span>
+                                  </div>
+                                </div>
+                              </TableCell>
+
+                              {/* Linked Agency History */}
+                              <TableCell>
+                                {box.agency ? (
+                                  <div className="flex items-center gap-1.5">
+                                    <Building2 className="h-3.5 w-3.5 text-sky-600" />
+                                    <span className="text-xs font-medium text-foreground max-w-[200px] truncate">
+                                      {box.agency.name}
+                                    </span>
+                                  </div>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground italic">Chưa phân phối</span>
+                                )}
+                              </TableCell>
+
+                              {/* Retention Year */}
+                              <TableCell className="text-center">
+                                <span className="text-xs font-medium text-foreground">
+                                  {box.year || "—"}
+                                </span>
+                              </TableCell>
+
+                              {/* Retention Period Label */}
+                              <TableCell className="text-center">
+                                {box.retention ? (
+                                  <Badge variant="outline" className="text-xs font-medium bg-muted/30 border-muted">
+                                    {box.retention}
+                                  </Badge>
+                                ) : (
+                                  <span className="text-xs text-muted-foreground">—</span>
+                                )}
+                              </TableCell>
+
+                              {/* File Counter and Range */}
+                              <TableCell className="text-center">
+                                <div className="flex flex-col items-center gap-1">
+                                  <Badge 
+                                    variant={filesCount > 0 ? "secondary" : "outline"} 
+                                    className={`text-xs gap-1 ${
+                                      filesCount > 0 
+                                        ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400 hover:bg-emerald-50 border-emerald-200 dark:border-emerald-900" 
+                                        : "text-muted-foreground"
+                                    }`}
+                                  >
+                                    <FolderOpen className="h-3 w-3" />
+                                    {filesCount}
+                                  </Badge>
+                                  {(box.fromFileCode || box.toFileCode) && (
+                                    <span className="text-[10px] text-muted-foreground font-mono">
+                                      [{box.fromFileCode || "?"} - {box.toFileCode || "?"}]
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+
+                              {/* Action drop-down menu */}
+                              <TableCell className="text-right pr-6">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button
+                                      variant="ghost"
+                                      className="h-8 w-8 p-0 rounded-lg group-hover:bg-muted/80"
+                                      aria-label={`Mở thao tác hộp ${box.code}`}
+                                    >
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-[160px] rounded-xl shadow-lg border">
+                                    <DropdownMenuLabel className="text-xs text-muted-foreground">Lựa chọn</DropdownMenuLabel>
+                                    <DropdownMenuItem
+                                      onClick={() => openLabelPreview([box])}
+                                      className="text-xs cursor-pointer flex items-center gap-2 focus:bg-blue-50 focus:text-blue-600 dark:focus:bg-blue-950/50 dark:focus:text-blue-400"
+                                    >
+                                      <Printer className="h-3.5 w-3.5" /> In nhãn
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => window.open(getBoxQrUrl(box), "_blank")}
+                                      className="text-xs cursor-pointer flex items-center gap-2 focus:bg-emerald-50 focus:text-emerald-600 dark:focus:bg-emerald-950/50 dark:focus:text-emerald-400"
+                                    >
+                                      <QrCode className="h-3.5 w-3.5" /> Mở QR
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      onClick={() => {
+                                        setSelectedBox(box);
+                                        setIsDialogOpen(true);
+                                      }}
+                                      className="text-xs cursor-pointer flex items-center gap-2 focus:bg-amber-50 focus:text-amber-600 dark:focus:bg-amber-950/50 dark:focus:text-amber-400"
+                                    >
+                                      <Pencil className="h-3.5 w-3.5" /> Chỉnh sửa
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className={`text-xs cursor-pointer flex items-center gap-2 ${
+                                        filesCount > 0 
+                                          ? "text-muted-foreground opacity-50 cursor-not-allowed" 
+                                          : "text-destructive focus:bg-destructive/10 focus:text-destructive dark:focus:bg-destructive/20"
+                                      }`}
+                                      onClick={() => {
+                                        if (filesCount > 0) {
+                                          toast.warning(`Không thể xóa hộp lưu trữ vì đang có hồ sơ liên kết. Vui lòng di chuyển hồ sơ đi trước.`);
+                                          return;
+                                        }
+                                        setBoxToDelete(box);
+                                      }}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" /> Xoá hộp
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="layout">
+              <StorageLayoutCanvas
+                boxes={canvasBoxes}
+                highlightedBoxes={boxes}
+                savedLayout={storageLayout}
+                isLoadingLayout={isLayoutLoading || isCanvasBoxesLoading}
+                isHighlightActive={Boolean(search || yearFilter)}
+              />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
 

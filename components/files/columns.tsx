@@ -40,6 +40,8 @@ export type FileDocument = {
   pageCount?: number | null
   note?: string | null
   status?: string | null
+  createdBy?: { id: string, username: string, fullName: string } | null
+  updatedBy?: { id: string, username: string, fullName: string } | null
 }
 
 export const getColumns = (
@@ -138,6 +140,16 @@ export const getColumns = (
       accessorKey: "pageCount",
       header: () => <div className="text-right">Số tờ</div>,
       cell: ({ row }) => <div className="text-right">{row.original.pageCount}</div>,
+    },
+    {
+      accessorKey: "createdBy",
+      header: "Người tạo",
+      cell: ({ row }) => <div className="text-muted-foreground text-xs truncate max-w-[120px]">{row.original.createdBy?.fullName || row.original.createdBy?.username || "-"}</div>,
+    },
+    {
+      accessorKey: "updatedBy",
+      header: "Người cập nhật",
+      cell: ({ row }) => <div className="text-muted-foreground text-xs truncate max-w-[120px]">{row.original.updatedBy?.fullName || row.original.updatedBy?.username || "-"}</div>,
     },
     {
       accessorKey: "note",

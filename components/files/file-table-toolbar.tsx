@@ -5,6 +5,8 @@ import { SlidersHorizontal, Search, X } from "lucide-react";
 import { useState } from "react";
 import { useRouter, useSearchParams } from '@/src/lib/router';
 import { useDebouncedCallback } from "use-debounce";
+import useSWR from "swr";
+import { apiFetch } from "@/lib/api/client";
 
 import { Button } from "@/components/ui/button";
 import { DataTableFacetedFilter } from "@/components/ui/data-table-faceted-filter";
@@ -23,6 +25,7 @@ interface FileTableToolbarProps<TData> {
   onBorrow?: (files: TData[]) => void;
   density?: "compact" | "comfortable";
   onDensityChange?: (density: "compact" | "comfortable") => void;
+  role?: string;
 }
 
 const statuses = [
@@ -45,6 +48,7 @@ export function FileTableToolbar<TData>({
   onBorrow,
   density = "comfortable",
   onDensityChange,
+  role,
 }: FileTableToolbarProps<TData>) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -66,7 +70,20 @@ export function FileTableToolbar<TData>({
     "type",
     "status",
     ...advancedFilterKeys,
+    "createdById",
   ].some((key) => !!searchParams.get(key)) || table.getState().columnFilters.length > 0;
+
+  const isSuperOrAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN';
+  const { data: usersData } = useSWR(
+    isSuperOrAdmin ? '/api/users?purpose=coordinator' : null,
+    (url) => apiFetch(url).then((r) => r.json())
+  );
+
+  const coordinatorsList = Array.isArray(usersData) ? usersData : (usersData?.users || []);
+  const coordinatorOptions = coordinatorsList.map((u: any) => ({
+    label: u.username || u.name || "Unknown",
+    value: u.id
+  }));
 
   const setUrlParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
@@ -101,6 +118,7 @@ export function FileTableToolbar<TData>({
       "line",
       "shelf",
       "slot",
+      "createdById",
     ].forEach((key) => params.delete(key));
     params.set("page", "1");
     router.replace(`/?${params.toString()}`);
@@ -143,6 +161,29 @@ export function FileTableToolbar<TData>({
             <SlidersHorizontal className="h-4 w-4" />
             Bộ lọc
           </Button>
+
+          {isSuperOrAdmin && (
+            <DataTableFacetedFilter
+              title="Người điều phối"
+              options={coordinatorOptions}
+              value={
+                searchParams.has("createdById")
+                  ? searchParams.get("createdById") === "none"
+                    ? []
+                    : searchParams.get("createdById")!.split(",")
+                  : coordinatorOptions.map((o) => o.value)
+              }
+              onFilter={(values) => {
+                if (!values || values.length === 0) {
+                  setUrlParam("createdById", "none");
+                } else if (values.length === coordinatorOptions.length) {
+                  setUrlParam("createdById", "all");
+                } else {
+                  setUrlParam("createdById", values.join(","));
+                }
+              }}
+            />
+          )}
 
           {isFiltered && (
             <Button variant="ghost" onClick={handleReset} className="h-8 px-2 lg:px-3">

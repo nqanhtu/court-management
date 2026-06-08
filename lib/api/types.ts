@@ -73,6 +73,10 @@ export type FileDto = {
   documents?: DocumentDto[]
   borrowItems?: BorrowItemDto[]
   fileIndex?: FileIndexDto | null
+  createdById?: string | null
+  updatedById?: string | null
+  createdBy?: Pick<UserDto, 'id' | 'username' | 'fullName'> | null
+  updatedBy?: Pick<UserDto, 'id' | 'username' | 'fullName'> | null
   createdAt?: string | Date
   updatedAt?: string | Date
 }

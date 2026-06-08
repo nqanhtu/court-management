@@ -152,16 +152,33 @@ export function DataTableFacetedFilter<TData, TValue>({
                 )
               })}
             </CommandGroup>
-            {selectedValues.size > 0 && (
+            {(selectedValues.size > 0 || selectedValues.size < options.length) && (
               <>
                 <CommandSeparator />
                 <CommandGroup>
-                  <CommandItem
-                    onSelect={handleClear}
-                    className="justify-center text-center"
-                  >
-                    Xóa bộ lọc
-                  </CommandItem>
+                  {selectedValues.size < options.length && (
+                    <CommandItem
+                      onSelect={() => {
+                        const allValues = options.map((o) => o.value)
+                        if (onFilter) {
+                          onFilter(allValues)
+                        } else {
+                          column?.setFilterValue(allValues)
+                        }
+                      }}
+                      className="justify-center text-center text-sm font-medium"
+                    >
+                      Chọn tất cả
+                    </CommandItem>
+                  )}
+                  {selectedValues.size > 0 && (
+                    <CommandItem
+                      onSelect={handleClear}
+                      className="justify-center text-center text-sm"
+                    >
+                      Bỏ chọn tất cả
+                    </CommandItem>
+                  )}
                 </CommandGroup>
               </>
             )}

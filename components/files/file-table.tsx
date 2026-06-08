@@ -56,7 +56,7 @@ interface FileTableProps {
   onRefresh?: () => void
 }
 
-export function FileTable({ files, isLoading, canBorrow = false, onCreate, total, page = 1, pageSize = 10, onPaginationChange, onRefresh }: FileTableProps) {
+export function FileTable({ files, isLoading, role, canBorrow = false, onCreate, total, page = 1, pageSize = 10, onPaginationChange, onRefresh }: FileTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [isBorrowModalOpen, setIsBorrowModalOpen] = React.useState(false);
   const [borrowFiles, setBorrowFiles] = React.useState<FileWithBox[]>([]);
@@ -134,7 +134,7 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
     [onCreate, handleDeleteFile]
   )
 
-   
+
   const table = useReactTable({
     data: files,
     columns,
@@ -171,34 +171,35 @@ export function FileTable({ files, isLoading, canBorrow = false, onCreate, total
         onBorrow={canBorrow ? handleBorrow : undefined}
         density={density}
         onDensityChange={setDensity}
+        role={role}
       />
       <TableSurface
         toolbar={
           <div className="flex items-center justify-end gap-2">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm">
-                <Columns3 className="h-4 w-4" />
-                Cột hiển thị
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Tùy chỉnh bảng</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              {table
-                .getAllColumns()
-                .filter((column) => column.getCanHide())
-                .map((column) => (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                ))}
-            </DropdownMenuContent>
-          </DropdownMenu>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Columns3 className="h-4 w-4" />
+                  Cột hiển thị
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Tùy chỉnh bảng</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                {table
+                  .getAllColumns()
+                  .filter((column) => column.getCanHide())
+                  .map((column) => (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         }
       >

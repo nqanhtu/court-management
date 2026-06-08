@@ -18,12 +18,15 @@ import { queryKeys } from '@/src/lib/query-keys'
 import { AutocompleteInput } from '@/components/ui/autocomplete-input'
 import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { useRouter } from '@/src/lib/router'
 
 interface ManualFileFormProps {
     onSuccess: () => void
 }
 
 export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
+    const router = useRouter()
+    const submitActionRef = useRef<'save' | 'save_and_add_child'>('save')
     const [isLoading, setIsLoading] = useState(false)
     const [boxes, setBoxes] = useState<StorageBoxDto[]>([]);
     const { suggestions } = useAutocompleteSuggestions()
@@ -87,6 +90,9 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                 queryClient.invalidateQueries({ queryKey: queryKeys.files.all })
                 queryClient.invalidateQueries({ queryKey: queryKeys.files.stats })
                 queryClient.invalidateQueries({ queryKey: queryKeys.boxes.all })
+                
+                const fileId = result.file?.id
+
                 // Reset form
                 if (isSticky) {
                     setFormData(prev => ({
@@ -125,6 +131,9 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                     })
                 }
                 onSuccess()
+                if (submitActionRef.current === 'save_and_add_child' && fileId) {
+                    router.push(`/files/${fileId}`)
+                }
             } else {
                 toast.error('Tạo thất bại: ' + (result.error || 'Lỗi không xác định'))
             }
@@ -164,6 +173,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     const handleKeyDown = (e: React.KeyboardEvent<HTMLFormElement>) => {
         if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
             e.preventDefault()
+            submitActionRef.current = 'save'
             handleManualSubmit(e)
         }
     }
@@ -323,11 +333,24 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                 </Label>
             </div>
 
-            <DialogFooter className="border-t bg-background px-1 py-3">
+            <DialogFooter className="border-t bg-background px-1 py-3 flex items-center justify-end gap-2">
+                <Button
+                    type="submit"
+                    variant="outline"
+                    disabled={isLoading}
+                    onClick={() => { submitActionRef.current = 'save_and_add_child' }}
+                >
+                    {isLoading && submitActionRef.current === 'save_and_add_child' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Lưu và thêm hồ sơ con
+                </Button>
                 <Tooltip>
                     <TooltipTrigger asChild>
-                        <Button type="submit" disabled={isLoading}>
-                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        <Button
+                            type="submit"
+                            disabled={isLoading}
+                            onClick={() => { submitActionRef.current = 'save' }}
+                        >
+                            {isLoading && submitActionRef.current === 'save' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Lưu hồ sơ
                         </Button>
                     </TooltipTrigger>

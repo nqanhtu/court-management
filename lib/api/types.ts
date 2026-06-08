@@ -184,3 +184,9 @@ export type BackupScheduleDto = {
   lastStatus?: string | null
   lastMessage?: string | null
 }
+
+export type AutocompleteSuggestions = {
+  types: string[]
+  retentions: string[]
+  titles: string[]
+}

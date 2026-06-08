@@ -5,6 +5,7 @@ export const queryKeys = {
     list: (params?: string) => ['files', 'list', params || ''] as const,
     detail: (id: string) => ['files', 'detail', id] as const,
     stats: ['files', 'stats'] as const,
+    autocompleteSuggestions: ['files', 'autocomplete-suggestions'] as const,
   },
   borrow: {
     all: ['borrow'] as const,

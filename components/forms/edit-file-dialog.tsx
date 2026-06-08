@@ -86,7 +86,7 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
             setFormData({
                 code: file.code || '',
                 title: file.title || '',
-                type: file.type || 'Hình sự',
+                type: file.type || '',
                 year: file.year || new Date().getFullYear(),
                 retention: file.retention || '10 năm',
                 note: file.note || '',

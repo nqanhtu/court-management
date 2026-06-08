@@ -39,7 +39,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     const [formData, setFormData] = useState({
         code: '',
         title: '',
-        type: 'Hình sự',
+        type: '',
         year: new Date().getFullYear(),
         retention: '10 năm',
         note: '',
@@ -111,7 +111,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                     setFormData({
                         code: '',
                         title: '',
-                        type: 'Hình sự',
+                        type: '',
                         year: new Date().getFullYear(),
                         retention: '10 năm',
                         note: '',

@@ -2,7 +2,9 @@
 
 import { apiFetch } from '@/lib/api/client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { Checkbox } from '@/components/ui/checkbox'
+
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -25,6 +27,14 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     const [isLoading, setIsLoading] = useState(false)
     const [boxes, setBoxes] = useState<StorageBoxDto[]>([]);
     const { suggestions } = useAutocompleteSuggestions()
+    const codeInputRef = useRef<HTMLInputElement>(null)
+    const [isSticky, setIsSticky] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('sticky_file_fields') === 'true'
+        }
+        return false
+    })
+
 
     const [formData, setFormData] = useState({
         code: '',
@@ -78,21 +88,42 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                 queryClient.invalidateQueries({ queryKey: queryKeys.files.stats })
                 queryClient.invalidateQueries({ queryKey: queryKeys.boxes.all })
                 // Reset form
-                setFormData({
-                    code: '',
-                    title: '',
-                    type: 'Hình sự',
-                    year: new Date().getFullYear(),
-                    retention: '10 năm',
-                    note: '',
-                    judgmentNumber: '',
-                    judgmentDate: '',
-                    pageCount: 0,
-                    defendants: '',
-                    plaintiffs: '',
-                    civilDefendants: '',
-                    boxId: ''
-                })
+                if (isSticky) {
+                    setFormData(prev => ({
+                        code: '',
+                        title: '',
+                        type: prev.type,
+                        year: prev.year,
+                        retention: prev.retention,
+                        note: '',
+                        judgmentNumber: '',
+                        judgmentDate: '',
+                        pageCount: 0,
+                        defendants: '',
+                        plaintiffs: '',
+                        civilDefendants: '',
+                        boxId: prev.boxId
+                    }))
+                    setTimeout(() => {
+                        codeInputRef.current?.focus()
+                    }, 50)
+                } else {
+                    setFormData({
+                        code: '',
+                        title: '',
+                        type: 'Hình sự',
+                        year: new Date().getFullYear(),
+                        retention: '10 năm',
+                        note: '',
+                        judgmentNumber: '',
+                        judgmentDate: '',
+                        pageCount: 0,
+                        defendants: '',
+                        plaintiffs: '',
+                        civilDefendants: '',
+                        boxId: ''
+                    })
+                }
                 onSuccess()
             } else {
                 toast.error('Tạo thất bại: ' + (result.error || 'Lỗi không xác định'))
@@ -132,6 +163,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                 <div className="space-y-2">
                     <Label htmlFor="code" className="text-red-600 font-semibold">Mã hồ sơ *</Label>
                     <Input
+                        ref={codeInputRef}
                         id="code"
                         placeholder="VD: HS-001"
                         value={formData.code}
@@ -272,6 +304,20 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                 />
             </div>
 
+            </div>
+
+            <div className="flex items-center space-x-2 py-3 px-1 border-t mt-4">
+                <Checkbox
+                    id="sticky"
+                    checked={isSticky}
+                    onCheckedChange={(checked) => {
+                        setIsSticky(!!checked)
+                        localStorage.setItem('sticky_file_fields', String(checked))
+                    }}
+                />
+                <Label htmlFor="sticky" className="text-sm font-medium cursor-pointer text-muted-foreground">
+                    Nhập liên tục (Giữ lại Loại án, Năm, Bảo quản và Hộp số)
+                </Label>
             </div>
 
             <DialogFooter className="border-t bg-background px-1 py-3">

@@ -2,9 +2,15 @@ import * as React from "react"
 import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
-interface AutocompleteInputProps extends React.ComponentProps<"input"> {
-  suggestions: string[]
+export interface AutocompleteOption {
+  value: string
+  label: string
+}
+
+interface AutocompleteInputProps extends Omit<React.ComponentProps<"input">, "value" | "onChange"> {
+  suggestions: string[] | AutocompleteOption[]
   onValueChange: (val: string) => void
+  value?: string
 }
 
 export function AutocompleteInput({
@@ -12,34 +18,45 @@ export function AutocompleteInput({
   onValueChange,
   className,
   value,
-  onChange,
   ...props
 }: AutocompleteInputProps) {
   const [open, setOpen] = React.useState(false)
-  const [inputValue, setInputValue] = React.useState(String(value || ""))
   const [selectedIndex, setSelectedIndex] = React.useState(-1)
   const containerRef = React.useRef<HTMLDivElement>(null)
 
+  // Normalize suggestions to option object structure
+  const normalizedSuggestions = React.useMemo<AutocompleteOption[]>(() => {
+    return suggestions.map((item) => {
+      if (typeof item === "string") {
+        return { value: item, label: item }
+      }
+      return item
+    })
+  }, [suggestions])
+
+  // Local input text is the label of the currently selected option, or the typed string
+  const [inputValue, setInputValue] = React.useState("")
+
   React.useEffect(() => {
-    setInputValue(String(value || ""))
-  }, [value])
+    const match = normalizedSuggestions.find(o => o.value === value)
+    setInputValue(match ? match.label : String(value || ""))
+  }, [value, normalizedSuggestions])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value
     setInputValue(val)
-    onValueChange(val)
+    onValueChange(val) // Send raw typed text to parent
     setSelectedIndex(-1)
     setOpen(true)
-    if (onChange) onChange(e)
   }
 
   const filteredSuggestions = React.useMemo(() => {
     const cleanInput = inputValue.trim().toLowerCase()
-    if (!cleanInput) return suggestions
-    return suggestions.filter((item) =>
-      item.toLowerCase().includes(cleanInput)
+    if (!cleanInput) return normalizedSuggestions
+    return normalizedSuggestions.filter((item) =>
+      item.label.toLowerCase().includes(cleanInput)
     )
-  }, [suggestions, inputValue])
+  }, [normalizedSuggestions, inputValue])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (!open || filteredSuggestions.length === 0) return
@@ -53,9 +70,9 @@ export function AutocompleteInput({
     } else if (e.key === "Enter") {
       if (selectedIndex >= 0 && selectedIndex < filteredSuggestions.length) {
         e.preventDefault()
-        const selectedValue = filteredSuggestions[selectedIndex]
-        setInputValue(selectedValue)
-        onValueChange(selectedValue)
+        const selectedOption = filteredSuggestions[selectedIndex]
+        setInputValue(selectedOption.label)
+        onValueChange(selectedOption.value)
         setOpen(false)
       }
     } else if (e.key === "Escape") {
@@ -78,10 +95,14 @@ export function AutocompleteInput({
           <ul className="flex flex-col gap-0.5">
             {filteredSuggestions.map((item, index) => (
               <li
-                key={item}
+                key={item.value}
+                onMouseDown={(e) => {
+                  // Prevent input blur before click registers
+                  e.preventDefault()
+                }}
                 onClick={() => {
-                  setInputValue(item)
-                  onValueChange(item)
+                  setInputValue(item.label)
+                  onValueChange(item.value)
                   setOpen(false)
                 }}
                 className={cn(
@@ -89,7 +110,7 @@ export function AutocompleteInput({
                   index === selectedIndex && "bg-accent text-accent-foreground"
                 )}
               >
-                {item}
+                {item.label}
               </li>
             ))}
           </ul>
@@ -98,3 +119,4 @@ export function AutocompleteInput({
     </div>
   )
 }
+

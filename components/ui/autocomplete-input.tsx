@@ -76,6 +76,8 @@ export function AutocompleteInput({
         setOpen(false)
       }
     } else if (e.key === "Escape") {
+      e.preventDefault()
+      e.stopPropagation() // Prevent closing parent dialogs
       setOpen(false)
     }
   }

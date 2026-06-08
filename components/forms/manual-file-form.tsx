@@ -17,6 +17,7 @@ import { queryClient } from '@/src/lib/query-client'
 import { queryKeys } from '@/src/lib/query-keys'
 import { AutocompleteInput } from '@/components/ui/autocomplete-input'
 import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 interface ManualFileFormProps {
     onSuccess: () => void
@@ -323,10 +324,17 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
             </div>
 
             <DialogFooter className="border-t bg-background px-1 py-3">
-                <Button type="submit" disabled={isLoading}>
-                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                    Lưu hồ sơ
-                </Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button type="submit" disabled={isLoading}>
+                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            Lưu hồ sơ
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        Lưu hồ sơ (Ctrl + Enter)
+                    </TooltipContent>
+                </Tooltip>
             </DialogFooter>
         </form>
     )

@@ -23,6 +23,7 @@ import { queryClient } from '@/src/lib/query-client'
 import { queryKeys } from '@/src/lib/query-keys'
 import { AutocompleteInput } from '@/components/ui/autocomplete-input'
 import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 
 interface FileData {
@@ -343,10 +344,17 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
                         <Button type="button" variant="outline" onClick={() => setOpen(false)}>
                             Hủy
                         </Button>
-                        <Button type="submit" disabled={isLoading}>
-                            {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Lưu thay đổi
-                        </Button>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button type="submit" disabled={isLoading}>
+                                    {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                    Lưu thay đổi
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                                Lưu thay đổi (Ctrl + Enter)
+                            </TooltipContent>
+                        </Tooltip>
                     </DialogFooter>
                 </form>
             </DialogContent>

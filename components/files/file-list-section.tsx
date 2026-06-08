@@ -23,6 +23,7 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
     const line = searchParams.get('line') || undefined
     const shelf = searchParams.get('shelf') || undefined
     const slot = searchParams.get('slot') || undefined
+    const createdById = searchParams.get('createdById') || undefined
     const page = parseInt(searchParams.get('page') || '1')
     const limit = parseInt(searchParams.get('limit') || '10')
 
@@ -36,6 +37,7 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
         line,
         shelf,
         slot,
+        createdById,
         limit,
         offset: (page - 1) * limit
     })

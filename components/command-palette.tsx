@@ -86,7 +86,7 @@ export function CommandPalette() {
       } else {
         toast.error('Sao lưu thất bại', { id: toastId })
       }
-    } catch (error) {
+    } catch {
       toast.error('Có lỗi xảy ra khi sao lưu', { id: toastId })
     }
   }

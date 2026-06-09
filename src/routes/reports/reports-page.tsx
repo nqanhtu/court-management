@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { ReportDashboard } from "@/components/reports/report-dashboard";
 import { apiFetch } from "@/lib/api/client";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/common/page-header";
 import { PrintActionButton } from "@/components/common/print-action-button";
 
 export default function Reports() {
@@ -36,23 +35,17 @@ export default function Reports() {
 
   return (
     <div className="flex flex-col h-full space-y-4 w-full">
-      <PageHeader
-        title="Báo cáo thống kê"
-        description="Tổng hợp tình hình mượn trả hồ sơ."
-        actions={(
-          <>
-          <PrintActionButton onClick={() => window.print()} />
-          <Button variant="outline" onClick={() => exportReport("csv")} disabled={isExporting}>
-            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            CSV
-          </Button>
-          <Button variant="outline" onClick={() => exportReport("xlsx")} disabled={isExporting}>
-            {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-            Excel
-          </Button>
-          </>
-        )}
-      />
+      <div className="flex justify-end items-center gap-2">
+        <PrintActionButton onClick={() => window.print()} />
+        <Button variant="outline" onClick={() => exportReport("csv")} disabled={isExporting}>
+          {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          CSV
+        </Button>
+        <Button variant="outline" onClick={() => exportReport("xlsx")} disabled={isExporting}>
+          {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+          Excel
+        </Button>
+      </div>
 
       <ReportDashboard />
     </div>

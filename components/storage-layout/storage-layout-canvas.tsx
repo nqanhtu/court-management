@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type Konva from "konva";
+import Konva from "konva";
 import { select } from "d3-selection";
 import { zoom, zoomIdentity, type D3ZoomEvent, type ZoomBehavior } from "d3-zoom";
 import {
@@ -20,23 +20,51 @@ import {
   Save,
   Search,
   Trash2,
+  Redo2,
+  Undo2,
   Upload,
   Warehouse,
+  Maximize2,
   ZoomIn,
   ZoomOut,
 } from "lucide-react";
-import { QRCodeCanvas } from "qrcode.react";
 import { Circle, Group, Layer, Line, Rect, Stage, Text, Transformer } from "react-konva";
 import { toast } from "sonner";
+import { useDebounce } from "use-debounce";
 
 import type { StorageBoxDto } from "@/lib/api/types";
-import { useSaveStorageLayout } from "@/lib/hooks/use-storage-layout";
+import { useSaveStorageLayout, useStorageLayoutOccupancy } from "@/lib/hooks/use-storage-layout";
+import { useStorageBoxes } from "@/lib/hooks/use-storage-boxes";
 import {
-  buildStorageOccupancyMap,
-  filterBoxesForStorageLayoutSearch,
+  clampShelfToWarehouse,
+  clampWarehouse,
+  findSelectedObject,
+  findSelectedWarehouse,
+  getLayoutMismatch,
+  getOverlappingShelfIds,
+  snapRect,
+  updateWarehouse,
+  STORAGE_LAYOUT_GRID_SIZE,
+  STORAGE_LAYOUT_LOGICAL_SIZE,
+  STORAGE_LAYOUT_MIN_SHELF_SIZE,
+  STORAGE_LAYOUT_MIN_WAREHOUSE_SIZE,
+} from "@/lib/storage-layout/geometry";
+import {
+  createStorageLayoutHistory,
+  pushStorageLayoutHistory,
+  redoStorageLayoutHistory,
+  replaceStorageLayoutHistory,
+  resetStorageLayoutHistory,
+  undoStorageLayoutHistory,
+} from "@/lib/storage-layout/history";
+import {
+  buildStorageOccupancyMapFromResponse,
+  getPhysicalWarehousesFromOccupancy,
   getStorageLayoutSignature,
+  getStorageShelfParts,
   getStorageShelfId,
-  mergeStorageLayout,
+  mergeStorageLayoutFromPhysical,
+  validateStorageLayoutData,
 } from "@/lib/storage-layout/layout-mapper";
 import type {
   StorageLayoutData,
@@ -53,19 +81,18 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StorageLayoutLabelPreviewModal } from "@/components/storage-layout/storage-layout-label-preview-modal";
+import { StorageLayoutDistributionPanel, StorageLayoutMismatchPanel } from "@/components/storage-layout/storage-layout-summary-panels";
 
 const LOGICAL_WIDTH = 1000;
 const LOGICAL_HEIGHT = 640;
-const MIN_WAREHOUSE_SIZE = { w: 180, h: 130 };
-const MIN_SHELF_SIZE = { w: 56, h: 28 };
 const ENTRANCE_GATE = { x: 500, y: 610 };
 
 type StorageLayoutCanvasProps = {
-  boxes: StorageBoxDto[];
-  highlightedBoxes: StorageBoxDto[];
   savedLayout: StorageLayoutData | null;
   isLoadingLayout: boolean;
-  isHighlightActive: boolean;
+  tableSearch: string;
+  yearFilter: string;
 };
 
 type HoveredShelf = {
@@ -85,8 +112,6 @@ type CanvasBoardProps = {
   isHighlightActive: boolean;
   is25DMode: boolean;
   isPathfindingActive: boolean;
-  pulseScale: number;
-  lineDashOffset: number;
   selectedElement: StorageLayoutSelection | null;
   transform: StorageLayoutTransform;
   onTransformChange: (transform: StorageLayoutTransform) => void;
@@ -186,18 +211,19 @@ function getRoutePoints(shelf: StorageLayoutShelf, is25DMode: boolean) {
   ];
 }
 
-function updateWarehouse(layout: StorageLayoutData, warehouseId: string, nextWarehouse: StorageLayoutWarehouse) {
-  return {
-    ...layout,
-    warehouses: layout.warehouses.map((warehouse) => (warehouse.id === warehouseId ? nextWarehouse : warehouse)),
-  };
-}
-
-function getShelfColor(count: number, isHeatmapMode: boolean, isSelected: boolean, isHighlighted: boolean, isHovered: boolean) {
+function getShelfColor(count: number, capacity: number | null | undefined, isHeatmapMode: boolean, isSelected: boolean, isHighlighted: boolean, isHovered: boolean, hasOverlap: boolean) {
   if (isSelected) return { fill: "#dbeafe", stroke: "#2563eb", text: "#1e3a8a" };
   if (isHighlighted) return { fill: "#ffedd5", stroke: "#f97316", text: "#9a3412" };
+  if (hasOverlap) return { fill: "#fff7ed", stroke: "#ea580c", text: "#9a3412" };
   if (isHovered) return { fill: "#ecfdf5", stroke: "#10b981", text: "#047857" };
   if (!isHeatmapMode) return { fill: "#ffffff", stroke: "#64748b", text: "#334155" };
+  if (capacity && capacity > 0) {
+    const usage = count / capacity;
+    if (usage === 0) return { fill: "#f8fafc", stroke: "#cbd5e1", text: "#64748b" };
+    if (usage <= 0.5) return { fill: "#dcfce7", stroke: "#16a34a", text: "#166534" };
+    if (usage <= 0.85) return { fill: "#fef3c7", stroke: "#d97706", text: "#92400e" };
+    return { fill: "#fee2e2", stroke: "#dc2626", text: "#991b1b" };
+  }
   if (count === 0) return { fill: "#f8fafc", stroke: "#cbd5e1", text: "#64748b" };
   if (count <= 2) return { fill: "#dcfce7", stroke: "#16a34a", text: "#166534" };
   if (count <= 4) return { fill: "#fef3c7", stroke: "#d97706", text: "#92400e" };
@@ -234,25 +260,6 @@ function createWarehouse(layout: StorageLayoutData): StorageLayoutWarehouse {
   };
 }
 
-function isStorageLayoutData(value: unknown): value is StorageLayoutData {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
-  const record = value as Record<string, unknown>;
-  if (record.version !== 1 || !Array.isArray(record.warehouses)) return false;
-  return record.warehouses.every((warehouse) => {
-    if (!warehouse || typeof warehouse !== "object" || Array.isArray(warehouse)) return false;
-    const wh = warehouse as Record<string, unknown>;
-    return (
-      typeof wh.id === "string" &&
-      typeof wh.name === "string" &&
-      typeof wh.x === "number" &&
-      typeof wh.y === "number" &&
-      typeof wh.w === "number" &&
-      typeof wh.h === "number" &&
-      Array.isArray(wh.shelves)
-    );
-  });
-}
-
 function getBoxQrUrl(box: StorageBoxDto) {
   if (typeof window === "undefined") return `/qr/boxes/${box.id}`;
   return `${window.location.origin}/qr/boxes/${box.id}`;
@@ -267,8 +274,6 @@ function CanvasBoard({
   isHighlightActive,
   is25DMode,
   isPathfindingActive,
-  pulseScale,
-  lineDashOffset,
   selectedElement,
   transform,
   onTransformChange,
@@ -280,6 +285,10 @@ function CanvasBoard({
   const stageRef = useRef<Konva.Stage | null>(null);
   const transformerRef = useRef<Konva.Transformer | null>(null);
   const shapeRefs = useRef<Map<string, Konva.Node>>(new Map());
+  const pulseRefs = useRef<Map<string, { node: Konva.Rect; x: number; y: number; w: number; h: number }>>(new Map());
+  const routeLineRef = useRef<Konva.Line | null>(null);
+  const routePulseRef = useRef<Konva.Circle | null>(null);
+  const entrancePulseRef = useRef<Konva.Circle | null>(null);
   const zoomBehaviorRef = useRef<ZoomBehavior<HTMLDivElement, unknown> | null>(null);
   const transformRef = useRef(transform);
   const [size, setSize] = useState({ width: 1, height: 1 });
@@ -312,6 +321,37 @@ function CanvasBoard({
   }, [isHighlightActive, layout.warehouses, occupancyMap, selectedElement]);
 
   const routePoints = targetShelf && isPathfindingActive ? getRoutePoints(targetShelf, is25DMode) : [];
+
+  useEffect(() => {
+    const layers = stageRef.current?.getLayers() || [];
+    const animation = new Konva.Animation((frame) => {
+      const time = frame?.time || 0;
+      const pulseScale = 1 + ((time / 16) % 60) / 60;
+      const opacity = Math.max(0, 1 - (pulseScale - 1));
+      pulseRefs.current.forEach((entry) => {
+        entry.node.setAttrs({
+          x: entry.x - (pulseScale - 1) * 10,
+          y: entry.y - (pulseScale - 1) * 10,
+          width: entry.w + (pulseScale - 1) * 20,
+          height: entry.h + (pulseScale - 1) * 20,
+          opacity,
+        });
+      });
+      routeLineRef.current?.dashOffset(-(time / 20) % 24);
+      routePulseRef.current?.setAttrs({
+        radius: 10 * pulseScale,
+        opacity: Math.max(0, 1 - (pulseScale - 1) / 1.4),
+      });
+      entrancePulseRef.current?.setAttrs({
+        radius: 9 * pulseScale,
+        opacity: Math.max(0, 1 - (pulseScale - 1) / 1.4),
+      });
+    }, layers);
+    animation.start();
+    return () => {
+      animation.stop();
+    };
+  }, []);
 
   useEffect(() => {
     transformRef.current = transform;
@@ -389,8 +429,10 @@ function CanvasBoard({
   }, [is25DMode, isEditMode, layout, selectedKey]);
 
   const handleWarehouseDragEnd = (warehouse: StorageLayoutWarehouse, event: Konva.KonvaEventObject<DragEvent>) => {
-    const nextX = Math.round(Math.max(0, Math.min(event.target.x(), LOGICAL_WIDTH - warehouse.w)));
-    const nextY = Math.round(Math.max(0, event.target.y()));
+    const snapped = snapRect({ ...warehouse, x: event.target.x(), y: event.target.y() }, STORAGE_LAYOUT_GRID_SIZE);
+    const clamped = clampWarehouse(snapped);
+    const nextX = clamped.x;
+    const nextY = clamped.y;
     const deltaX = nextX - warehouse.x;
     const deltaY = nextY - warehouse.y;
     onChangeLayout(updateWarehouse(layout, warehouse.id, {
@@ -411,13 +453,14 @@ function CanvasBoard({
     const scaleY = node.scaleY();
     node.scaleX(1);
     node.scaleY(1);
-    onChangeLayout(updateWarehouse(layout, warehouse.id, {
+    const resized = clampWarehouse(snapRect({
       ...warehouse,
       x: Math.round(node.x()),
       y: Math.round(node.y()),
-      w: Math.max(MIN_WAREHOUSE_SIZE.w, Math.round(warehouse.w * scaleX)),
-      h: Math.max(MIN_WAREHOUSE_SIZE.h, Math.round(warehouse.h * scaleY)),
-    }));
+      w: Math.max(STORAGE_LAYOUT_MIN_WAREHOUSE_SIZE.w, Math.round(warehouse.w * scaleX)),
+      h: Math.max(STORAGE_LAYOUT_MIN_WAREHOUSE_SIZE.h, Math.round(warehouse.h * scaleY)),
+    }, STORAGE_LAYOUT_GRID_SIZE));
+    onChangeLayout(updateWarehouse(layout, warehouse.id, resized));
   };
 
   const handleShelfDragEnd = (warehouse: StorageLayoutWarehouse, shelfId: string, event: Konva.KonvaEventObject<DragEvent>) => {
@@ -425,11 +468,7 @@ function CanvasBoard({
       ...warehouse,
       shelves: warehouse.shelves.map((shelf) => {
         if (shelf.id !== shelfId) return shelf;
-        return {
-          ...shelf,
-          x: Math.round(Math.max(warehouse.x + 12, Math.min(event.target.x(), warehouse.x + warehouse.w - shelf.w - 12))),
-          y: Math.round(Math.max(warehouse.y + 38, Math.min(event.target.y(), warehouse.y + warehouse.h - shelf.h - 12))),
-        };
+        return clampShelfToWarehouse(snapRect({ ...shelf, x: event.target.x(), y: event.target.y() }, STORAGE_LAYOUT_GRID_SIZE), warehouse);
       }),
     }));
   };
@@ -444,15 +483,13 @@ function CanvasBoard({
       ...warehouse,
       shelves: warehouse.shelves.map((shelf) => {
         if (shelf.id !== shelfId) return shelf;
-        const nextX = Math.max(warehouse.x + 12, Math.min(node.x(), warehouse.x + warehouse.w - MIN_SHELF_SIZE.w - 12));
-        const nextY = Math.max(warehouse.y + 38, Math.min(node.y(), warehouse.y + warehouse.h - MIN_SHELF_SIZE.h - 12));
-        return {
+        return clampShelfToWarehouse(snapRect({
           ...shelf,
-          x: Math.round(nextX),
-          y: Math.round(nextY),
-          w: Math.max(MIN_SHELF_SIZE.w, Math.min(Math.round(shelf.w * scaleX), warehouse.x + warehouse.w - nextX - 12)),
-          h: Math.max(MIN_SHELF_SIZE.h, Math.min(Math.round(shelf.h * scaleY), warehouse.y + warehouse.h - nextY - 12)),
-        };
+          x: node.x(),
+          y: node.y(),
+          w: Math.max(STORAGE_LAYOUT_MIN_SHELF_SIZE.w, Math.round(shelf.w * scaleX)),
+          h: Math.max(STORAGE_LAYOUT_MIN_SHELF_SIZE.h, Math.round(shelf.h * scaleY)),
+        }, STORAGE_LAYOUT_GRID_SIZE), warehouse);
       }),
     }));
   };
@@ -492,6 +529,7 @@ function CanvasBoard({
             const warehousePoints = getWarehousePolygon(warehouse, is25DMode, wallHeight);
             const warehouseBasePoints = getWarehousePolygon(warehouse, is25DMode, 0);
             const warehouseCenter = projectIso({ x: warehouse.x + warehouse.w / 2, y: warehouse.y + warehouse.h / 2, z: wallHeight }, is25DMode);
+            const overlappingShelfIds = getOverlappingShelfIds(warehouse);
 
             return (
               <Group key={warehouse.id}>
@@ -595,7 +633,8 @@ function CanvasBoard({
                   const shelfCenter = projectIso({ x: shelf.x + shelf.w / 2, y: shelf.y + shelf.h / 2, z: wallHeight + shelfHeight }, is25DMode);
                   const shelfKey = `shelf:${warehouse.id}:${shelf.id}`;
                   const isShelfHovered = hoveredShelfKey === shelfKey;
-                  const color = getShelfColor(count, isHeatmapMode, isShelfSelected, isHighlighted, isShelfHovered);
+                  const hasOverlap = overlappingShelfIds.has(shelf.id);
+                  const color = getShelfColor(count, shelf.capacity || warehouse.capacity, isHeatmapMode, isShelfSelected, isHighlighted, isShelfHovered, hasOverlap);
                   return (
                     <Group key={shelf.id}>
                       {is25DMode && <PrismFaces basePoints={shelfBasePoints} height={shelfHeight} fill="rgba(100, 116, 139, 0.38)" stroke="#475569" />}
@@ -683,13 +722,26 @@ function CanvasBoard({
                       })}
                       {isHighlighted && (
                         <Rect
-                          x={shelfCenter.x - shelf.w / 2 - (pulseScale - 1) * 10}
-                          y={shelfCenter.y - shelf.h / 2 - (pulseScale - 1) * 10}
-                          width={shelf.w + (pulseScale - 1) * 20}
-                          height={shelf.h + (pulseScale - 1) * 20}
+                          ref={(node) => {
+                            if (node) {
+                              pulseRefs.current.set(shelfKey, {
+                                node,
+                                x: shelfCenter.x - shelf.w / 2,
+                                y: shelfCenter.y - shelf.h / 2,
+                                w: shelf.w,
+                                h: shelf.h,
+                              });
+                            } else {
+                              pulseRefs.current.delete(shelfKey);
+                            }
+                          }}
+                          x={shelfCenter.x - shelf.w / 2}
+                          y={shelfCenter.y - shelf.h / 2}
+                          width={shelf.w}
+                          height={shelf.h}
                           stroke="#f97316"
                           strokeWidth={1.5}
-                          opacity={1 - (pulseScale - 1)}
+                          opacity={1}
                           listening={false}
                         />
                       )}
@@ -728,25 +780,26 @@ function CanvasBoard({
           {routePoints.length > 0 && (
             <>
               <Line
+                ref={routeLineRef}
                 points={flattenPoints(routePoints)}
                 stroke="#6366f1"
                 strokeWidth={4}
                 lineCap="round"
                 lineJoin="round"
                 dash={[6, 6]}
-                dashOffset={lineDashOffset}
                 shadowColor="#6366f1"
                 shadowBlur={8}
                 shadowOpacity={0.25}
               />
               <Circle x={routePoints[routePoints.length - 1].x} y={routePoints[routePoints.length - 1].y} radius={4} fill="#6366f1" />
               <Circle
+                ref={routePulseRef}
                 x={routePoints[routePoints.length - 1].x}
                 y={routePoints[routePoints.length - 1].y}
-                radius={10 * pulseScale}
+                radius={10}
                 stroke="rgba(99, 102, 241, 0.4)"
                 strokeWidth={2}
-                opacity={1 - (pulseScale - 1) / 1.4}
+                opacity={1}
               />
             </>
           )}
@@ -755,7 +808,7 @@ function CanvasBoard({
             return (
               <Group>
                 <Circle x={entrance.x} y={entrance.y} radius={6} fill="#334155" stroke="#ffffff" strokeWidth={1} />
-                <Circle x={entrance.x} y={entrance.y} radius={9 * pulseScale} stroke="rgba(51, 65, 85, 0.22)" strokeWidth={2} opacity={1 - (pulseScale - 1) / 1.4} />
+                <Circle ref={entrancePulseRef} x={entrance.x} y={entrance.y} radius={9} stroke="rgba(51, 65, 85, 0.22)" strokeWidth={2} opacity={1} />
                 <Text x={entrance.x - 45} y={entrance.y - 22} width={90} align="center" text="LỐI VÀO KHO" fontSize={8} fontStyle="bold" fill="#475569" />
               </Group>
             );
@@ -768,7 +821,7 @@ function CanvasBoard({
             flipEnabled={false}
             enabledAnchors={["bottom-right", "middle-right", "bottom-center"]}
             boundBoxFunc={(oldBox, newBox) => {
-              if (newBox.width < MIN_SHELF_SIZE.w || newBox.height < MIN_SHELF_SIZE.h) return oldBox;
+              if (newBox.width < STORAGE_LAYOUT_MIN_SHELF_SIZE.w || newBox.height < STORAGE_LAYOUT_MIN_SHELF_SIZE.h) return oldBox;
               return newBox;
             }}
           />
@@ -778,26 +831,18 @@ function CanvasBoard({
   );
 }
 
-function findSelectedObject(layout: StorageLayoutData, selectedElement: StorageLayoutSelection | null) {
-  if (!selectedElement) return null;
-  if (selectedElement.type === "warehouse") {
-    return layout.warehouses.find((warehouse) => warehouse.id === selectedElement.id) || null;
-  }
-  return layout.warehouses
-    .find((warehouse) => warehouse.id === selectedElement.warehouseId)
-    ?.shelves.find((shelf) => shelf.id === selectedElement.id) || null;
-}
-
 export function StorageLayoutCanvas({
-  boxes,
-  highlightedBoxes,
   savedLayout,
   isLoadingLayout,
-  isHighlightActive,
+  tableSearch,
+  yearFilter,
 }: StorageLayoutCanvasProps) {
   const saveLayout = useSaveStorageLayout();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
-  const [layout, setLayout] = useState<StorageLayoutData>({ version: 1, warehouses: [] });
+  const emptyLayout = useMemo<StorageLayoutData>(() => ({ version: 1, warehouses: [] }), []);
+  const [history, setHistory] = useState(() => createStorageLayoutHistory(emptyLayout));
+  const layout = history.present;
+  const [baselineSignature, setBaselineSignature] = useState(() => getStorageLayoutSignature(emptyLayout));
   const [selectedElement, setSelectedElement] = useState<StorageLayoutSelection | null>(null);
   const [hoveredShelf, setHoveredShelf] = useState<HoveredShelf | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -805,9 +850,6 @@ export function StorageLayoutCanvas({
   const [isHeatmapMode, setIsHeatmapMode] = useState(true);
   const [is25DMode, setIs25DMode] = useState(false);
   const [isPathfindingActive, setIsPathfindingActive] = useState(true);
-  const [isDirty, setIsDirty] = useState(false);
-  const [pulseScale, setPulseScale] = useState(1);
-  const [lineDashOffset, setLineDashOffset] = useState(0);
   const [transform, setTransform] = useState<StorageLayoutTransform>({ x: 0, y: 0, k: 1 });
   const [canvasSearch, setCanvasSearch] = useState<StorageLayoutSearch>({
     code: "",
@@ -815,67 +857,106 @@ export function StorageLayoutCanvas({
     caseType: "",
     documentNumber: "",
   });
+  const [debouncedCanvasSearch] = useDebounce(canvasSearch, 250);
   const [labelPreviewBoxes, setLabelPreviewBoxes] = useState<StorageBoxDto[]>([]);
 
-  const mergedLayout = useMemo(() => mergeStorageLayout(boxes, savedLayout), [boxes, savedLayout]);
-  const canvasSearchResults = useMemo(() => filterBoxesForStorageLayoutSearch(boxes, canvasSearch), [boxes, canvasSearch]);
-  const effectiveHighlightedBoxes = canvasSearchResults.isActive ? canvasSearchResults.boxes : highlightedBoxes;
-  const effectiveHighlightActive = canvasSearchResults.isActive || isHighlightActive;
-  const occupancyMap = useMemo(
-    () => buildStorageOccupancyMap(boxes, effectiveHighlightedBoxes),
-    [boxes, effectiveHighlightedBoxes]
-  );
+  const { occupancy, isLoading: isLoadingOccupancy } = useStorageLayoutOccupancy({
+    search: tableSearch,
+    year: yearFilter,
+    ...debouncedCanvasSearch,
+  });
+  const physicalGroups = useMemo(() => getPhysicalWarehousesFromOccupancy(occupancy), [occupancy]);
+  const mergedLayout = useMemo(() => mergeStorageLayoutFromPhysical(physicalGroups, savedLayout), [physicalGroups, savedLayout]);
+  const isDirty = getStorageLayoutSignature(layout) !== baselineSignature;
+  const hasCanvasSearch = Boolean(debouncedCanvasSearch.code || debouncedCanvasSearch.fond || debouncedCanvasSearch.caseType || debouncedCanvasSearch.documentNumber);
+  const effectiveHighlightActive = Boolean(tableSearch || yearFilter || hasCanvasSearch);
+  const occupancyMap = useMemo(() => buildStorageOccupancyMapFromResponse(occupancy), [occupancy]);
   const selectedObject = useMemo(() => findSelectedObject(layout, selectedElement), [layout, selectedElement]);
-  const selectedWarehouse = selectedElement?.type === "warehouse"
-    ? layout.warehouses.find((warehouse) => warehouse.id === selectedElement.id) || null
-    : selectedElement?.type === "shelf"
-      ? layout.warehouses.find((warehouse) => warehouse.id === selectedElement.warehouseId) || null
-      : null;
-  const caseTypes = useMemo(() => {
-    const values = new Set(boxes.map((box) => box.caseType).filter((value): value is string => Boolean(value)));
-    return Array.from(values).sort((a, b) => a.localeCompare(b, "vi"));
-  }, [boxes]);
-  const boxCount = boxes.length;
+  const selectedWarehouse = useMemo(() => findSelectedWarehouse(layout, selectedElement), [layout, selectedElement]);
+  const selectedShelfParts = selectedElement?.type === "shelf" ? getStorageShelfParts(selectedElement.id) : null;
+  const { boxes: selectedShelfFullBoxes, isLoading: isLoadingSelectedShelfBoxes } = useStorageBoxes({
+    warehouse: selectedElement?.type === "shelf" ? selectedElement.warehouseId : undefined,
+    line: selectedShelfParts?.row,
+    shelf: selectedShelfParts?.name,
+  }, selectedElement?.type === "shelf");
+  const caseTypes = occupancy?.caseTypes || [];
+  const boxCount = occupancy?.totalBoxes || 0;
   const shelfCount = layout.warehouses.reduce((sum, warehouse) => sum + warehouse.shelves.length, 0);
-  const selectedShelfBoxes =
+  const selectedShelfPreviewBoxes =
     selectedElement?.type === "shelf"
       ? occupancyMap.get(getShelfMapKey(selectedElement.warehouseId, selectedElement.id))?.boxes || []
       : [];
+  const mismatch = useMemo(() => getLayoutMismatch(layout, physicalGroups), [layout, physicalGroups]);
+  const searchResultBoxes = useMemo(() => (
+    (occupancy?.warehouses || []).flatMap((warehouse) =>
+      warehouse.shelves.flatMap((shelf) => shelf.previewBoxes)
+    )
+  ), [occupancy]);
+  const hasUndo = history.past.length > 0;
+  const hasRedo = history.future.length > 0;
 
   useEffect(() => {
-    setLayout(mergedLayout);
-    setSelectedElement(null);
-    setIsDirty(false);
-  }, [mergedLayout]);
+    if (!isDirty) {
+      setHistory(resetStorageLayoutHistory(mergedLayout));
+      setBaselineSignature(getStorageLayoutSignature(mergedLayout));
+      setSelectedElement(null);
+      return;
+    }
+    setHistory((current) => replaceStorageLayoutHistory(current, mergeStorageLayoutFromPhysical(physicalGroups, current.present)));
+  }, [isDirty, mergedLayout, physicalGroups]);
 
   useEffect(() => {
-    let animationFrame = 0;
-    const animate = () => {
-      setPulseScale((current) => {
-        const next = current + 0.04;
-        return next > 2 ? 1 : next;
-      });
-      setLineDashOffset((current) => (current - 0.75) % 24);
-      animationFrame = window.requestAnimationFrame(animate);
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!isDirty) return;
+      event.preventDefault();
+      event.returnValue = "";
     };
-    animationFrame = window.requestAnimationFrame(animate);
-    return () => window.cancelAnimationFrame(animationFrame);
-  }, []);
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [isDirty]);
 
   const handleChangeLayout = useCallback((nextLayout: StorageLayoutData) => {
-    setLayout(nextLayout);
-    setIsDirty(getStorageLayoutSignature(nextLayout) !== getStorageLayoutSignature(mergedLayout));
-  }, [mergedLayout]);
+    setHistory((current) => pushStorageLayoutHistory(current, nextLayout));
+  }, []);
 
   const handleSave = async () => {
     try {
       const saved = await saveLayout.mutateAsync(layout);
-      setLayout(saved);
-      setIsDirty(false);
+      setHistory(resetStorageLayoutHistory(saved));
+      setBaselineSignature(getStorageLayoutSignature(saved));
       toast.success("Đã lưu sơ đồ kho");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Không lưu được sơ đồ kho");
     }
+  };
+
+  const handleUndo = useCallback(() => {
+    setHistory((current) => undoStorageLayoutHistory(current));
+  }, []);
+
+  const handleRedo = useCallback(() => {
+    setHistory((current) => redoStorageLayoutHistory(current));
+  }, []);
+
+  const handleResetLayout = () => {
+    if (!window.confirm("Tạo lại sơ đồ từ dữ liệu vị trí hiện có? Các chỉnh sửa chưa lưu sẽ bị thay thế.")) return;
+    setHistory(pushStorageLayoutHistory(history, mergedLayout));
+    setSelectedElement(null);
+  };
+
+  const handleFitLayout = () => {
+    setTransform({ x: 0, y: 0, k: 1 });
+  };
+
+  const handleFitSelected = () => {
+    if (!selectedObject) return;
+    const centerX = selectedObject.x + selectedObject.w / 2;
+    const centerY = selectedObject.y + selectedObject.h / 2;
+    setTransform({
+      x: STORAGE_LAYOUT_LOGICAL_SIZE.width / 2 - centerX,
+      y: STORAGE_LAYOUT_LOGICAL_SIZE.height / 2 - centerY,
+      k: 1.45,
+    });
   };
 
   const handleAddWarehouse = () => {
@@ -900,8 +981,9 @@ export function StorageLayoutCanvas({
     setIsEditMode(true);
   };
 
-  const handleDeleteSelected = () => {
+  const handleDeleteSelected = useCallback(() => {
     if (!selectedElement) return;
+    if (!window.confirm(selectedElement.type === "warehouse" ? "Xóa kho đang chọn khỏi sơ đồ?" : "Xóa kệ đang chọn khỏi sơ đồ?")) return;
     if (selectedElement.type === "warehouse") {
       handleChangeLayout({ ...layout, warehouses: layout.warehouses.filter((warehouse) => warehouse.id !== selectedElement.id) });
     } else {
@@ -915,7 +997,62 @@ export function StorageLayoutCanvas({
       });
     }
     setSelectedElement(null);
-  };
+  }, [handleChangeLayout, layout, selectedElement]);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const target = event.target;
+      if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement || target instanceof HTMLSelectElement) return;
+      const isMod = event.metaKey || event.ctrlKey;
+      if (isMod && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        setHistory((current) => (event.shiftKey ? redoStorageLayoutHistory(current) : undoStorageLayoutHistory(current)));
+        return;
+      }
+      if (!selectedElement) return;
+      if (event.key === "Escape") {
+        setSelectedElement(null);
+        return;
+      }
+      if (event.key === "Delete" || event.key === "Backspace") {
+        event.preventDefault();
+        handleDeleteSelected();
+        return;
+      }
+      const delta = event.shiftKey ? STORAGE_LAYOUT_GRID_SIZE : 5;
+      const direction = {
+        ArrowLeft: [-delta, 0],
+        ArrowRight: [delta, 0],
+        ArrowUp: [0, -delta],
+        ArrowDown: [0, delta],
+      }[event.key] as [number, number] | undefined;
+      if (!direction) return;
+      event.preventDefault();
+      const [dx, dy] = direction;
+      if (selectedElement.type === "warehouse") {
+        const warehouse = layout.warehouses.find((item) => item.id === selectedElement.id);
+        if (!warehouse) return;
+        const nextWarehouse = clampWarehouse({
+          ...warehouse,
+          x: warehouse.x + dx,
+          y: warehouse.y + dy,
+          shelves: warehouse.shelves.map((shelf) => ({ ...shelf, x: shelf.x + dx, y: shelf.y + dy })),
+        });
+        handleChangeLayout(updateWarehouse(layout, warehouse.id, nextWarehouse));
+        return;
+      }
+      const warehouse = layout.warehouses.find((item) => item.id === selectedElement.warehouseId);
+      if (!warehouse) return;
+      handleChangeLayout(updateWarehouse(layout, warehouse.id, {
+        ...warehouse,
+        shelves: warehouse.shelves.map((shelf) => (
+          shelf.id === selectedElement.id ? clampShelfToWarehouse({ ...shelf, x: shelf.x + dx, y: shelf.y + dy }, warehouse) : shelf
+        )),
+      }));
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handleChangeLayout, handleDeleteSelected, layout, selectedElement]);
 
   const handleUpdateSelected = (field: string, value: string | number | null) => {
     if (!selectedElement) return;
@@ -954,11 +1091,13 @@ export function StorageLayoutCanvas({
     reader.onload = () => {
       try {
         const parsed: unknown = JSON.parse(String(reader.result || ""));
-        if (!isStorageLayoutData(parsed)) {
-          toast.error("Tệp sơ đồ không đúng định dạng");
+        const validation = validateStorageLayoutData(parsed);
+        if (!validation.ok) {
+          toast.error(validation.error);
           return;
         }
-        handleChangeLayout(mergeStorageLayout(boxes, parsed));
+        if (!window.confirm("Nhập tệp JSON sẽ thay thế sơ đồ hiện tại. Tiếp tục?")) return;
+        handleChangeLayout(mergeStorageLayoutFromPhysical(physicalGroups, validation.data));
         toast.success("Đã nhập sơ đồ kho");
       } catch {
         toast.error("Không đọc được tệp JSON");
@@ -968,11 +1107,11 @@ export function StorageLayoutCanvas({
   };
 
   const handlePrintSelectedShelf = () => {
-    if (selectedShelfBoxes.length === 0) {
+    if (selectedShelfFullBoxes.length === 0) {
       toast.warning("Kệ đang chọn chưa có hộp để in nhãn");
       return;
     }
-    setLabelPreviewBoxes(selectedShelfBoxes);
+    setLabelPreviewBoxes(selectedShelfFullBoxes);
   };
 
   const getBoxQrDataUrl = (box: StorageBoxDto) => {
@@ -995,7 +1134,7 @@ export function StorageLayoutCanvas({
     }
   };
 
-  if (isLoadingLayout) {
+  if (isLoadingLayout || isLoadingOccupancy) {
     return <Skeleton className="h-[640px] w-full rounded-xl" />;
   }
 
@@ -1027,6 +1166,15 @@ export function StorageLayoutCanvas({
               <Move className="h-4 w-4" />
               Pan
             </Button>
+            <Button type="button" variant="outline" size="icon-sm" onClick={handleUndo} disabled={!hasUndo} title="Hoàn tác" aria-label="Hoàn tác">
+              <Undo2 className="h-4 w-4" />
+            </Button>
+            <Button type="button" variant="outline" size="icon-sm" onClick={handleRedo} disabled={!hasRedo} title="Làm lại" aria-label="Làm lại">
+              <Redo2 className="h-4 w-4" />
+            </Button>
+            <Button type="button" variant="outline" size="icon-sm" onClick={handleResetLayout} title="Tạo lại sơ đồ" aria-label="Tạo lại sơ đồ">
+              <RotateCcw className="h-4 w-4" />
+            </Button>
             <Button type="button" size="sm" onClick={handleSave} disabled={!isDirty || saveLayout.isPending} className={cn(!isDirty && "opacity-70")}>
               {saveLayout.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
               Lưu sơ đồ
@@ -1042,7 +1190,7 @@ export function StorageLayoutCanvas({
               <div>
                 <div className="text-sm font-semibold">Tra cứu hồ sơ</div>
                 <div className="text-xs text-slate-500">
-                  {canvasSearchResults.isActive ? `${canvasSearchResults.boxes.length} hộp phù hợp` : "Tìm theo dữ liệu hộp hiện có"}
+                  {effectiveHighlightActive ? `${occupancy?.matchedBoxes || 0} hộp phù hợp` : "Tìm theo dữ liệu hộp hiện có"}
                 </div>
               </div>
               <Search className="h-4 w-4 text-slate-400" />
@@ -1065,7 +1213,7 @@ export function StorageLayoutCanvas({
               </select>
               <Input className="h-9" placeholder="Số hồ sơ lẻ" value={canvasSearch.documentNumber} onChange={(event) => setCanvasSearch((current) => ({ ...current, documentNumber: event.target.value }))} />
             </div>
-            {canvasSearchResults.isActive && (
+            {effectiveHighlightActive && (
               <div className="storage-animate-fade-in mt-3 space-y-3">
                 <div className="relative flex h-24 items-center justify-center overflow-hidden rounded-xl border border-violet-200 bg-slate-950">
                   <div className="absolute inset-4 rounded border-2 border-dashed border-violet-400/40" />
@@ -1073,7 +1221,10 @@ export function StorageLayoutCanvas({
                   <span className="font-mono text-xs font-semibold tracking-wider text-violet-300 animate-pulse">SCANNING...</span>
                 </div>
                 <div className="max-h-44 space-y-2 overflow-auto">
-                  {canvasSearchResults.boxes.slice(0, 8).map((box) => (
+                  {searchResultBoxes.length === 0 && (
+                    <div className="rounded-lg border border-dashed bg-slate-50 p-4 text-center text-xs text-slate-500 dark:bg-slate-950">Không có hộp phù hợp</div>
+                  )}
+                  {searchResultBoxes.map((box) => (
                     <button
                       key={box.id}
                       type="button"
@@ -1081,7 +1232,14 @@ export function StorageLayoutCanvas({
                       onClick={() => {
                         const warehouse = layout.warehouses.find((item) => item.id === box.warehouse);
                         const shelf = warehouse?.shelves.find((item) => item.id === getStorageShelfId(box));
-                        if (warehouse && shelf) setSelectedElement({ type: "shelf", warehouseId: warehouse.id, id: shelf.id });
+                        if (warehouse && shelf) {
+                          setSelectedElement({ type: "shelf", warehouseId: warehouse.id, id: shelf.id });
+                          setTransform({
+                            x: STORAGE_LAYOUT_LOGICAL_SIZE.width / 2 - (shelf.x + shelf.w / 2),
+                            y: STORAGE_LAYOUT_LOGICAL_SIZE.height / 2 - (shelf.y + shelf.h / 2),
+                            k: 1.45,
+                          });
+                        }
                       }}
                     >
                       <span className="min-w-0">
@@ -1112,6 +1270,14 @@ export function StorageLayoutCanvas({
               <Button type="button" variant="outline" size="sm" onClick={handleAddShelf} disabled={layout.warehouses.length === 0}>
                 <Box className="h-4 w-4" />
                 Thêm kệ
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={handleFitLayout}>
+                <Maximize2 className="h-4 w-4" />
+                Fit layout
+              </Button>
+              <Button type="button" variant="outline" size="sm" onClick={handleFitSelected} disabled={!selectedElement}>
+                <MapPinned className="h-4 w-4" />
+                Fit chọn
               </Button>
               <Button type="button" variant="outline" size="sm" onClick={handleExportJSON}>
                 <Download className="h-4 w-4" />
@@ -1149,10 +1315,18 @@ export function StorageLayoutCanvas({
                   <Input aria-label="W" type="number" value={selectedObject.w} className="h-8" onChange={(event) => handleUpdateSelected("w", Math.max(1, Number(event.target.value) || 1))} />
                   <Input aria-label="H" type="number" value={selectedObject.h} className="h-8" onChange={(event) => handleUpdateSelected("h", Math.max(1, Number(event.target.value) || 1))} />
                 </div>
+                <Input
+                  aria-label="Capacity"
+                  type="number"
+                  value={selectedObject.capacity ?? ""}
+                  placeholder="Sức chứa tùy chọn"
+                  className="h-8"
+                  onChange={(event) => handleUpdateSelected("capacity", event.target.value ? Math.max(1, Number(event.target.value) || 1) : null)}
+                />
                 {selectedElement.type === "shelf" && (
-                  <Button type="button" variant="outline" size="sm" onClick={handlePrintSelectedShelf} disabled={selectedShelfBoxes.length === 0}>
+                  <Button type="button" variant="outline" size="sm" onClick={handlePrintSelectedShelf} disabled={selectedShelfPreviewBoxes.length === 0 || isLoadingSelectedShelfBoxes}>
                     <QrCode className="h-4 w-4" />
-                    In nhãn kệ ({selectedShelfBoxes.length})
+                    In nhãn kệ ({selectedShelfPreviewBoxes.length})
                   </Button>
                 )}
               </div>
@@ -1169,7 +1343,7 @@ export function StorageLayoutCanvas({
                 <span className={cn("h-2.5 w-2.5 rounded-full", isEditMode ? "animate-pulse bg-emerald-500" : "bg-sky-500")} />
                 {is25DMode ? "Mặt bằng 2.5D" : "Mặt bằng 2D"}
               </div>
-              <div className="text-slate-500">{isEditMode ? "Sửa layout" : "Xem layout"} · {isHeatmapMode ? "Heatmap" : "Màu trạng thái"}</div>
+              <div className="text-slate-500">{is25DMode ? "2.5D chỉ xem" : isEditMode ? "Sửa layout" : "Xem layout"} · {isHeatmapMode ? "Heatmap" : "Màu trạng thái"}</div>
             </div>
 
             <div className="absolute right-4 top-4 z-10 flex flex-wrap justify-end gap-2">
@@ -1188,7 +1362,7 @@ export function StorageLayoutCanvas({
               <Button type="button" variant="outline" size="icon-sm" onClick={() => setTransform((current) => ({ ...current, k: Math.max(current.k - 0.12, 0.55) }))} title="Thu nhỏ">
                 <ZoomOut className="h-4 w-4" />
               </Button>
-              <Button type="button" variant="outline" size="icon-sm" onClick={() => setTransform({ x: 0, y: 0, k: 1 })} title="Căn lại">
+              <Button type="button" variant="outline" size="icon-sm" onClick={handleFitLayout} title="Căn lại" aria-label="Căn lại">
                 <RotateCcw className="h-4 w-4" />
               </Button>
             </div>
@@ -1202,8 +1376,6 @@ export function StorageLayoutCanvas({
             isHighlightActive={effectiveHighlightActive}
             is25DMode={is25DMode}
             isPathfindingActive={isPathfindingActive}
-            pulseScale={pulseScale}
-            lineDashOffset={lineDashOffset}
             selectedElement={selectedElement}
             transform={transform}
             onTransformChange={setTransform}
@@ -1233,8 +1405,9 @@ export function StorageLayoutCanvas({
             <div
               className="storage-animate-scale-in pointer-events-none absolute z-20 w-80 rounded-2xl border bg-white/95 p-3 text-xs shadow-xl backdrop-blur"
               style={{
-                left: Math.min(hoveredShelf.x + 16, 640),
+                left: Math.max(12, hoveredShelf.x + 16),
                 top: Math.max(12, hoveredShelf.y + 16),
+                maxWidth: "calc(100% - 24px)",
               }}
             >
               <div className="mb-2 flex items-center justify-between border-b pb-2">
@@ -1254,7 +1427,7 @@ export function StorageLayoutCanvas({
                   hoveredShelf.occupancy?.boxes.map((box) => (
                     <div key={box.id} className="rounded border bg-slate-50 p-2">
                       <div className="font-mono font-semibold text-sky-700">{box.code}</div>
-                      <div className="truncate text-muted-foreground">{box.agency?.name || "Chưa phân phối"}</div>
+                      <div className="truncate text-muted-foreground">{box.agencyName || "Chưa phân phối"}</div>
                       <div className="mt-1 flex justify-between text-[10px] text-muted-foreground">
                         <span>{box.caseType || "-"}</span>
                         <span>{box.year || "-"}</span>
@@ -1269,83 +1442,26 @@ export function StorageLayoutCanvas({
           )}
           </div>
 
-          <section className="storage-animate-fade-in rounded-xl border bg-white p-4 shadow-sm dark:bg-slate-900">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <div>
-                <div className="text-sm font-semibold">Phân bổ hộp theo kệ</div>
-                <div className="text-xs text-slate-500">Dữ liệu đọc từ danh sách hộp, layout chỉ lưu hình học</div>
-              </div>
-              <Box className="h-4 w-4 text-slate-400" />
-            </div>
-            <div className="grid max-h-80 gap-3 overflow-auto md:grid-cols-2">
-              {layout.warehouses.flatMap((warehouse) =>
-                warehouse.shelves.map((shelf) => {
-                  const shelfOccupancy = occupancyMap.get(getShelfMapKey(warehouse.id, shelf.id));
-                  const shelfBoxes = shelfOccupancy?.boxes || [];
-                  return (
-                    <button
-                      key={`${warehouse.id}-${shelf.id}`}
-                      type="button"
-                      className={cn(
-                        "rounded-xl border bg-slate-50 p-3 text-left transition-all hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50 hover:shadow-sm dark:bg-slate-950 dark:hover:bg-slate-900",
-                        selectedElement?.type === "shelf" && selectedElement.warehouseId === warehouse.id && selectedElement.id === shelf.id && "border-sky-400 bg-sky-50 dark:bg-slate-900",
-                      )}
-                      onClick={() => setSelectedElement({ type: "shelf", warehouseId: warehouse.id, id: shelf.id })}
-                    >
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <div className="truncate text-sm font-semibold">{shelf.name}</div>
-                          <div className="truncate text-xs text-slate-500">{warehouse.name} · {shelf.row}</div>
-                        </div>
-                        <span className="rounded-full bg-white px-2 py-0.5 text-[11px] font-semibold text-slate-600 shadow-sm dark:bg-slate-800 dark:text-slate-200">{shelfBoxes.length}</span>
-                      </div>
-                      <div className="mt-3 space-y-1">
-                        {shelfBoxes.slice(0, 3).map((box) => (
-                          <div key={box.id} className="flex items-center justify-between gap-2 rounded bg-white px-2 py-1 text-[11px] dark:bg-slate-900">
-                            <span className="truncate font-mono text-sky-700">{box.code}</span>
-                            <span className="shrink-0 text-slate-400">{box.year || "-"}</span>
-                          </div>
-                        ))}
-                        {shelfBoxes.length > 3 && <div className="text-[11px] text-slate-500">+{shelfBoxes.length - 3} hộp khác</div>}
-                        {shelfBoxes.length === 0 && <div className="text-[11px] text-slate-400">Kệ trống</div>}
-                      </div>
-                    </button>
-                  );
-                }),
-              )}
-            </div>
-          </section>
+          <StorageLayoutDistributionPanel
+            layout={layout}
+            occupancyMap={occupancyMap}
+            selectedElement={selectedElement}
+            onSelectShelf={setSelectedElement}
+          />
+
+          <StorageLayoutMismatchPanel
+            mismatch={mismatch}
+            onSelectShelf={setSelectedElement}
+          />
         </main>
       </div>
 
-      <div className="hidden">
-        {labelPreviewBoxes.map((box) => (
-          <QRCodeCanvas key={box.id} id={`storage-layout-qr-${box.id}`} value={getBoxQrUrl(box)} size={112} level="M" includeMargin />
-        ))}
-      </div>
-
-      {labelPreviewBoxes.length > 0 && (
-        <div className="storage-animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 p-4 backdrop-blur-sm">
-          <div className="storage-animate-scale-in w-full max-w-md rounded-xl border bg-background p-5 shadow-xl">
-            <div className="mb-4">
-              <div className="text-base font-semibold">In nhãn từ sơ đồ kho</div>
-              <div className="text-sm text-muted-foreground">{labelPreviewBoxes.length} hộp trong kệ đang chọn</div>
-            </div>
-            <div className="max-h-56 space-y-2 overflow-auto">
-              {labelPreviewBoxes.map((box) => (
-                <div key={box.id} className="rounded border p-2 text-sm">
-                  <div className="font-mono font-semibold">{box.code}</div>
-                  <div className="text-xs text-muted-foreground">{[box.warehouse, box.line, box.shelf, box.slot, box.boxNumber].filter(Boolean).join(" - ")}</div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setLabelPreviewBoxes([])}>Đóng</Button>
-              <Button type="button" onClick={handlePrintLabels}>In nhãn</Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <StorageLayoutLabelPreviewModal
+        boxes={labelPreviewBoxes}
+        getBoxQrUrl={getBoxQrUrl}
+        onClose={() => setLabelPreviewBoxes([])}
+        onPrint={handlePrintLabels}
+      />
     </div>
   );
 }

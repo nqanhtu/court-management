@@ -1,5 +1,3 @@
-import type { StorageBoxDto } from "@/lib/api/types";
-
 export type StorageLayoutShelf = {
   id: string;
   name: string;
@@ -8,6 +6,7 @@ export type StorageLayoutShelf = {
   y: number;
   w: number;
   h: number;
+  capacity?: number | null;
 };
 
 export type StorageLayoutWarehouse = {
@@ -19,6 +18,7 @@ export type StorageLayoutWarehouse = {
   h: number;
   widthInMeters?: number | null;
   heightInMeters?: number | null;
+  capacity?: number | null;
   shelves: StorageLayoutShelf[];
 };
 
@@ -39,7 +39,8 @@ export type StorageLayoutTransform = {
 
 export type StorageShelfOccupancy = {
   count: number;
-  boxes: StorageBoxDto[];
+  matchedCount: number;
+  boxes: StorageLayoutBoxPreview[];
   isHighlighted: boolean;
 };
 
@@ -51,3 +52,54 @@ export type StorageLayoutSearch = {
   caseType: string;
   documentNumber: string;
 };
+
+export type StorageLayoutBoxPreview = {
+  id: string;
+  code: string;
+  warehouse: string;
+  line: string;
+  shelf: string;
+  slot: string;
+  boxNumber: string;
+  year?: number | null;
+  caseType?: string | null;
+  agencyName?: string | null;
+};
+
+export type StorageLayoutOccupancyShelf = {
+  id: string;
+  row: string;
+  name: string;
+  totalBoxes: number;
+  matchedBoxes: number;
+  previewBoxes: StorageLayoutBoxPreview[];
+};
+
+export type StorageLayoutOccupancyWarehouse = {
+  id: string;
+  name: string;
+  totalBoxes: number;
+  matchedBoxes: number;
+  shelves: StorageLayoutOccupancyShelf[];
+};
+
+export type StorageLayoutOccupancyResponse = {
+  totalBoxes: number;
+  matchedBoxes: number;
+  caseTypes: string[];
+  warehouses: StorageLayoutOccupancyWarehouse[];
+};
+
+export type StorageLayoutPhysicalWarehouse = {
+  id: string;
+  name: string;
+  shelves: {
+    id: string;
+    name: string;
+    row: string;
+  }[];
+};
+
+export type StorageLayoutValidationResult =
+  | { ok: true; data: StorageLayoutData }
+  | { ok: false; error: string };

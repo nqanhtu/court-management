@@ -18,7 +18,7 @@ import {
     Trash2,
     Upload,
 } from 'lucide-react'
-import { PageHeader } from '@/components/common/page-header'
+
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -240,12 +240,9 @@ export default function ResetPage() {
 
     return (
         <div className="flex min-h-full w-full flex-col gap-6 pb-6">
-            <PageHeader
-                title="Bảo trì dữ liệu"
-                description="Quản lý sao lưu, khôi phục và reset dữ liệu hệ thống."
-                icon={<ShieldAlert className="h-6 w-6 text-red-600" />}
-                actions={<Badge variant="destructive">SUPER_ADMIN</Badge>}
-            />
+            <div className="flex justify-end">
+                <Badge variant="destructive">SUPER_ADMIN</Badge>
+            </div>
 
             <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
                 <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />

@@ -45,7 +45,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { PageHeader } from "@/components/common/page-header";
+
 import { DataToolbar } from "@/components/common/data-toolbar";
 import { PrintActionButton } from "@/components/common/print-action-button";
 import { StorageBoxDialog } from "@/components/forms/storage-box-dialog";
@@ -80,7 +80,6 @@ export default function StorageBoxesPage() {
   const [yearFilter, setYearFilter] = useState("");
   const canLoadBoxes = session?.role === "SUPER_ADMIN";
   const { boxes, isLoading } = useStorageBoxes({ search, year: yearFilter }, canLoadBoxes);
-  const { boxes: canvasBoxes, isLoading: isCanvasBoxesLoading } = useStorageBoxes({}, canLoadBoxes);
   const { layout: storageLayout, isLoading: isLayoutLoading } = useStorageLayout(canLoadBoxes);
   const deleteStorageBox = useDeleteStorageBox();
 
@@ -205,25 +204,7 @@ export default function StorageBoxesPage() {
     <div className="flex flex-col bg-background/50">
       <main className="p-6">
         <div className="max-w-7xl mx-auto space-y-6">
-          {/* Page Header */}
-          <div className="bg-white dark:bg-card p-6 rounded-2xl border shadow-sm transition-all duration-300">
-            <PageHeader
-              title="Quản lý Hộp lưu trữ"
-              description="Cấu hình thông tin vị trí lưu trữ vật lý, phân phối phông lưu trữ, loại hồ sơ và theo dõi số lượng hồ sơ được gán cho từng hộp lưu trữ trên hệ thống."
-              icon={<div className="p-2 bg-primary/10 rounded-lg text-primary"><Archive className="h-6 w-6" /></div>}
-              actions={(
-                <Button
-                  className="h-10 px-4 rounded-xl flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
-                  onClick={() => {
-                    setSelectedBox(null);
-                    setIsDialogOpen(true);
-                  }}
-                >
-                  <Plus className="h-4 w-4" /> Thêm hộp mới
-                </Button>
-              )}
-            />
-          </div>
+
 
           {/* Search & Filters */}
           <DataToolbar>
@@ -270,6 +251,15 @@ export default function StorageBoxesPage() {
               {selectedVisibleBoxes.length > 0 && (
                 <span className="ml-1 rounded bg-muted px-1.5 py-0.5 text-[10px]">{selectedVisibleBoxes.length}</span>
               )}
+            </Button>
+            <Button
+              onClick={() => {
+                setSelectedBox(null);
+                setIsDialogOpen(true);
+              }}
+              className="h-9.5 rounded-lg flex items-center gap-2 hover:scale-[1.02] active:scale-[0.98] transition-all"
+            >
+              <Plus className="h-4 w-4" /> Thêm hộp mới
             </Button>
           </DataToolbar>
 
@@ -499,11 +489,10 @@ export default function StorageBoxesPage() {
 
             <TabsContent value="layout">
               <StorageLayoutCanvas
-                boxes={canvasBoxes}
-                highlightedBoxes={boxes}
                 savedLayout={storageLayout}
-                isLoadingLayout={isLayoutLoading || isCanvasBoxesLoading}
-                isHighlightActive={Boolean(search || yearFilter)}
+                isLoadingLayout={isLayoutLoading}
+                tableSearch={search}
+                yearFilter={yearFilter}
               />
             </TabsContent>
           </Tabs>

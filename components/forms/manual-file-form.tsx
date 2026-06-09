@@ -27,6 +27,7 @@ interface ManualFileFormProps {
 export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
     const router = useRouter()
     const submitActionRef = useRef<'save' | 'save_and_add_child'>('save')
+    const [submitAction, setSubmitAction] = useState<'save' | 'save_and_add_child'>('save')
     const [isLoading, setIsLoading] = useState(false)
     const [boxes, setBoxes] = useState<StorageBoxDto[]>([]);
     const { suggestions } = useAutocompleteSuggestions()
@@ -174,6 +175,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
         if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
             e.preventDefault()
             submitActionRef.current = 'save'
+            setSubmitAction('save')
             handleManualSubmit(e)
         }
     }
@@ -338,9 +340,12 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                     type="submit"
                     variant="outline"
                     disabled={isLoading}
-                    onClick={() => { submitActionRef.current = 'save_and_add_child' }}
+                    onClick={() => {
+                        submitActionRef.current = 'save_and_add_child'
+                        setSubmitAction('save_and_add_child')
+                    }}
                 >
-                    {isLoading && submitActionRef.current === 'save_and_add_child' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isLoading && submitAction === 'save_and_add_child' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Lưu và thêm hồ sơ con
                 </Button>
                 <Tooltip>
@@ -348,9 +353,12 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                         <Button
                             type="submit"
                             disabled={isLoading}
-                            onClick={() => { submitActionRef.current = 'save' }}
+                            onClick={() => {
+                                submitActionRef.current = 'save'
+                                setSubmitAction('save')
+                            }}
                         >
-                            {isLoading && submitActionRef.current === 'save' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {isLoading && submitAction === 'save' && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             Lưu hồ sơ
                         </Button>
                     </TooltipTrigger>

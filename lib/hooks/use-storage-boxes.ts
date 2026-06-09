@@ -8,6 +8,9 @@ import { queryKeys } from '@/src/lib/query-keys'
 export type StorageBoxesParams = {
   search?: string
   year?: string
+  warehouse?: string
+  line?: string
+  shelf?: string
 }
 
 export type StorageBoxPayload = {
@@ -30,6 +33,9 @@ function getStorageBoxesQueryString(params: StorageBoxesParams) {
   const queryString = new URLSearchParams()
   if (params.search) queryString.set('search', params.search)
   if (params.year) queryString.set('year', params.year)
+  if (params.warehouse) queryString.set('warehouse', params.warehouse)
+  if (params.line) queryString.set('line', params.line)
+  if (params.shelf) queryString.set('shelf', params.shelf)
   return queryString.toString()
 }
 

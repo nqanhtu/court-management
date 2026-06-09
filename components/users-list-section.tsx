@@ -20,7 +20,6 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from 'sonner'
 import { DataPageShell } from '@/components/common/data-page-shell'
-import { PageHeader } from '@/components/common/page-header'
 
 export function UsersListSection() {
     const { users, isLoading: isUsersLoading, mutate } = useUsers()
@@ -89,14 +88,7 @@ export function UsersListSection() {
     const editingUser = editingUserId ? users.find(u => u.id === editingUserId) : undefined
 
     return (
-        <DataPageShell
-            header={
-                <PageHeader
-                    title="Quản lý người dùng"
-                    description="Danh sách cán bộ và người dùng hệ thống."
-                />
-            }
-        >
+        <DataPageShell>
             <div className="min-h-0 flex-1">
                 <UserTable
                     users={users}

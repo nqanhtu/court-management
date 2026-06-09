@@ -6,7 +6,6 @@ import { useSession } from "@/lib/hooks/use-auth";
 import { apiFetch, apiDownload } from "@/lib/api/client";
 import { toast } from "sonner";
 import { 
-  Database, 
   Download, 
   Upload, 
   Settings, 
@@ -38,7 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { PageHeader } from "@/components/common/page-header";
+
 
 type BackupSchedule = {
   enabled: boolean;
@@ -221,11 +220,7 @@ export default function BackupPage() {
   return (
     <div className="flex flex-col bg-background/50 p-6 space-y-6">
       <div className="max-w-6xl mx-auto w-full space-y-6">
-        <PageHeader
-          title="Quản lý Sao lưu & Phục hồi"
-          description="Lập lịch sao lưu tự động và quản lý khôi phục cơ sở dữ liệu offline để tránh mất mát dữ liệu."
-          icon={<div className="p-2 bg-primary/10 rounded-lg text-primary"><Database className="h-6 w-6" /></div>}
-        />
+
 
         <div className="grid gap-6 md:grid-cols-2">
           {/* Quick Actions / Backup Form */}

@@ -10,11 +10,13 @@ import { DataTableFacetedFilter } from "@/components/ui/data-table-faceted-filte
 interface UserTableToolbarProps<TData> {
   table: Table<TData>
   onCreate?: () => void
+  onImport?: () => void
 }
 
 export function UserTableToolbar<TData>({
   table,
   onCreate,
+  onImport,
 }: UserTableToolbarProps<TData>) {
   const isFiltered = table.getState().columnFilters.length > 0
 
@@ -62,11 +64,19 @@ export function UserTableToolbar<TData>({
           </Button>
         )}
       </div>
-      {onCreate && (
-        <Button size="sm" onClick={onCreate}>
-          Thêm người dùng
-        </Button>
-      )}
+      <div className="flex items-center gap-2">
+        {onImport && (
+          <Button size="sm" variant="outline" onClick={onImport}>
+            Nhập từ file
+          </Button>
+        )}
+        {onCreate && (
+          <Button size="sm" onClick={onCreate}>
+            Thêm người dùng
+          </Button>
+        )}
+      </div>
     </div>
   )
 }
+

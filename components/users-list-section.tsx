@@ -8,6 +8,7 @@ import { useSession } from '@/lib/hooks/use-auth'
 import UserTable from '@/components/user-table'
 import Modal from '@/components/modal'
 import UserForm from '@/components/user-form'
+import { BulkImportUsersDialog } from '@/components/users/bulk-import-users-dialog'
 import {
     AlertDialog,
     AlertDialogAction,
@@ -28,6 +29,7 @@ export function UsersListSection() {
     // Modal states
     const [isAddModalOpen, setIsAddModalOpen] = useState(false)
     const [isEditModalOpen, setIsEditModalOpen] = useState(false)
+    const [isImportModalOpen, setIsImportModalOpen] = useState(false)
     const [editingUserId, setEditingUserId] = useState<string | null>(null)
     const [deleteUserId, setDeleteUserId] = useState<string | null>(null)
 
@@ -97,6 +99,7 @@ export function UsersListSection() {
                     onDelete={handleDelete}
                     onToggleLock={isSuperAdmin ? handleToggleLock : undefined}
                     onCreate={isSuperAdmin ? () => setIsAddModalOpen(true) : undefined}
+                    onImport={isSuperAdmin ? () => setIsImportModalOpen(true) : undefined}
                     currentUserRole={session?.role}
                 />
             </div>
@@ -114,6 +117,22 @@ export function UsersListSection() {
                         mutate()
                     }}
                     onCancel={() => setIsAddModalOpen(false)}
+                />
+            </Modal>
+
+            {/* Import Modal */}
+            <Modal
+                isOpen={isImportModalOpen}
+                onClose={() => setIsImportModalOpen(false)}
+                title="Nhập danh sách người dùng từ file"
+                className="max-w-4xl"
+            >
+                <BulkImportUsersDialog
+                    onSuccess={() => {
+                        setIsImportModalOpen(false)
+                        mutate()
+                    }}
+                    onCancel={() => setIsImportModalOpen(false)}
                 />
             </Modal>
 

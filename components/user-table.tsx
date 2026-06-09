@@ -36,10 +36,11 @@ interface UserTableProps {
   onDelete: (id: string) => void;
   onToggleLock?: (user: UserDto) => void;
   onCreate?: () => void;
+  onImport?: () => void;
   currentUserRole?: string;
 }
 
-export default function UserTable({ users, isLoading, onEdit, onDelete, onToggleLock, onCreate, currentUserRole }: UserTableProps) {
+export default function UserTable({ users, isLoading, onEdit, onDelete, onToggleLock, onCreate, onImport, currentUserRole }: UserTableProps) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
@@ -75,7 +76,7 @@ export default function UserTable({ users, isLoading, onEdit, onDelete, onToggle
 
   return (
     <div className="space-y-4">
-      <UserTableToolbar table={table} onCreate={onCreate} />
+      <UserTableToolbar table={table} onCreate={onCreate} onImport={onImport} />
       <TableSurface>
         <Table>
           <TableHeader>

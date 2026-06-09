@@ -76,7 +76,7 @@ export function FileTableToolbar<TData>({
   const isSuperOrAdmin = role === 'SUPER_ADMIN' || role === 'ADMIN';
   const { data: usersData } = useSWR(
     isSuperOrAdmin ? '/api/users?purpose=coordinator' : null,
-    (url) => apiFetch(url).then((r) => r.json())
+    (url: string) => apiFetch(url).then((r) => r.json())
   );
 
   const coordinatorsList = Array.isArray(usersData) ? usersData : (usersData?.users || []);
@@ -171,7 +171,7 @@ export function FileTableToolbar<TData>({
                   ? searchParams.get("createdById") === "none"
                     ? []
                     : searchParams.get("createdById")!.split(",")
-                  : coordinatorOptions.map((o) => o.value)
+                  : coordinatorOptions.map((o: { value: string }) => o.value)
               }
               onFilter={(values) => {
                 if (!values || values.length === 0) {

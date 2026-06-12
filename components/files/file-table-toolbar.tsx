@@ -26,6 +26,7 @@ interface FileTableToolbarProps<TData> {
   density?: "compact" | "comfortable";
   onDensityChange?: (density: "compact" | "comfortable") => void;
   role?: string;
+  onPrintCovers?: (files: TData[]) => void;
 }
 
 const statuses = [
@@ -49,6 +50,7 @@ export function FileTableToolbar<TData>({
   density = "comfortable",
   onDensityChange,
   role,
+  onPrintCovers,
 }: FileTableToolbarProps<TData>) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -207,6 +209,23 @@ export function FileTableToolbar<TData>({
             </SelectContent>
           </Select>
 
+          {onPrintCovers &&
+            (table.getFilteredSelectedRowModel().rows.length > 0 ? (
+              <Button
+                variant="outline"
+                onClick={() =>
+                  onPrintCovers(table.getFilteredSelectedRowModel().rows.map((row) => row.original))
+                }
+                className="h-8"
+              >
+                In bìa ({table.getFilteredSelectedRowModel().rows.length})
+              </Button>
+            ) : (
+              <Button variant="outline" className="h-8" disabled>
+                Chọn hồ sơ để in bìa
+              </Button>
+            ))}
+
           {onBorrow &&
             (table.getFilteredSelectedRowModel().rows.length > 0 ? (
               <Button
@@ -232,7 +251,7 @@ export function FileTableToolbar<TData>({
           className="h-8 w-[100px]"
         />
         <Input
-          placeholder="Số bản án"
+          placeholder="số bản án/quyết định"
           defaultValue={searchParams.get("judgmentNumber")?.toString()}
           onChange={(event) => handleTextFilter("judgmentNumber", event.target.value)}
           className="h-8 w-[140px]"

@@ -42,6 +42,7 @@ import {
 import { queryClient } from '@/src/lib/query-client'
 import { queryKeys } from '@/src/lib/query-keys'
 import { TableSurface } from '@/components/common/data-page-shell'
+import { PrintFileCoversDialog } from './print-file-covers-dialog'
 
 interface FileTableProps {
   files: FileWithBox[]
@@ -60,6 +61,8 @@ export function FileTable({ files, isLoading, role, canBorrow = false, onCreate,
   const [rowSelection, setRowSelection] = React.useState({})
   const [isBorrowModalOpen, setIsBorrowModalOpen] = React.useState(false);
   const [borrowFiles, setBorrowFiles] = React.useState<FileWithBox[]>([]);
+  const [isPrintModalOpen, setIsPrintModalOpen] = React.useState(false);
+  const [printFiles, setPrintFiles] = React.useState<FileWithBox[]>([]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({})
   const [density, setDensity] = React.useState<'compact' | 'comfortable'>('comfortable')
@@ -129,9 +132,20 @@ export function FileTable({ files, isLoading, role, canBorrow = false, onCreate,
     }
   }, [onRefresh]);
 
+  const handlePrintCovers = React.useCallback((selectedFiles: FileWithBox[]) => {
+    setPrintFiles(selectedFiles);
+    setIsPrintModalOpen(true);
+  }, []);
+
   const columns = React.useMemo<ColumnDef<FileWithBox>[]>(
-    () => getColumns(undefined, () => { }, !!onCreate, handleDeleteFile) as unknown as ColumnDef<FileWithBox>[],
-    [onCreate, handleDeleteFile]
+    () => getColumns(
+      undefined, 
+      () => { }, 
+      !!onCreate, 
+      handleDeleteFile,
+      (file) => handlePrintCovers([file as unknown as FileWithBox])
+    ) as unknown as ColumnDef<FileWithBox>[],
+    [onCreate, handleDeleteFile, handlePrintCovers]
   )
 
 
@@ -169,6 +183,7 @@ export function FileTable({ files, isLoading, role, canBorrow = false, onCreate,
         table={table}
         onCreate={onCreate}
         onBorrow={canBorrow ? handleBorrow : undefined}
+        onPrintCovers={handlePrintCovers}
         density={density}
         onDensityChange={setDensity}
         role={role}
@@ -283,6 +298,12 @@ export function FileTable({ files, isLoading, role, canBorrow = false, onCreate,
           }}
         />
       </Modal>
+
+      <PrintFileCoversDialog
+        isOpen={isPrintModalOpen}
+        onClose={() => setIsPrintModalOpen(false)}
+        files={printFiles}
+      />
     </div>
   )
 }

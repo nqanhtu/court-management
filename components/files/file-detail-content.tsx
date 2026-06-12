@@ -57,10 +57,10 @@ export function FileDetailContent({ id }: { id: string }) {
     const handlePrintQr = () => {
         const canvas = document.getElementById('qr-canvas') as HTMLCanvasElement;
         if (!canvas) return;
-        
+
         const dataUrl = canvas.toDataURL('image/png');
         const qrUrl = file ? getFileDetailQrUrl(file.id) : '';
-        
+
         const printWindow = window.open('', '_blank', 'width=600,height=600');
         if (printWindow) {
             printWindow.document.write(`
@@ -198,21 +198,21 @@ export function FileDetailContent({ id }: { id: string }) {
                     </div>
                     <div className="min-w-0">
                         <h1 className="break-words text-2xl font-bold tracking-tight sm:text-3xl">{file.title}</h1>
-                    <div className="mt-2 flex flex-wrap items-center gap-2 text-muted-foreground sm:gap-4">
-                        <div className="flex items-center gap-1">
-                            <span className="break-all font-semibold text-foreground">{file.code}</span>
+                        <div className="mt-2 flex flex-wrap items-center gap-2 text-muted-foreground sm:gap-4">
+                            <div className="flex items-center gap-1">
+                                <span className="break-all font-semibold text-foreground">{file.code}</span>
+                            </div>
+                            <Separator orientation="vertical" className="hidden h-4 sm:block" />
+                            <div className="flex items-center gap-1">
+                                <CalendarDays className="h-4 w-4" />
+                                <span>Năm: {file.year}</span>
+                            </div>
+                            <Badge variant={file.status === 'BORROWED' ? 'warning' : 'secondary'} className="ml-2">
+                                {file.status === 'BORROWED' ? 'Đang mượn' : 'Lưu kho'}
+                            </Badge>
+                            {file.isLocked && <Badge variant="destructive" className="ml-2">Đã khóa</Badge>}
                         </div>
-                        <Separator orientation="vertical" className="hidden h-4 sm:block" />
-                        <div className="flex items-center gap-1">
-                            <CalendarDays className="h-4 w-4" />
-                            <span>Năm: {file.year}</span>
-                        </div>
-                        <Badge variant={file.status === 'BORROWED' ? 'warning' : 'secondary'} className="ml-2">
-                            {file.status === 'BORROWED' ? 'Đang mượn' : 'Lưu kho'}
-                        </Badge>
-                         {file.isLocked && <Badge variant="destructive" className="ml-2">Đã khóa</Badge>}
                     </div>
-                </div>
                 </div>
                 <div className="flex w-full shrink-0 flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap lg:justify-end">
                     <Button variant="outline" onClick={handlePrintQr} className="w-full sm:w-auto">
@@ -249,7 +249,7 @@ export function FileDetailContent({ id }: { id: string }) {
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-                     {canManageBorrow && file.status !== 'BORROWED' && !file.isLocked && (
+                    {canManageBorrow && file.status !== 'BORROWED' && !file.isLocked && (
                         <Button asChild className="w-full sm:w-auto">
                             <Link to={`/borrow/create?files=${file.id}`}>
                                 Lập phiếu mượn
@@ -285,12 +285,12 @@ export function FileDetailContent({ id }: { id: string }) {
                                         <p className="text-sm font-medium text-muted-foreground">Loại án</p>
                                         <p className="font-medium">{file.type}</p>
                                     </div>
-                                     <div className="min-w-0">
+                                    <div className="min-w-0">
                                         <p className="text-sm font-medium text-muted-foreground">Số bản án</p>
                                         <p className="font-medium">{file.judgmentNumber || '-'}</p>
                                     </div>
                                     <div className="min-w-0">
-                                        <p className="text-sm font-medium text-muted-foreground">Số tờ</p>
+                                        <p className="text-sm font-medium text-muted-foreground">Số bút lục</p>
                                         <p className="font-medium">{file.pageCount || '-'}</p>
                                     </div>
                                     <div className="min-w-0">
@@ -335,9 +335,9 @@ export function FileDetailContent({ id }: { id: string }) {
                                 )}
                                 {file.plaintiffs && file.plaintiffs.length > 0 && (
                                     <div className="min-w-0">
-                                        <Separator className="my-3"/>
+                                        <Separator className="my-3" />
                                         <p className="text-sm font-medium text-muted-foreground mb-2">Nguyên đơn</p>
-                                         <div className="flex flex-wrap gap-2">
+                                        <div className="flex flex-wrap gap-2">
                                             {file.plaintiffs.map((name: string, i: number) => (
                                                 <Badge key={i} variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">
                                                     {name}
@@ -346,11 +346,11 @@ export function FileDetailContent({ id }: { id: string }) {
                                         </div>
                                     </div>
                                 )}
-                                  {file.civilDefendants && file.civilDefendants.length > 0 && (
+                                {file.civilDefendants && file.civilDefendants.length > 0 && (
                                     <div className="min-w-0">
-                                        <Separator className="my-3"/>
+                                        <Separator className="my-3" />
                                         <p className="text-sm font-medium text-muted-foreground mb-2">Bị đơn dân sự</p>
-                                         <div className="flex flex-wrap gap-2">
+                                        <div className="flex flex-wrap gap-2">
                                             {file.civilDefendants.map((name: string, i: number) => (
                                                 <Badge key={i} variant="outline" className="text-slate-600 border-slate-200 bg-slate-50">
                                                     {name}
@@ -366,64 +366,64 @@ export function FileDetailContent({ id }: { id: string }) {
 
                 {/* Storage Tab */}
                 {!isBasicViewer && (
-                <TabsContent value="storage" className="mt-6">
-                     <Card>
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2">
-                                <Archive className="h-5 w-5 text-orange-500" />
-                                Thông tin lưu trữ
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            {file.box ? (
-                                <div className="grid gap-6 md:grid-cols-2">
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50">
-                                            <div className="min-w-0">
-                                                <p className="text-sm text-muted-foreground">Hộp số</p>
-                                                <p className="text-2xl font-bold">{file.box.boxNumber}</p>
-                                                <p className="text-xs text-muted-foreground">{file.box.code}</p>
+                    <TabsContent value="storage" className="mt-6">
+                        <Card>
+                            <CardHeader>
+                                <CardTitle className="flex items-center gap-2">
+                                    <Archive className="h-5 w-5 text-orange-500" />
+                                    Thông tin lưu trữ
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {file.box ? (
+                                    <div className="grid gap-6 md:grid-cols-2">
+                                        <div className="space-y-4">
+                                            <div className="flex items-center justify-between p-4 border rounded-lg bg-slate-50">
+                                                <div className="min-w-0">
+                                                    <p className="text-sm text-muted-foreground">Hộp số</p>
+                                                    <p className="text-2xl font-bold">{file.box.boxNumber}</p>
+                                                    <p className="text-xs text-muted-foreground">{file.box.code}</p>
+                                                </div>
+                                                <Box className="h-8 w-8 text-slate-300" />
                                             </div>
-                                            <Box className="h-8 w-8 text-slate-300" />
+                                            {file.box.agency && (
+                                                <div className="p-4 border rounded-lg">
+                                                    <p className="text-sm text-muted-foreground mb-1">Phông lưu trữ</p>
+                                                    <p className="font-semibold">{file.box.agency.name}</p>
+                                                    <p className="text-xs text-muted-foreground mt-1">
+                                                        {formatDate(file.box.agency.startDate)} -
+                                                        {file.box.agency.endDate ? formatDate(file.box.agency.endDate) : 'Hiện tại'}
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
-                                        {file.box.agency && (
-                                             <div className="p-4 border rounded-lg">
-                                                <p className="text-sm text-muted-foreground mb-1">Phông lưu trữ</p>
-                                                <p className="font-semibold">{file.box.agency.name}</p>
-                                                <p className="text-xs text-muted-foreground mt-1">
-                                                    {formatDate(file.box.agency.startDate)} - 
-                                                    {file.box.agency.endDate ? formatDate(file.box.agency.endDate) : 'Hiện tại'}
-                                                </p>
+                                        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                            <div className="p-3 border rounded">
+                                                <p className="text-xs text-muted-foreground uppercase">Kho</p>
+                                                <p className="font-medium">{file.box.warehouse}</p>
                                             </div>
-                                        )}
-                                    </div>
-                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                                        <div className="p-3 border rounded">
-                                            <p className="text-xs text-muted-foreground uppercase">Kho</p>
-                                            <p className="font-medium">{file.box.warehouse}</p>
-                                        </div>
-                                        <div className="p-3 border rounded">
-                                            <p className="text-xs text-muted-foreground uppercase">Dãy</p>
-                                            <p className="font-medium">{file.box.line}</p>
-                                        </div>
-                                        <div className="p-3 border rounded">
-                                            <p className="text-xs text-muted-foreground uppercase">Kệ (Giá)</p>
-                                            <p className="font-medium">{file.box.shelf}</p>
-                                        </div>
-                                        <div className="p-3 border rounded">
-                                            <p className="text-xs text-muted-foreground uppercase">Ngăn</p>
-                                            <p className="font-medium">{file.box.slot}</p>
+                                            <div className="p-3 border rounded">
+                                                <p className="text-xs text-muted-foreground uppercase">Dãy</p>
+                                                <p className="font-medium">{file.box.line}</p>
+                                            </div>
+                                            <div className="p-3 border rounded">
+                                                <p className="text-xs text-muted-foreground uppercase">Kệ (Giá)</p>
+                                                <p className="font-medium">{file.box.shelf}</p>
+                                            </div>
+                                            <div className="p-3 border rounded">
+                                                <p className="text-xs text-muted-foreground uppercase">Ngăn</p>
+                                                <p className="font-medium">{file.box.slot}</p>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            ) : (
-                                <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
-                                    Hồ sơ chưa được xếp vào hộp/vị trí lưu trữ.
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </TabsContent>
+                                ) : (
+                                    <div className="text-center py-8 text-muted-foreground border-2 border-dashed rounded-lg">
+                                        Hồ sơ chưa được xếp vào hộp/vị trí lưu trữ.
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </TabsContent>
                 )}
 
                 {/* Index Tab */}
@@ -432,7 +432,7 @@ export function FileDetailContent({ id }: { id: string }) {
                         <Card>
                             <CardHeader>
                                 <CardTitle className="flex items-center gap-2">
-                                     <Gavel className="h-5 w-5 text-purple-500" />
+                                    <Gavel className="h-5 w-5 text-purple-500" />
                                     Mục lục hồ sơ gốc
                                 </CardTitle>
                             </CardHeader>
@@ -459,7 +459,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                 )}
                             </CardContent>
                         </Card>
-                    ) : ( 
+                    ) : (
                         <div className="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed">
                             <p className="text-muted-foreground">Chưa có thông tin mục lục hồ sơ gốc.</p>
                         </div>
@@ -468,7 +468,7 @@ export function FileDetailContent({ id }: { id: string }) {
 
                 {/* Borrow Tab */}
                 <TabsContent value="borrow" className="mt-6">
-                     {file.borrowItems && file.borrowItems.length > 0 ? (
+                    {file.borrowItems && file.borrowItems.length > 0 ? (
                         <Card className="border-amber-200 bg-amber-50 dark:bg-amber-900/10">
                             <CardHeader>
                                 <CardTitle className="flex items-center text-lg text-amber-700">
@@ -491,9 +491,9 @@ export function FileDetailContent({ id }: { id: string }) {
                                                     <p className="font-semibold text-red-600">{formatDate(item.borrowSlip.dueDate)}</p>
                                                 </div>
                                             </div>
-                                             {item.borrowSlip.reason && (
+                                            {item.borrowSlip.reason && (
                                                 <div className="mt-2 pt-2 border-t">
-                                                     <p className="text-xs text-muted-foreground">Lý do: {item.borrowSlip.reason}</p>
+                                                    <p className="text-xs text-muted-foreground">Lý do: {item.borrowSlip.reason}</p>
                                                 </div>
                                             )}
                                         </div>
@@ -502,7 +502,7 @@ export function FileDetailContent({ id }: { id: string }) {
                             </CardContent>
                         </Card>
                     ) : (
-                         <div className="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed">
+                        <div className="text-center py-12 bg-slate-50 rounded-lg border-2 border-dashed">
                             <p className="text-muted-foreground">Hồ sơ đang trong kho, chưa có phiếu mượn nào.</p>
                         </div>
                     )}
@@ -510,115 +510,115 @@ export function FileDetailContent({ id }: { id: string }) {
 
                 {/* Documents List - Always Visible */}
                 {!isBasicViewer && (
-                <Card>
-                    <CardHeader>
-                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                            <CardTitle className="flex items-center text-lg">
-                                <FileText className="mr-2 h-5 w-5" />
-                                Mục lục văn bản ({file.documents?.length || 0})
-                            </CardTitle>
-                            {canManageFiles && (
-                                <div className="flex flex-wrap gap-2">
-                                    <ChildDocumentFormModal fileId={file.id} onSuccess={() => mutate()} />
-                                    <ChildDocumentUploadModal fileId={file.id} onSuccess={() => mutate()} />
-                                </div>
-                            )}
-                        </div>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="overflow-x-auto">
-                        <Table className="w-full min-w-[760px]">
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead className="w-[80px]">TT</TableHead>
-                                    <TableHead>Trích yếu / Tên văn bản</TableHead>
-                                    <TableHead>Mã VB / MLHS</TableHead>
-                                    <TableHead>Thời gian</TableHead>
-                                    <TableHead className="text-right">Số tờ</TableHead>
-                                    <TableHead>Ghi chú</TableHead>
-                                            {canManageFiles && <TableHead className="w-[50px]"></TableHead>}
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {file.documents && file.documents.length > 0 ? (
-                                    file.documents.map((doc: DocumentDto, index: number) => (
-                                        <TableRow key={doc.id}>
-                                            <TableCell>{doc.order || index + 1}</TableCell>
-                                            <TableCell className="font-medium max-w-[400px]">
-                                                {doc.title}
-                                                {doc.contentIndex && <div className="text-xs text-muted-foreground mt-1">MLVB: {doc.contentIndex}</div>}
-                                            </TableCell>
-                                            <TableCell>
-                                                <div className="flex flex-col text-xs gap-1">
-                                                    <span>{doc.code || '-'}</span>
-                                                </div>
-                                            </TableCell>
-                                            <TableCell>{doc.year || '-'}</TableCell>
-                                            <TableCell className="text-right">{doc.pageCount}</TableCell>
-
-                                            <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note ?? undefined}>{doc.note}</TableCell>
-                                            {canManageFiles && <TableCell>
-                                                <div className="flex items-center">
-                                                    <ChildDocumentFormModal
-                                                        fileId={file.id}
-                                                        document={doc}
-                                                        trigger={
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                                                <Pencil className="h-4 w-4" />
-                                                            </Button>
-                                                        }
-                                                        onSuccess={() => mutate()}
-                                                    />
-                                                    <AlertDialog>
-                                                        <AlertDialogTrigger asChild>
-                                                            <Button variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 text-muted-foreground hover:text-red-600"><Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </AlertDialogTrigger>
-                                                        <AlertDialogContent>
-                                                            <AlertDialogHeader>
-                                                                <AlertDialogTitle>Xác nhận xóa?</AlertDialogTitle>
-                                                                <AlertDialogDescription>
-                                                                    Hành động này không thể hoàn tác. Văn bản này sẽ bị xóa vĩnh viễn.
-                                                                </AlertDialogDescription>
-                                                            </AlertDialogHeader>
-                                                            <AlertDialogFooter>
-                                                                <AlertDialogCancel>Hủy</AlertDialogCancel>
-                                                                <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
-                                                                    try {
-                                                                        const res = await apiFetch(`/api/documents/${doc.id}`, {
-                                                                            method: 'DELETE'
-                                                                        })
-                                                                        if (res.ok) {
-                                                                            toast.success('Xóa thành công')
-                                                                            mutate()
-                                                                        } else {
-                                                                            toast.error('Gặp lỗi khi xóa')
-                                                                        }
-                                                                    } catch {
-                                                                        toast.error('Gặp lỗi khi xóa')
-                                                                    }
-                                                                }}>Xóa</AlertDialogAction>
-                                                            </AlertDialogFooter>
-                                                        </AlertDialogContent>
-                                                    </AlertDialog>
-                                                </div>
-                                            </TableCell>}
-                                        </TableRow>
-                                    ))
-                                ) : (
-                                    <TableRow>
-                                        <TableCell colSpan={canManageFiles ? 7 : 6} className="text-center text-muted-foreground p-8">
-                                            Chưa có văn bản con
-                                        </TableCell>
-                                    </TableRow>
+                    <Card>
+                        <CardHeader>
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                <CardTitle className="flex items-center text-lg">
+                                    <FileText className="mr-2 h-5 w-5" />
+                                    Mục lục văn bản ({file.documents?.length || 0})
+                                </CardTitle>
+                                {canManageFiles && (
+                                    <div className="flex flex-wrap gap-2">
+                                        <ChildDocumentFormModal fileId={file.id} onSuccess={() => mutate()} />
+                                        <ChildDocumentUploadModal fileId={file.id} onSuccess={() => mutate()} />
+                                    </div>
                                 )}
-                            </TableBody>
-                        </Table>
-                        </div>
-                    </CardContent>
-                </Card>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="overflow-x-auto">
+                                <Table className="w-full min-w-[760px]">
+                                    <TableHeader>
+                                        <TableRow>
+                                            <TableHead className="w-[80px]">TT</TableHead>
+                                            <TableHead>Trích yếu / Tên văn bản</TableHead>
+                                            <TableHead>Mã VB / MLHS</TableHead>
+                                            <TableHead>Thời gian</TableHead>
+                                            <TableHead className="text-right">Số tờ</TableHead>
+                                            <TableHead>Ghi chú</TableHead>
+                                            {canManageFiles && <TableHead className="w-[50px]"></TableHead>}
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {file.documents && file.documents.length > 0 ? (
+                                            file.documents.map((doc: DocumentDto, index: number) => (
+                                                <TableRow key={doc.id}>
+                                                    <TableCell>{doc.order || index + 1}</TableCell>
+                                                    <TableCell className="font-medium max-w-[400px]">
+                                                        {doc.title}
+                                                        {doc.contentIndex && <div className="text-xs text-muted-foreground mt-1">MLVB: {doc.contentIndex}</div>}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        <div className="flex flex-col text-xs gap-1">
+                                                            <span>{doc.code || '-'}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell>{doc.year || '-'}</TableCell>
+                                                    <TableCell className="text-right">{doc.pageCount}</TableCell>
+
+                                                    <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note ?? undefined}>{doc.note}</TableCell>
+                                                    {canManageFiles && <TableCell>
+                                                        <div className="flex items-center">
+                                                            <ChildDocumentFormModal
+                                                                fileId={file.id}
+                                                                document={doc}
+                                                                trigger={
+                                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                                                                        <Pencil className="h-4 w-4" />
+                                                                    </Button>
+                                                                }
+                                                                onSuccess={() => mutate()}
+                                                            />
+                                                            <AlertDialog>
+                                                                <AlertDialogTrigger asChild>
+                                                                    <Button variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-muted-foreground hover:text-red-600"><Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </AlertDialogTrigger>
+                                                                <AlertDialogContent>
+                                                                    <AlertDialogHeader>
+                                                                        <AlertDialogTitle>Xác nhận xóa?</AlertDialogTitle>
+                                                                        <AlertDialogDescription>
+                                                                            Hành động này không thể hoàn tác. Văn bản này sẽ bị xóa vĩnh viễn.
+                                                                        </AlertDialogDescription>
+                                                                    </AlertDialogHeader>
+                                                                    <AlertDialogFooter>
+                                                                        <AlertDialogCancel>Hủy</AlertDialogCancel>
+                                                                        <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
+                                                                            try {
+                                                                                const res = await apiFetch(`/api/documents/${doc.id}`, {
+                                                                                    method: 'DELETE'
+                                                                                })
+                                                                                if (res.ok) {
+                                                                                    toast.success('Xóa thành công')
+                                                                                    mutate()
+                                                                                } else {
+                                                                                    toast.error('Gặp lỗi khi xóa')
+                                                                                }
+                                                                            } catch {
+                                                                                toast.error('Gặp lỗi khi xóa')
+                                                                            }
+                                                                        }}>Xóa</AlertDialogAction>
+                                                                    </AlertDialogFooter>
+                                                                </AlertDialogContent>
+                                                            </AlertDialog>
+                                                        </div>
+                                                    </TableCell>}
+                                                </TableRow>
+                                            ))
+                                        ) : (
+                                            <TableRow>
+                                                <TableCell colSpan={canManageFiles ? 7 : 6} className="text-center text-muted-foreground p-8">
+                                                    Chưa có văn bản con
+                                                </TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
+                        </CardContent>
+                    </Card>
                 )}
             </Tabs>
         </div>

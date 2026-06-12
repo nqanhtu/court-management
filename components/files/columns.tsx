@@ -4,7 +4,7 @@ import { apiFetch } from '@/lib/api/client';
 
 import { Link } from 'react-router-dom'
 import { ColumnDef } from "@tanstack/react-table"
-import { Pencil, Trash2 } from "lucide-react"
+import { Pencil, Trash2, Printer } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ChildDocumentFormModal } from "./child-document-form-modal"
 import {
@@ -48,7 +48,8 @@ export const getColumns = (
   fileId: string | undefined,
   mutate: () => void,
   canManageFiles = false,
-  onDeleteFile?: (file: FileDocument) => void
+  onDeleteFile?: (file: FileDocument) => void,
+  onPrintFile?: (file: FileDocument) => void
 ): ColumnDef<FileDocument>[] => {
   const cols: ColumnDef<FileDocument>[] = [
     {
@@ -171,6 +172,17 @@ export const getColumns = (
         if (!fileId) {
           return (
             <div className="flex items-center justify-end">
+              {onPrintFile && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:bg-blue-50 hover:text-blue-600 dark:hover:bg-blue-950/50 dark:hover:text-blue-400"
+                  onClick={() => onPrintFile(doc)}
+                  title="In bìa hồ sơ"
+                >
+                  <Printer className="h-4 w-4" />
+                </Button>
+              )}
               <AlertDialog>
                 <AlertDialogTrigger asChild>
                   <Button

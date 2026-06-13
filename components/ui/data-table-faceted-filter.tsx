@@ -32,6 +32,8 @@ interface DataTableFacetedFilterProps<TData, TValue> {
   // Controlled props
   value?: string[]
   onFilter?: (value: string[] | undefined) => void
+  simpleSummary?: boolean
+  alwaysShowActions?: boolean
 }
 
 export function DataTableFacetedFilter<TData, TValue>({
@@ -40,6 +42,8 @@ export function DataTableFacetedFilter<TData, TValue>({
   options,
   value: controlledValue,
   onFilter,
+  simpleSummary = false,
+  alwaysShowActions = false,
 }: DataTableFacetedFilterProps<TData, TValue>) {
   const facets = column?.getFacetedUniqueValues()
   // Use controlled value if provided, otherwise fallback to column
@@ -82,37 +86,41 @@ export function DataTableFacetedFilter<TData, TValue>({
           <PlusCircle className="mr-2 h-4 w-4" />
           {title}
           {selectedValues?.size > 0 && (
-            <>
-              <Separator orientation="vertical" className="mx-2 h-4" />
-              <Badge
-                variant="secondary"
-                className="rounded-sm px-1 font-normal lg:hidden"
-              >
-                {selectedValues.size}
-              </Badge>
-              <div className="hidden gap-1 lg:flex">
-                {selectedValues.size > 2 ? (
-                  <Badge
-                    variant="secondary"
-                    className="rounded-sm px-1 font-normal"
-                  >
-                    Đã chọn {selectedValues.size}
-                  </Badge>
-                ) : (
-                  options
-                    .filter((option) => selectedValues.has(option.value))
-                    .map((option) => (
-                      <Badge
-                        variant="secondary"
-                        key={option.value}
-                        className="rounded-sm px-1 font-normal"
-                      >
-                        {option.label}
-                      </Badge>
-                    ))
-                )}
-              </div>
-            </>
+            simpleSummary ? (
+              ` • ${selectedValues.size} đã chọn`
+            ) : (
+              <>
+                <Separator orientation="vertical" className="mx-2 h-4" />
+                <Badge
+                  variant="secondary"
+                  className="rounded-sm px-1 font-normal lg:hidden"
+                >
+                  {selectedValues.size}
+                </Badge>
+                <div className="hidden gap-1 lg:flex">
+                  {selectedValues.size > 2 ? (
+                    <Badge
+                      variant="secondary"
+                      className="rounded-sm px-1 font-normal"
+                    >
+                      Đã chọn {selectedValues.size}
+                    </Badge>
+                  ) : (
+                    options
+                      .filter((option) => selectedValues.has(option.value))
+                      .map((option) => (
+                        <Badge
+                          variant="secondary"
+                          key={option.value}
+                          className="rounded-sm px-1 font-normal"
+                        >
+                          {option.label}
+                        </Badge>
+                      ))
+                  )}
+                </div>
+              </>
+            )
           )}
         </Button>
       </PopoverTrigger>
@@ -152,32 +160,58 @@ export function DataTableFacetedFilter<TData, TValue>({
                 )
               })}
             </CommandGroup>
-            {(selectedValues.size > 0 || selectedValues.size < options.length) && (
+            {(alwaysShowActions || selectedValues.size > 0 || selectedValues.size < options.length) && (
               <>
                 <CommandSeparator />
                 <CommandGroup>
-                  {selectedValues.size < options.length && (
-                    <CommandItem
-                      onSelect={() => {
-                        const allValues = options.map((o) => o.value)
-                        if (onFilter) {
-                          onFilter(allValues)
-                        } else {
-                          column?.setFilterValue(allValues)
-                        }
-                      }}
-                      className="justify-center text-center text-sm font-medium"
-                    >
-                      Chọn tất cả
-                    </CommandItem>
-                  )}
-                  {selectedValues.size > 0 && (
-                    <CommandItem
-                      onSelect={handleClear}
-                      className="justify-center text-center text-sm"
-                    >
-                      Bỏ chọn tất cả
-                    </CommandItem>
+                  {alwaysShowActions ? (
+                    <div className="flex flex-col gap-0.5">
+                      <CommandItem
+                        onSelect={() => {
+                          const allValues = options.map((o) => o.value)
+                          if (onFilter) {
+                            onFilter(allValues)
+                          } else {
+                            column?.setFilterValue(allValues)
+                          }
+                        }}
+                        className="justify-center text-center text-sm font-medium"
+                      >
+                        Chọn tất cả
+                      </CommandItem>
+                      <CommandItem
+                        onSelect={handleClear}
+                        className="justify-center text-center text-sm"
+                      >
+                        Bỏ chọn tất cả
+                      </CommandItem>
+                    </div>
+                  ) : (
+                    <>
+                      {selectedValues.size < options.length && (
+                        <CommandItem
+                          onSelect={() => {
+                            const allValues = options.map((o) => o.value)
+                            if (onFilter) {
+                              onFilter(allValues)
+                            } else {
+                              column?.setFilterValue(allValues)
+                            }
+                          }}
+                          className="justify-center text-center text-sm font-medium"
+                        >
+                          Chọn tất cả
+                        </CommandItem>
+                      )}
+                      {selectedValues.size > 0 && (
+                        <CommandItem
+                          onSelect={handleClear}
+                          className="justify-center text-center text-sm"
+                        >
+                          Bỏ chọn tất cả
+                        </CommandItem>
+                      )}
+                    </>
                   )}
                 </CommandGroup>
               </>

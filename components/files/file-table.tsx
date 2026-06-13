@@ -204,15 +204,28 @@ export function FileTable({ files, isLoading, role, canBorrow = false, onCreate,
                 {table
                   .getAllColumns()
                   .filter((column) => column.getCanHide())
-                  .map((column) => (
-                    <DropdownMenuCheckboxItem
-                      key={column.id}
-                      checked={column.getIsVisible()}
-                      onCheckedChange={(value) => column.toggleVisibility(!!value)}
-                    >
-                      {column.id}
-                    </DropdownMenuCheckboxItem>
-                  ))}
+                  .map((column) => {
+                    const columnIdMap: Record<string, string> = {
+                      code: 'Mã hồ sơ',
+                      title: 'Tiêu đề / Trích yếu',
+                      status: 'Trạng thái',
+                      year: 'Năm',
+                      pageCount: 'Số bút lục',
+                      createdBy: 'Người tạo',
+                      updatedBy: 'Người cập nhật',
+                      note: 'Ghi chú',
+                      actions: 'Thao tác'
+                    }
+                    return (
+                      <DropdownMenuCheckboxItem
+                        key={column.id}
+                        checked={column.getIsVisible()}
+                        onCheckedChange={(value) => column.toggleVisibility(!!value)}
+                      >
+                        {columnIdMap[column.id] || column.id}
+                      </DropdownMenuCheckboxItem>
+                    )
+                  })}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

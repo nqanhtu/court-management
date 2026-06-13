@@ -82,10 +82,14 @@ export function FileTableToolbar<TData>({
   );
 
   const coordinatorsList = Array.isArray(usersData) ? usersData : (usersData?.users || []);
-  const coordinatorOptions = coordinatorsList.map((u: any) => ({
-    label: u.username || u.name || "Unknown",
-    value: u.id
-  }));
+  const coordinatorOptions = coordinatorsList.map((u: any) => {
+    const displayName = u.fullName || u.name;
+    const label = displayName && u.username ? `${displayName} (${u.username})` : (displayName || u.username || "Unknown");
+    return {
+      label,
+      value: u.id
+    }
+  });
 
   const setUrlParam = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams);
@@ -169,21 +173,21 @@ export function FileTableToolbar<TData>({
               title="Người điều phối"
               options={coordinatorOptions}
               value={
-                searchParams.has("createdById")
-                  ? searchParams.get("createdById") === "none"
-                    ? []
-                    : searchParams.get("createdById")!.split(",")
-                  : coordinatorOptions.map((o: { value: string }) => o.value)
+                searchParams.has("createdById") &&
+                searchParams.get("createdById") !== "all" &&
+                searchParams.get("createdById") !== "none"
+                  ? searchParams.get("createdById")!.split(",")
+                  : []
               }
               onFilter={(values) => {
                 if (!values || values.length === 0) {
-                  setUrlParam("createdById", "none");
-                } else if (values.length === coordinatorOptions.length) {
                   setUrlParam("createdById", "all");
                 } else {
                   setUrlParam("createdById", values.join(","));
                 }
               }}
+              simpleSummary={true}
+              alwaysShowActions={true}
             />
           )}
 

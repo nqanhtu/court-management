@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from 'sonner'
 import { Badge } from "@/components/ui/badge"
+import { cn } from '@/lib/utils'
 
 
 import type { FileDto, StorageBoxDto } from "@/lib/api/types"
@@ -82,8 +83,8 @@ export const getColumns = (
       accessorKey: "code",
       header: "Mã VB / MLHS",
       cell: ({ row }) => (
-        <div className="flex flex-col text-xs gap-1">
-          <span>{row.original.code || "-"}</span>
+        <div className="flex flex-col gap-1 text-xs">
+          <span className="font-mono font-semibold tabular-nums text-slate-700 dark:text-slate-200">{row.original.code || "-"}</span>
         </div>
       ),
     },
@@ -91,11 +92,11 @@ export const getColumns = (
       accessorKey: "title",
       header: "Trích yếu / Tên văn bản",
       cell: ({ row }) => (
-        <div className="font-medium max-w-100">
+        <div className="max-w-100 font-medium leading-5">
           {!fileId ? (
             <Link 
               to={`/files/${row.original.id}`}
-              className="hover:underline hover:text-primary transition-colors cursor-pointer"
+              className="cursor-pointer text-slate-900 transition-colors hover:text-primary hover:underline dark:text-slate-100"
             >
               {row.original.title}
             </Link>
@@ -104,7 +105,7 @@ export const getColumns = (
           )}
           {/* Support both contentIndex (Child) and indexCode (Parent) */}
           {(row.original.contentIndex || row.original.indexCode) && (
-            <div className="text-xs text-muted-foreground mt-1">
+            <div className="mt-1 text-xs text-muted-foreground">
               MLVB: {row.original.contentIndex || row.original.indexCode}
             </div>
           )}
@@ -116,7 +117,6 @@ export const getColumns = (
       header: "Trạng thái",
       cell: ({ row }) => {
         const status = row.original.status || "IN_STOCK"
-        const variant = status === "BORROWED" ? "warning" : status === "ARCHIVED" || status === "LOST" ? "secondary" : "default"
         const label = status === "BORROWED"
           ? "Đang mượn"
           : status === "ARCHIVED"
@@ -124,9 +124,14 @@ export const getColumns = (
             : status === "LOST"
               ? "Thất lạc"
               : "Trong kho"
+        const className = status === "BORROWED"
+          ? "border-amber-200 bg-amber-50 text-amber-800 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200"
+          : status === "ARCHIVED" || status === "LOST"
+            ? "border-slate-200 bg-slate-100 text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+            : "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-200"
         
         return (
-          <Badge variant={variant}>
+          <Badge variant="outline" className={cn("h-6 rounded-md px-2 font-semibold", className)}>
             {label}
           </Badge>
         )
@@ -135,12 +140,12 @@ export const getColumns = (
     {
       accessorKey: "year",
       header: "Thời gian",
-      cell: ({ row }) => <div>{row.original.year || "-"}</div>,
+      cell: ({ row }) => <div className="tabular-nums">{row.original.year || "-"}</div>,
     },
     {
       accessorKey: "pageCount",
       header: () => <div className="text-right">Số tờ</div>,
-      cell: ({ row }) => <div className="text-right">{row.original.pageCount}</div>,
+      cell: ({ row }) => <div className="text-right tabular-nums">{row.original.pageCount}</div>,
     },
     {
       accessorKey: "createdBy",
@@ -189,6 +194,7 @@ export const getColumns = (
                     variant="ghost"
                     size="icon"
                     className="h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50 dark:hover:text-red-400"
+                    title="Lưu trữ hồ sơ"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -221,7 +227,12 @@ export const getColumns = (
               fileId={fileId ?? ""}
               document={doc}
               trigger={
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-950/50 dark:hover:text-amber-400">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-muted-foreground hover:bg-amber-50 hover:text-amber-600 dark:hover:bg-amber-950/50 dark:hover:text-amber-400"
+                  title="Chỉnh sửa văn bản"
+                >
                   <Pencil className="h-4 w-4" />
                 </Button>
               }
@@ -229,9 +240,13 @@ export const getColumns = (
             />
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="outline"
+                <Button
+                  variant="outline"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50 dark:hover:text-red-400"><Trash2 className="h-4 w-4" />
+                  className="h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50 dark:hover:text-red-400"
+                  title="Xóa văn bản"
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
@@ -269,5 +284,3 @@ export const getColumns = (
 
   return canManageFiles ? cols : cols.filter((column) => column.id !== "actions")
 }
-
-

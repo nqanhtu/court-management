@@ -33,7 +33,6 @@ export function PrintFileCoversDialog({
     if (!printWindow) return;
 
     let gridStyle = "grid-template-columns: 1fr;";
-    let pageBreak = "page-break-after: always;";
     if (layout === "2") {
       gridStyle = "grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; gap: 20mm;";
     } else if (layout === "4") {
@@ -52,7 +51,6 @@ export function PrintFileCoversDialog({
           const typeYear = `${file.type || ""} ${file.year || ""}`.trim();
           const plaintiffs = (file.plaintiffs || []).join(", ");
           const defendants = (file.defendants || []).join(", ");
-          const civilDefendants = ((file as any).civilDefendants || []).join(", ");
 
           return `
             <div class="cover-wrapper">

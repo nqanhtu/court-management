@@ -57,7 +57,7 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
     }
 
     return (
-        <div className="flex-1 min-h-0">
+        <div>
             <FileTable
                 files={files}
                 isLoading={isLoading}

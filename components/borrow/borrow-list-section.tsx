@@ -18,9 +18,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { printBorrowSlip } from '@/lib/borrow/print'
 import { queryClient } from '@/src/lib/query-client'
 import { queryKeys } from '@/src/lib/query-keys'
+import { DataPageShell } from '@/components/common/data-page-shell'
 
 export function BorrowListSection() {
-  const { borrowSlips, isLoading, mutate } = useBorrowSlips()
+  const { borrowSlips = [], isLoading, mutate } = useBorrowSlips()
   const { session } = useSession()
   const canManageBorrow = can(session?.role, 'manageBorrow')
   const canApproveBorrow = session?.role === 'SUPER_ADMIN' || session?.role === 'ADMIN'
@@ -93,22 +94,30 @@ export function BorrowListSection() {
     ? borrowSlips.find((slip: BorrowSlipWithDetails) => slip.id === returnSlipId)
     : undefined
 
-  return (
-    <div className="flex h-full w-full flex-col space-y-4">
-      <div className="flex shrink-0 items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800">Quản lý mượn trả</h1>
-          <p className="mt-1 text-sm text-slate-500">Theo dõi quá trình luân chuyển hồ sơ.</p>
-        </div>
-      </div>
+  const countPending = borrowSlips.filter((s) => ['PENDING_APPROVAL'].includes(s.status)).length
+  const countApproved = borrowSlips.filter((s) => ['APPROVED'].includes(s.status)).length
+  const countBorrowing = borrowSlips.filter((s) => ['EXPORTED', 'PARTIAL_RETURN'].includes(s.status)).length
+  const countReturned = borrowSlips.filter((s) => ['RETURNED'].includes(s.status)).length
+  const countClosed = borrowSlips.filter((s) => ['REJECTED', 'OVERDUE'].includes(s.status)).length
 
-      <Tabs defaultValue="pending" className="min-h-0 flex-1">
-        <TabsList className="flex flex-wrap mb-4">
-          <TabsTrigger value="pending" className="data-[state=active]:bg-slate-600 data-[state=active]:text-white">Chờ duyệt</TabsTrigger>
-          <TabsTrigger value="approved" className="data-[state=active]:bg-blue-600 data-[state=active]:text-white">Đã duyệt</TabsTrigger>
-          <TabsTrigger value="borrowing" className="data-[state=active]:bg-amber-500 data-[state=active]:text-white">Đang mượn</TabsTrigger>
-          <TabsTrigger value="returned" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Đã trả</TabsTrigger>
-          <TabsTrigger value="closed" className="data-[state=active]:bg-red-500 data-[state=active]:text-white">Từ chối/Quá hạn</TabsTrigger>
+  return (
+    <DataPageShell
+      toolbar={
+        <div className="flex justify-between items-center w-full">
+          <div>
+            <h1 className="text-xl font-bold text-foreground">Quản lý mượn trả</h1>
+            <p className="text-xs text-muted-foreground">Theo dõi quá trình luân chuyển hồ sơ.</p>
+          </div>
+        </div>
+      }
+    >
+      <Tabs defaultValue="pending" className="w-full">
+        <TabsList className="flex flex-wrap mb-4 bg-muted/30 p-1 w-max">
+          <TabsTrigger value="pending" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-md">Chờ duyệt ({countPending})</TabsTrigger>
+          <TabsTrigger value="approved" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-md">Đã duyệt ({countApproved})</TabsTrigger>
+          <TabsTrigger value="borrowing" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-md">Đang mượn ({countBorrowing})</TabsTrigger>
+          <TabsTrigger value="returned" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-md">Đã trả ({countReturned})</TabsTrigger>
+          <TabsTrigger value="closed" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-md">Từ chối/Quá hạn ({countClosed})</TabsTrigger>
         </TabsList>
         {[
           { value: 'pending', statuses: ['PENDING_APPROVAL'] },
@@ -117,7 +126,7 @@ export function BorrowListSection() {
           { value: 'returned', statuses: ['RETURNED'] },
           { value: 'closed', statuses: ['REJECTED', 'OVERDUE'] },
         ].map((tab) => (
-          <TabsContent key={tab.value} value={tab.value} className="min-h-0">
+          <TabsContent key={tab.value} value={tab.value}>
             <BorrowTable
               borrowSlips={borrowSlips.filter((slip) => tab.statuses.includes(slip.status))}
               isLoading={isLoading}
@@ -145,6 +154,7 @@ export function BorrowListSection() {
           </TabsContent>
         ))}
       </Tabs>
+
 
       <Modal
         isOpen={isAddModalOpen}
@@ -196,6 +206,6 @@ export function BorrowListSection() {
         onConfirm={confirmReturn}
         slip={returnSlip}
       />
-    </div>
+      </DataPageShell>
   )
 }

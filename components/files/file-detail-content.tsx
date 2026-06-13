@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react'
 import { QRCodeCanvas } from 'qrcode.react';
 
 import { apiFetch } from '@/lib/api/client';
@@ -9,19 +10,17 @@ import { vi } from 'date-fns/locale'
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Separator } from "@/components/ui/separator"
 
-import { Box, FileText, Loader2, Pencil, Trash2, Info, Archive, CalendarDays, Gavel, Users, Printer } from 'lucide-react'
+import { Box, Loader2, Trash2, Info, Archive, CalendarDays, Gavel, Users, Printer } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useRouter } from '@/src/lib/router'
 import { useFile } from '@/lib/hooks/use-files'
 
-import { ChildDocumentUploadModal } from './child-document-upload-modal'
-import { ChildDocumentFormModal } from './child-document-form-modal'
-import type { BorrowItemDto, DocumentDto } from '@/lib/api/types'
+import { ChildDocumentWorkspace } from './child-document-workspace'
+import type { BorrowItemDto } from '@/lib/api/types'
 import { EditFileDialog } from '@/components/forms/edit-file-dialog'
 
 type BorrowItemWithSlip = BorrowItemDto & { borrowSlip: NonNullable<BorrowItemDto['borrowSlip']> }
@@ -52,6 +51,33 @@ export function FileDetailContent({ id }: { id: string }) {
     const canManageBorrow = can(session?.role, 'manageBorrow')
     const showEditButton = (canManageFiles && !file?.isLocked) || session?.role === 'SUPER_ADMIN'
     const isBasicViewer = session?.role === 'BASIC_VIEWER'
+
+    useEffect(() => {
+        if (!isLoading && file) {
+            const params = new URLSearchParams(window.location.search)
+            const focus = params.get('focus')
+            const entry = params.get('entry')
+
+            if (focus === 'documents') {
+                setTimeout(() => {
+                    const element = document.getElementById('documents-card')
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' })
+                        element.classList.add('ring-2', 'ring-primary', 'ring-offset-2', 'transition-all', 'duration-500')
+                        setTimeout(() => {
+                            element.classList.remove('ring-2', 'ring-primary', 'ring-offset-2')
+                        }, 2500)
+                    }
+                }, 150)
+            }
+
+            if (focus || entry) {
+                setTimeout(() => {
+                    window.history.replaceState({}, '', window.location.pathname)
+                }, 1000)
+            }
+        }
+    }, [isLoading, file])
 
 
     const handlePrintQr = () => {
@@ -510,115 +536,15 @@ export function FileDetailContent({ id }: { id: string }) {
 
                 {/* Documents List - Always Visible */}
                 {!isBasicViewer && (
-                    <Card>
-                        <CardHeader>
-                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                                <CardTitle className="flex items-center text-lg">
-                                    <FileText className="mr-2 h-5 w-5" />
-                                    Mục lục văn bản ({file.documents?.length || 0})
-                                </CardTitle>
-                                {canManageFiles && (
-                                    <div className="flex flex-wrap gap-2">
-                                        <ChildDocumentFormModal fileId={file.id} onSuccess={() => mutate()} />
-                                        <ChildDocumentUploadModal fileId={file.id} onSuccess={() => mutate()} />
-                                    </div>
-                                )}
-                            </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="overflow-x-auto">
-                                <Table className="w-full min-w-[760px]">
-                                    <TableHeader>
-                                        <TableRow>
-                                            <TableHead className="w-[80px]">TT</TableHead>
-                                            <TableHead>Trích yếu / Tên văn bản</TableHead>
-                                            <TableHead>Mã VB / MLHS</TableHead>
-                                            <TableHead>Thời gian</TableHead>
-                                            <TableHead className="text-right">Số tờ</TableHead>
-                                            <TableHead>Ghi chú</TableHead>
-                                            {canManageFiles && <TableHead className="w-[50px]"></TableHead>}
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {file.documents && file.documents.length > 0 ? (
-                                            file.documents.map((doc: DocumentDto, index: number) => (
-                                                <TableRow key={doc.id}>
-                                                    <TableCell>{doc.order || index + 1}</TableCell>
-                                                    <TableCell className="font-medium max-w-[400px]">
-                                                        {doc.title}
-                                                        {doc.contentIndex && <div className="text-xs text-muted-foreground mt-1">MLVB: {doc.contentIndex}</div>}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                        <div className="flex flex-col text-xs gap-1">
-                                                            <span>{doc.code || '-'}</span>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell>{doc.year || '-'}</TableCell>
-                                                    <TableCell className="text-right">{doc.pageCount}</TableCell>
-
-                                                    <TableCell className="text-muted-foreground text-xs max-w-[200px] truncate" title={doc.note ?? undefined}>{doc.note}</TableCell>
-                                                    {canManageFiles && <TableCell>
-                                                        <div className="flex items-center">
-                                                            <ChildDocumentFormModal
-                                                                fileId={file.id}
-                                                                document={doc}
-                                                                trigger={
-                                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                                                                        <Pencil className="h-4 w-4" />
-                                                                    </Button>
-                                                                }
-                                                                onSuccess={() => mutate()}
-                                                            />
-                                                            <AlertDialog>
-                                                                <AlertDialogTrigger asChild>
-                                                                    <Button variant="ghost"
-                                                                        size="icon"
-                                                                        className="h-8 w-8 text-muted-foreground hover:text-red-600"><Trash2 className="h-4 w-4" />
-                                                                    </Button>
-                                                                </AlertDialogTrigger>
-                                                                <AlertDialogContent>
-                                                                    <AlertDialogHeader>
-                                                                        <AlertDialogTitle>Xác nhận xóa?</AlertDialogTitle>
-                                                                        <AlertDialogDescription>
-                                                                            Hành động này không thể hoàn tác. Văn bản này sẽ bị xóa vĩnh viễn.
-                                                                        </AlertDialogDescription>
-                                                                    </AlertDialogHeader>
-                                                                    <AlertDialogFooter>
-                                                                        <AlertDialogCancel>Hủy</AlertDialogCancel>
-                                                                        <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
-                                                                            try {
-                                                                                const res = await apiFetch(`/api/documents/${doc.id}`, {
-                                                                                    method: 'DELETE'
-                                                                                })
-                                                                                if (res.ok) {
-                                                                                    toast.success('Xóa thành công')
-                                                                                    mutate()
-                                                                                } else {
-                                                                                    toast.error('Gặp lỗi khi xóa')
-                                                                                }
-                                                                            } catch {
-                                                                                toast.error('Gặp lỗi khi xóa')
-                                                                            }
-                                                                        }}>Xóa</AlertDialogAction>
-                                                                    </AlertDialogFooter>
-                                                                </AlertDialogContent>
-                                                            </AlertDialog>
-                                                        </div>
-                                                    </TableCell>}
-                                                </TableRow>
-                                            ))
-                                        ) : (
-                                            <TableRow>
-                                                <TableCell colSpan={canManageFiles ? 7 : 6} className="text-center text-muted-foreground p-8">
-                                                    Chưa có văn bản con
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                        </CardContent>
-                    </Card>
+                    <ChildDocumentWorkspace
+                        fileId={file.id}
+                        parentYear={file.year || undefined}
+                        parentRetention={file.retention || undefined}
+                        documents={file.documents || []}
+                        canManage={canManageFiles}
+                        onMutate={() => mutate()}
+                        entryMode={new URLSearchParams(window.location.search).get('entry') === 'create' ? 'create' : 'idle'}
+                    />
                 )}
             </Tabs>
         </div>

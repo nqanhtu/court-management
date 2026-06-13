@@ -19,21 +19,44 @@ export default function Header({ user }: HeaderProps) {
 
   if (pathname === "/login") return null;
 
+  const pageTitles: Record<string, { title: string; description: string }> = {
+    "/": { title: "Hồ sơ", description: "Tra cứu, lọc và xử lý hồ sơ lưu trữ" },
+    "/borrow": { title: "Mượn trả", description: "Theo dõi phiếu mượn và hoàn trả hồ sơ" },
+    "/upload": { title: "Nhập liệu", description: "Tạo mới hoặc nhập hồ sơ từ Excel" },
+    "/users": { title: "Người dùng", description: "Quản lý tài khoản và phân quyền" },
+    "/admin/agency": { title: "Phông lưu trữ", description: "Quản lý đơn vị và phông lưu trữ" },
+    "/admin/boxes": { title: "Hộp lưu trữ", description: "Quản lý vị trí và hộp hồ sơ" },
+    "/admin/backup": { title: "Sao lưu dữ liệu", description: "Thiết lập và kiểm tra sao lưu" },
+    "/admin/audit": { title: "Nhật ký", description: "Theo dõi hoạt động hệ thống" },
+    "/reports": { title: "Thống kê", description: "Báo cáo tình trạng hồ sơ" },
+    "/reset": { title: "Reset dữ liệu", description: "Công cụ bảo trì hệ thống" },
+  }
+  const currentPage = pageTitles[pathname] ?? (
+    pathname.startsWith("/files/")
+      ? { title: "Chi tiết hồ sơ", description: "Xem và cập nhật thông tin hồ sơ" }
+      : { title: "Quản lý hồ sơ", description: "Hệ thống lưu trữ nội bộ" }
+  )
+
   async function handleLogout() {
     await logout();
     router.push("/login");
   }
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
+    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b bg-background/85 backdrop-blur supports-[backdrop-filter]:bg-background/75 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+      <div className="flex w-full items-center gap-3 px-4 lg:px-5">
         <SidebarTrigger className="-ml-1" />
+
+        <div className="hidden min-w-0 flex-col lg:flex">
+          <h1 className="truncate text-sm font-semibold leading-5 text-foreground">{currentPage.title}</h1>
+          <p className="truncate text-xs text-muted-foreground">{currentPage.description}</p>
+        </div>
 
         <Tooltip>
           <TooltipTrigger asChild>
             <button
               onClick={() => window.dispatchEvent(new CustomEvent('toggle-command-palette'))}
-              className="ml-4 hidden md:flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground bg-muted/30 hover:bg-muted/50 border rounded-lg px-2.5 py-1.5 transition-colors cursor-pointer w-64 text-left font-normal"
+              className="ml-0 hidden w-72 items-center gap-2 rounded-lg border bg-muted/35 px-2.5 py-1.5 text-left text-xs font-normal text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground md:flex lg:ml-6"
             >
               <Search className="h-3.5 w-3.5 shrink-0" />
               <span>Tìm kiếm...</span>
@@ -48,8 +71,8 @@ export default function Header({ user }: HeaderProps) {
         </Tooltip>
 
 
-        <div className="flex items-center ml-auto gap-1 px-4 lg:gap-2 lg:px-6">
-          <div className="h-8 w-px bg-border mx-2"></div>
+        <div className="ml-auto flex items-center gap-1 lg:gap-2">
+          <div className="mx-2 h-8 w-px bg-border"></div>
           {user ? (
             <div className="flex items-center gap-3">
               <div className="text-right hidden sm:block">

@@ -125,6 +125,26 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+
+        if (!formData.code.trim()) {
+            toast.error('Vui lòng nhập Mã hồ sơ')
+            window.document.getElementById('code')?.focus()
+            return
+        }
+
+        if (!formData.title.trim()) {
+            toast.error('Vui lòng nhập Tiêu đề / Trích yếu')
+            window.document.getElementById('title')?.focus()
+            return
+        }
+
+        const yearVal = formData.year;
+        if (!yearVal || isNaN(Number(yearVal))) {
+            toast.error('Vui lòng nhập Năm hợp lệ')
+            window.document.getElementById('year')?.focus()
+            return
+        }
+
         setIsLoading(true)
 
         try {
@@ -202,7 +222,7 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
                         Cập nhật thông tin chi tiết cho hồ sơ này.
                     </DialogDescription>
                 </DialogHeader>
-                <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} className="flex-1 flex flex-col overflow-hidden">
+                <form onSubmit={handleSubmit} onKeyDown={handleKeyDown} noValidate className="flex-1 flex flex-col overflow-hidden">
                     <div className="space-y-4 overflow-y-auto px-1 py-4 flex-1">
                         <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <div className="space-y-2">

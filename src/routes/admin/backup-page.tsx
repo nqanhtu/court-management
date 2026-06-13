@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { DataPageShell, TableSurface } from "@/components/common/data-page-shell";
 import {
   Select,
   SelectContent,
@@ -217,252 +218,261 @@ export default function BackupPage() {
     return null;
   }
 
-  return (
-    <div className="flex flex-col bg-background/50 p-6 space-y-6">
-      <div className="max-w-6xl mx-auto w-full space-y-6">
-
-
-        <div className="grid gap-6 md:grid-cols-2">
-          {/* Quick Actions / Backup Form */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Download className="h-5 w-5 text-blue-600" />
-                Sao lưu thủ công
-              </CardTitle>
-              <CardDescription>
-                Tải ngay bản sao lưu cơ sở dữ liệu hiện tại (.dump) về thiết bị của bạn.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="rounded-lg border bg-muted/20 p-4 space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Trạng thái lần chạy cuối:</span>
-                  <span className={`font-semibold ${
-                    schedule.lastStatus === "SUCCESS" || schedule.lastStatus === "RESTORED"
-                      ? "text-emerald-600" 
-                      : schedule.lastStatus 
-                      ? "text-destructive" 
-                      : "text-muted-foreground"
-                  }`}>
-                    {schedule.lastStatus === "SUCCESS" ? "Thành công" : schedule.lastStatus === "RESTORED" ? "Đã khôi phục" : schedule.lastStatus || "Chưa có"}
-                  </span>
+    return (
+        <DataPageShell
+            toolbar={
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">
+                    <div>
+                        <h1 className="text-xl font-bold text-foreground">Sao lưu & Khôi phục</h1>
+                        <p className="text-xs text-muted-foreground">Quản lý phiên bản dữ liệu và lịch trình sao lưu cơ sở dữ liệu.</p>
+                    </div>
                 </div>
-                {schedule.lastRunAt && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Thời gian chạy cuối:</span>
-                    <span>{new Date(schedule.lastRunAt).toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
-              <Button 
-                onClick={handleBackupNow} 
-                disabled={isBackingUp}
-                className="w-full flex items-center justify-center gap-2"
-              >
-                {isBackingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
-                Sao lưu và tải về ngay
-              </Button>
-            </CardContent>
-          </Card>
+            }
+        >
+            <div className="space-y-6">
+                <div className="grid gap-6 md:grid-cols-2">
+                    {/* Quick Actions / Backup Form */}
+                    <Card className="border border-muted/60 shadow-sm">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
+                                <Download className="h-4.5 w-4.5 text-primary" />
+                                Sao lưu thủ công
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                                Tải ngay bản sao lưu cơ sở dữ liệu hiện tại (.dump) về thiết bị của bạn.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="rounded-lg border bg-muted/20 p-4 space-y-3">
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="text-muted-foreground">Trạng thái lần chạy cuối:</span>
+                                    <span className={`font-semibold ${
+                                        schedule.lastStatus === "SUCCESS" || schedule.lastStatus === "RESTORED"
+                                            ? "text-emerald-600 dark:text-emerald-400" 
+                                            : schedule.lastStatus 
+                                            ? "text-destructive" 
+                                            : "text-muted-foreground"
+                                    }`}>
+                                        {schedule.lastStatus === "SUCCESS" ? "Thành công" : schedule.lastStatus === "RESTORED" ? "Đã khôi phục" : schedule.lastStatus || "Chưa có"}
+                                    </span>
+                                </div>
+                                {schedule.lastRunAt && (
+                                    <div className="flex items-center justify-between text-xs">
+                                        <span className="text-muted-foreground">Thời gian chạy cuối:</span>
+                                        <span className="text-foreground">{new Date(schedule.lastRunAt).toLocaleString()}</span>
+                                    </div>
+                                )}
+                            </div>
+                            <Button 
+                                onClick={handleBackupNow} 
+                                disabled={isBackingUp}
+                                className="w-full flex items-center justify-center gap-2 h-9.5 rounded-lg"
+                            >
+                                {isBackingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4" />}
+                                Sao lưu và tải về ngay
+                            </Button>
+                        </CardContent>
+                    </Card>
 
-          {/* Backup Schedule Configuration */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Settings className="h-5 w-5 text-indigo-600" />
-                Lập lịch sao lưu tự động
-              </CardTitle>
-              <CardDescription>
-                Thiết lập tự động sao lưu định kỳ trên máy chủ.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSaveSchedule} className="space-y-4">
-                <div className="flex items-center gap-2 py-2">
-                  <Checkbox 
-                    id="schedule-enabled" 
-                    checked={schedule.enabled}
-                    onCheckedChange={(checked) => setSchedule({ ...schedule, enabled: Boolean(checked) })}
-                  />
-                  <Label htmlFor="schedule-enabled" className="cursor-pointer font-medium">Bật lịch sao lưu tự động</Label>
+                    {/* Backup Schedule Configuration */}
+                    <Card className="border border-muted/60 shadow-sm">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="flex items-center gap-2 text-base font-bold text-foreground">
+                                <Settings className="h-4.5 w-4.5 text-primary" />
+                                Lập lịch sao lưu tự động
+                            </CardTitle>
+                            <CardDescription className="text-xs">
+                                Thiết lập tự động sao lưu định kỳ trên máy chủ.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <form onSubmit={handleSaveSchedule} className="space-y-4">
+                                <div className="flex items-center gap-2 py-1">
+                                    <Checkbox 
+                                        id="schedule-enabled" 
+                                        checked={schedule.enabled}
+                                        onCheckedChange={(checked) => setSchedule({ ...schedule, enabled: Boolean(checked) })}
+                                    />
+                                    <Label htmlFor="schedule-enabled" className="cursor-pointer text-xs font-semibold text-foreground">Bật lịch sao lưu tự động</Label>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="frequency" className="text-xs text-muted-foreground">Tần suất</Label>
+                                        <Select
+                                            value={schedule.frequency}
+                                            onValueChange={(val) => setSchedule({ ...schedule, frequency: val })}
+                                            disabled={!schedule.enabled}
+                                        >
+                                            <SelectTrigger id="frequency" className="h-9 rounded-lg">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="DAILY">Hàng ngày</SelectItem>
+                                                <SelectItem value="WEEKLY">Hàng tuần</SelectItem>
+                                                <SelectItem value="MONTHLY">Hàng tháng</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="timeOfDay" className="text-xs text-muted-foreground">Thời điểm (Giờ:Phút)</Label>
+                                        <Input 
+                                            id="timeOfDay"
+                                            value={schedule.timeOfDay}
+                                            onChange={(e) => setSchedule({ ...schedule, timeOfDay: e.target.value })}
+                                            placeholder="23:00"
+                                            className="h-9 rounded-lg"
+                                            disabled={!schedule.enabled}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="space-y-1.5">
+                                    <Label htmlFor="retentionDays" className="text-xs text-muted-foreground">Số ngày giữ bản sao lưu</Label>
+                                    <Input 
+                                        id="retentionDays"
+                                        type="number"
+                                        value={schedule.retentionDays}
+                                        onChange={(e) => setSchedule({ ...schedule, retentionDays: parseInt(e.target.value) || 7 })}
+                                        disabled={!schedule.enabled}
+                                        className="h-9 rounded-lg"
+                                        min={1}
+                                    />
+                                </div>
+
+                                <Button type="submit" disabled={isSaving} className="w-full flex items-center justify-center gap-2 h-9.5 rounded-lg">
+                                    {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                                    Lưu cấu hình
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+
+                    {/* Database Restore Card */}
+                    <Card className="md:col-span-2 border-red-200 dark:border-red-950 bg-red-50/10 dark:bg-red-950/5 shadow-sm">
+                        <CardHeader className="pb-3 border-b border-red-100 dark:border-red-950/40">
+                            <CardTitle className="flex items-center gap-2 text-base font-bold text-red-600 dark:text-red-400">
+                                <AlertTriangle className="h-4.5 w-4.5" />
+                                Khôi phục cơ sở dữ liệu
+                            </CardTitle>
+                            <CardDescription className="text-xs text-red-500/80">
+                                Tải lên bản sao lưu (.dump) để ghi đè cơ sở dữ liệu hiện có. Hành động này sẽ thay thế hoàn toàn dữ liệu cũ!
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="pt-4">
+                            <form onSubmit={handleRestore} className="space-y-4">
+                                <div className="grid gap-4 md:grid-cols-2">
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="restore-file" className="text-xs text-muted-foreground">Chọn tệp sao lưu (.dump)</Label>
+                                        <Input 
+                                            id="restore-file"
+                                            type="file"
+                                            accept=".dump"
+                                            className="h-9 rounded-lg text-xs"
+                                            onChange={(e) => setRestoreFile(e.target.files?.[0] || null)}
+                                        />
+                                    </div>
+                                    <div className="space-y-1.5">
+                                        <Label htmlFor="confirm-text" className="text-xs text-muted-foreground">
+                                            Nhập chữ <span className="font-bold text-red-600 dark:text-red-400">RESTORE</span> để xác nhận
+                                        </Label>
+                                        <Input 
+                                            id="confirm-text"
+                                            placeholder="Nhập chữ xác nhận..."
+                                            value={confirmText}
+                                            className="h-9 rounded-lg"
+                                            onChange={(e) => setConfirmText(e.target.value)}
+                                        />
+                                    </div>
+                                </div>
+
+                                <Button 
+                                    type="submit" 
+                                    variant="destructive"
+                                    disabled={isRestoring || !restoreFile || confirmText !== "RESTORE"}
+                                    className="w-full flex items-center justify-center gap-2 h-9.5 rounded-lg"
+                                >
+                                    {isRestoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
+                                    Tiến hành khôi phục dữ liệu
+                                </Button>
+                            </form>
+                        </CardContent>
+                    </Card>
+
+                    {/* History of runs */}
+                    <div className="md:col-span-2 space-y-2">
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                                    <History className="h-4 w-4 text-muted-foreground" />
+                                    Nhật ký sao lưu & khôi phục
+                                </h3>
+                                <p className="text-xs text-muted-foreground">Danh sách 20 lần chạy sao lưu hoặc khôi phục gần nhất.</p>
+                            </div>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 rounded-lg" onClick={fetchBackupData}>
+                                <RefreshCw className="h-4 w-4" />
+                            </Button>
+                        </div>
+                        <TableSurface>
+                            <Table>
+                                <TableHeader className="bg-muted/10">
+                                    <TableRow className="hover:bg-transparent">
+                                        <TableHead className="text-xs font-bold uppercase tracking-wider py-2 text-foreground">Thời gian</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase tracking-wider py-2 text-foreground">Tên tệp</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase tracking-wider py-2 text-foreground">Kích thước</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase tracking-wider py-2 text-foreground">Hình thức</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase tracking-wider py-2 text-foreground">Trạng thái</TableHead>
+                                        <TableHead className="text-xs font-bold uppercase tracking-wider py-2 text-foreground">Chi tiết</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {runs.length === 0 ? (
+                                        <TableRow className="hover:bg-transparent">
+                                            <TableCell colSpan={6} className="h-24 text-center text-xs text-muted-foreground">
+                                                Chưa có lịch sử chạy sao lưu.
+                                            </TableCell>
+                                        </TableRow>
+                                    ) : (
+                                        runs.map((run) => (
+                                            <TableRow key={run.id} className="hover:bg-muted/30 transition-colors">
+                                                <TableCell className="whitespace-nowrap py-2 text-xs font-medium text-foreground">
+                                                    {new Date(run.startedAt).toLocaleString()}
+                                                </TableCell>
+                                                <TableCell className="font-mono text-xs max-w-[200px] truncate py-2 text-foreground" title={run.filename || ""}>
+                                                    {run.filename || "—"}
+                                                </TableCell>
+                                                <TableCell className="py-2 text-xs text-foreground">
+                                                    {run.size ? `${(run.size / 1024 / 1024).toFixed(2)} MB` : "—"}
+                                                </TableCell>
+                                                <TableCell className="py-2 text-xs text-foreground">
+                                                    <span className="text-xs capitalize font-medium">{run.target}</span>
+                                                </TableCell>
+                                                <TableCell className="py-2">
+                                                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
+                                                        run.status === "SUCCESS" || run.status === "RESTORED"
+                                                            ? "bg-emerald-50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-400" 
+                                                            : "bg-destructive/10 text-destructive dark:bg-destructive/20"
+                                                    }`}>
+                                                        {run.status === "SUCCESS" 
+                                                            ? "Sao lưu OK" 
+                                                            : run.status === "RESTORED" 
+                                                            ? "Khôi phục OK" 
+                                                            : run.status}
+                                                    </span>
+                                                </TableCell>
+                                                <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate py-2" title={run.message || ""}>
+                                                    {run.message || "—"}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </TableSurface>
+                    </div>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="frequency">Tần suất</Label>
-                    <Select
-                      value={schedule.frequency}
-                      onValueChange={(val) => setSchedule({ ...schedule, frequency: val })}
-                      disabled={!schedule.enabled}
-                    >
-                      <SelectTrigger id="frequency">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="DAILY">Hàng ngày</SelectItem>
-                        <SelectItem value="WEEKLY">Hàng tuần</SelectItem>
-                        <SelectItem value="MONTHLY">Hàng tháng</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="timeOfDay">Thời điểm (Giờ:Phút)</Label>
-                    <Input 
-                      id="timeOfDay"
-                      value={schedule.timeOfDay}
-                      onChange={(e) => setSchedule({ ...schedule, timeOfDay: e.target.value })}
-                      placeholder="23:00"
-                      disabled={!schedule.enabled}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="retentionDays">Số ngày giữ bản sao lưu</Label>
-                  <Input 
-                    id="retentionDays"
-                    type="number"
-                    value={schedule.retentionDays}
-                    onChange={(e) => setSchedule({ ...schedule, retentionDays: parseInt(e.target.value) || 7 })}
-                    disabled={!schedule.enabled}
-                    min={1}
-                  />
-                </div>
-
-                <Button type="submit" disabled={isSaving} className="w-full flex items-center justify-center gap-2">
-                  {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                  Lưu cấu hình
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* Database Restore Card */}
-          <Card className="md:col-span-2 border-red-200 dark:border-red-900/40">
-            <CardHeader className="bg-red-50/30 dark:bg-red-950/10">
-              <CardTitle className="flex items-center gap-2 text-red-600">
-                <AlertTriangle className="h-5 w-5" />
-                Khôi phục cơ sở dữ liệu
-              </CardTitle>
-              <CardDescription>
-                Tải lên bản sao lưu (.dump) để ghi đè cơ sở dữ liệu hiện có. Hành động này sẽ thay thế hoàn toàn dữ liệu cũ!
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={handleRestore} className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="restore-file">Chọn tệp sao lưu (.dump)</Label>
-                    <Input 
-                      id="restore-file"
-                      type="file"
-                      accept=".dump"
-                      onChange={(e) => setRestoreFile(e.target.files?.[0] || null)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="confirm-text">
-                      Nhập chữ <span className="font-bold text-destructive">RESTORE</span> để xác nhận
-                    </Label>
-                    <Input 
-                      id="confirm-text"
-                      placeholder="Nhập chữ xác nhận..."
-                      value={confirmText}
-                      onChange={(e) => setConfirmText(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <Button 
-                  type="submit" 
-                  variant="destructive"
-                  disabled={isRestoring || !restoreFile || confirmText !== "RESTORE"}
-                  className="w-full flex items-center justify-center gap-2"
-                >
-                  {isRestoring ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
-                  Tiến hành khôi phục dữ liệu
-                </Button>
-              </form>
-            </CardContent>
-          </Card>
-
-          {/* History of runs */}
-          <Card className="md:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <History className="h-5 w-5 text-muted-foreground" />
-                  Nhật ký sao lưu & khôi phục
-                </CardTitle>
-                <CardDescription>Danh sách 20 lần chạy sao lưu hoặc khôi phục gần nhất.</CardDescription>
-              </div>
-              <Button variant="ghost" size="icon" onClick={fetchBackupData}>
-                <RefreshCw className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Thời gian</TableHead>
-                      <TableHead>Tên tệp</TableHead>
-                      <TableHead>Kích thước</TableHead>
-                      <TableHead>Hình thức</TableHead>
-                      <TableHead>Trạng thái</TableHead>
-                      <TableHead>Chi tiết</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {runs.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
-                          Chưa có lịch sử chạy sao lưu.
-                        </TableCell>
-                      </TableRow>
-                    ) : (
-                      runs.map((run) => (
-                        <TableRow key={run.id}>
-                          <TableCell className="whitespace-nowrap">
-                            {new Date(run.startedAt).toLocaleString()}
-                          </TableCell>
-                          <TableCell className="font-mono text-xs max-w-[200px] truncate" title={run.filename || ""}>
-                            {run.filename || "—"}
-                          </TableCell>
-                          <TableCell>
-                            {run.size ? `${(run.size / 1024 / 1024).toFixed(2)} MB` : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-xs capitalize font-medium">{run.target}</span>
-                          </TableCell>
-                          <TableCell>
-                            <span className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                              run.status === "SUCCESS" || run.status === "RESTORED"
-                                ? "bg-emerald-50 text-emerald-700" 
-                                : "bg-destructive/10 text-destructive"
-                            }`}>
-                              {run.status === "SUCCESS" 
-                                ? "Sao lưu OK" 
-                                : run.status === "RESTORED" 
-                                ? "Khôi phục OK" 
-                                : run.status}
-                            </span>
-                          </TableCell>
-                          <TableCell className="text-xs text-muted-foreground max-w-[200px] truncate" title={run.message || ""}>
-                            {run.message || "—"}
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    </div>
-  );
+            </div>
+        </DataPageShell>
+    );
 }

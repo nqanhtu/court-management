@@ -7,6 +7,7 @@ import { AuditList } from '@/components/audit/audit-list';
 import { AccessLogList } from '@/components/audit/access-log-list';
 import { useSession } from "@/lib/hooks/use-auth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DataPageShell } from "@/components/common/data-page-shell";
 
 export default function AuditLogPage() {
     const router = useRouter();
@@ -45,35 +46,36 @@ export default function AuditLogPage() {
     };
 
     return (
-        <div className="flex flex-col h-full space-y-4 w-full">
-            <div className="flex items-center justify-between shrink-0">
-                <div>
-                    <h1 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
-                        <History className="w-6 h-6 text-indigo-600" />
-                        Nhật ký hệ thống
-                    </h1>
-                    <p className="text-slate-500 text-sm mt-1">Lịch sử truy vết và thao tác dữ liệu (Security Log).</p>
+        <DataPageShell
+            toolbar={
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between w-full">
+                    <div>
+                        <h1 className="text-xl font-bold text-foreground">Nhật ký hệ thống</h1>
+                        <p className="text-xs text-muted-foreground">Lịch sử truy vết và thao tác dữ liệu (Security Log).</p>
+                    </div>
                 </div>
+            }
+        >
+            <div className="space-y-4">
+                <Tabs value={currentTab} onValueChange={handleTabChange} className="space-y-4">
+                    <TabsList className="bg-muted/30 p-1 rounded-lg w-max">
+                        <TabsTrigger value="audit" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-md">
+                            <History className="h-3.5 w-3.5" />
+                            Nhật ký thao tác
+                        </TabsTrigger>
+                        <TabsTrigger value="access" className="gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-md">
+                            <ShieldCheck className="h-3.5 w-3.5" />
+                            Lịch sử truy cập
+                        </TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="audit" className="outline-none">
+                        <AuditList />
+                    </TabsContent>
+                    <TabsContent value="access" className="outline-none">
+                        <AccessLogList />
+                    </TabsContent>
+                </Tabs>
             </div>
-
-            <Tabs value={currentTab} onValueChange={handleTabChange} className="min-h-0 flex-1">
-                <TabsList>
-                    <TabsTrigger value="audit">
-                        <History className="h-4 w-4" />
-                        Nhật ký thao tác
-                    </TabsTrigger>
-                    <TabsTrigger value="access">
-                        <ShieldCheck className="h-4 w-4" />
-                        Lịch sử truy cập
-                    </TabsTrigger>
-                </TabsList>
-                <TabsContent value="audit" className="min-h-0">
-                    <AuditList />
-                </TabsContent>
-                <TabsContent value="access" className="min-h-0">
-                    <AccessLogList />
-                </TabsContent>
-            </Tabs>
-        </div>
+        </DataPageShell>
     );
 }

@@ -30,20 +30,20 @@ export function DataTablePagination<TData>({
       : table.getPaginationRowModel().rows.length
 
   return (
-    <div className="flex items-center justify-between px-2">
-      <div className="flex-1 text-sm text-muted-foreground">
+    <div className="flex items-center justify-between rounded-xl border bg-background/90 px-3 py-2 shadow-sm">
+      <div className="flex-1 text-sm font-medium text-muted-foreground">
         Hiển thị {currentCount} / {totalCount} kết quả
       </div>
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Số hàng mỗi trang</p>
+          <p className="text-sm font-medium text-muted-foreground">Số hàng mỗi trang</p>
           <Select
             value={`${table.getState().pagination.pageSize}`}
             onValueChange={(value) => {
               table.setPageSize(Number(value))
             }}
           >
-            <SelectTrigger className="h-8 w-[70px]">
+            <SelectTrigger className="h-8 w-[70px] rounded-lg">
               <SelectValue placeholder={table.getState().pagination.pageSize} />
             </SelectTrigger>
             <SelectContent side="top">
@@ -55,14 +55,14 @@ export function DataTablePagination<TData>({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Trang {table.getState().pagination.pageIndex + 1} trên{" "}
-          {table.getPageCount()}
+        <div className="flex w-[100px] items-center justify-center text-sm font-medium tabular-nums">
+          Trang {totalCount === 0 ? 1 : table.getState().pagination.pageIndex + 1} trên{" "}
+          {Math.max(1, table.getPageCount())}
         </div>
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
-            className="hidden h-8 w-8 p-0 lg:flex"
+            className="hidden h-8 w-8 rounded-lg p-0 lg:flex"
             onClick={() => table.setPageIndex(0)}
             disabled={!table.getCanPreviousPage()}
           >
@@ -71,7 +71,7 @@ export function DataTablePagination<TData>({
           </Button>
           <Button
             variant="outline"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 rounded-lg p-0"
             onClick={() => table.previousPage()}
             disabled={!table.getCanPreviousPage()}
           >
@@ -80,7 +80,7 @@ export function DataTablePagination<TData>({
           </Button>
           <Button
             variant="outline"
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 rounded-lg p-0"
             onClick={() => table.nextPage()}
             disabled={!table.getCanNextPage()}
           >
@@ -89,7 +89,7 @@ export function DataTablePagination<TData>({
           </Button>
           <Button
             variant="outline"
-            className="hidden h-8 w-8 p-0 lg:flex"
+            className="hidden h-8 w-8 rounded-lg p-0 lg:flex"
             onClick={() => table.setPageIndex(table.getPageCount() - 1)}
             disabled={!table.getCanNextPage()}
           >

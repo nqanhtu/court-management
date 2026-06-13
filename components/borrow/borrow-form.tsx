@@ -221,9 +221,17 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
   };
 
   const handleSubmit = async () => {
-    if (!selectedUserId || selectedFiles.length === 0) {
+    if (!selectedUserId) {
       toast.error("Thiếu thông tin", {
-        description: "Vui lòng chọn người mượn và ít nhất 1 hồ sơ",
+        description: "Vui lòng chọn người mượn",
+      });
+      window.document.getElementById('borrower-select')?.focus();
+      return;
+    }
+
+    if (selectedFiles.length === 0) {
+      toast.error("Thiếu thông tin", {
+        description: "Vui lòng chọn ít nhất 1 hồ sơ mượn",
       });
       return;
     }
@@ -286,6 +294,7 @@ export default function BorrowForm({ onSuccess, onCancel, initialData, slipId, i
       {/* Left: Form Inputs */}
       <form
         className="flex-1 flex flex-col space-y-5 overflow-y-auto px-2 max-w-md w-full"
+        noValidate
         onSubmit={(e) => {
           e.preventDefault();
           handleSubmit();

@@ -4,7 +4,6 @@
 import * as React from 'react';
 import { BarChart3, TrendingUp, AlertCircle, CheckCircle2, FileClock, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
     Table,
     TableBody,
@@ -42,106 +41,105 @@ export function ReportDashboard() {
     const { totalBorrows = 0, activeBorrows = 0, overdueBorrows = 0, returnedRate = 0 } = stats || {};
 
     return (
-        <>
+        <div className="flex flex-col gap-4">
             {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 {[
-                    { label: "Tổng lượt mượn", value: totalBorrows.toString(), icon: TrendingUp, color: "text-blue-600", bg: "bg-blue-50" },
-                    { label: "Đang mượn", value: activeBorrows.toString(), icon: FileClock, color: "text-amber-600", bg: "bg-amber-50" },
-                    { label: "Quá hạn", value: overdueBorrows.toString(), icon: AlertCircle, color: "text-red-600", bg: "bg-red-50" },
-                    { label: "Đã trả đúng hạn", value: `${returnedRate}%`, icon: CheckCircle2, color: "text-emerald-600", bg: "bg-emerald-50" },
+                    { label: "Tổng lượt mượn", value: totalBorrows.toString(), icon: TrendingUp, className: "border-blue-200/70 bg-blue-50/70 text-blue-900 dark:border-blue-900/70 dark:bg-blue-950/20 dark:text-blue-100", dotClassName: "bg-blue-500" },
+                    { label: "Đang mượn", value: activeBorrows.toString(), icon: FileClock, className: "border-amber-200/70 bg-amber-50/70 text-amber-900 dark:border-amber-900/70 dark:bg-amber-950/20 dark:text-amber-100", dotClassName: "bg-amber-500" },
+                    { label: "Quá hạn", value: overdueBorrows.toString(), icon: AlertCircle, className: "border-red-200/70 bg-red-50/70 text-red-900 dark:border-red-900/70 dark:bg-red-950/20 dark:text-red-100", dotClassName: "bg-red-500" },
+                    { label: "Đã trả đúng hạn", value: `${returnedRate}%`, icon: CheckCircle2, className: "border-emerald-200/70 bg-emerald-50/70 text-emerald-900 dark:border-emerald-900/70 dark:bg-emerald-950/20 dark:text-emerald-100", dotClassName: "bg-emerald-500" },
                 ].map((stat, i) => (
-                    <Card key={i} className="flex items-center gap-4 p-5 hover:shadow-md transition-shadow">
-                        <div className={cn("p-3 rounded-xl", stat.bg, stat.color)}>
-                            <stat.icon className="w-6 h-6" />
+                    <div
+                        key={i}
+                        className={cn(
+                            'flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2',
+                            stat.className
+                        )}
+                    >
+                        <span className="flex size-7 shrink-0 items-center justify-center rounded-md bg-white/70 shadow-xs dark:bg-white/10">
+                            <stat.icon className="size-3.5" />
+                        </span>
+                        <div className="min-w-0">
+                            <div className="flex items-center gap-2 text-[10px] font-semibold">
+                                <span className={cn('size-1.5 rounded-full', stat.dotClassName)} />
+                                <span>{stat.label}</span>
+                            </div>
+                            <p className="mt-0.5 text-lg font-semibold leading-none tabular-nums">{stat.value}</p>
                         </div>
-                        <div>
-                            <p className="text-sm font-medium text-slate-500">{stat.label}</p>
-                            <h3 className="text-2xl font-bold text-slate-800">{stat.value}</h3>
-                        </div>
-                    </Card>
+                    </div>
                 ))}
             </div>
 
             {/* Data Table Card */}
-            <Card className="flex flex-col overflow-hidden rounded-lg">
-                <CardHeader className="border-b bg-slate-50/50 py-4">
-                    <CardTitle className="text-lg font-semibold flex items-center gap-2">
-                        <BarChart3 className="w-5 h-5 text-slate-400" />
-                        Chi tiết giao dịch gần đây
-                    </CardTitle>
-                </CardHeader>
-
-                <CardContent className="p-0">
-                    <TableSurface className="rounded-none border-0">
-                    <Table>
-                        <TableHeader className="bg-white sticky top-0 z-10">
-                            {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow key={headerGroup.id}>
-                                    {headerGroup.headers.map((header) => {
-                                        return (
-                                            <TableHead key={header.id} colSpan={header.colSpan} className="whitespace-nowrap">
-                                                {header.isPlaceholder
-                                                    ? null
-                                                    : flexRender(
-                                                        header.column.columnDef.header,
-                                                        header.getContext()
-                                                    )}
-                                            </TableHead>
-                                        )
-                                    })}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-                        <TableBody>
-                            {isLoading ? (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={columns.length}
-                                        className="h-24 text-center"
-                                    >
-                                        <div className="flex items-center justify-center text-slate-400">
-                                            <Loader2 className="w-6 h-6 animate-spin" />
-                                            <span className="ml-2">Đang tải...</span>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            ) : table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row) => (
-                                    <TableRow
-                                        key={row.id}
-                                        data-state={row.getIsSelected() && "selected"}
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id}>
-                                                {flexRender(
-                                                    cell.column.columnDef.cell,
-                                                    cell.getContext()
+            <TableSurface
+                toolbar={
+                    <div className="flex items-center gap-2 py-0.5 font-semibold text-xs text-foreground">
+                        <BarChart3 className="w-4 h-4 text-muted-foreground" />
+                        <span>Chi tiết giao dịch gần đây</span>
+                    </div>
+                }
+            >
+                <Table>
+                    <TableHeader className="bg-muted/10">
+                        {table.getHeaderGroups().map((headerGroup) => (
+                            <TableRow key={headerGroup.id} className="hover:bg-transparent">
+                                {headerGroup.headers.map((header) => {
+                                    return (
+                                        <TableHead key={header.id} colSpan={header.colSpan} className="text-xs font-bold uppercase tracking-wider py-2">
+                                            {header.isPlaceholder
+                                                ? null
+                                                : flexRender(
+                                                    header.column.columnDef.header,
+                                                    header.getContext()
                                                 )}
-                                            </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell
-                                        colSpan={columns.length}
-                                        className="h-24 text-center text-muted-foreground"
-                                    >
-                                        Chưa có dữ liệu giao dịch.
-                                    </TableCell>
+                                        </TableHead>
+                                    )
+                                })}
+                            </TableRow>
+                        ))}
+                    </TableHeader>
+                    <TableBody>
+                        {isLoading ? (
+                            <TableRow className="hover:bg-transparent">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-32 text-center"
+                                >
+                                    <div className="flex items-center justify-center text-slate-400">
+                                        <Loader2 className="w-6 h-6 animate-spin" />
+                                    </div>
+                                </TableCell>
+                            </TableRow>
+                        ) : table.getRowModel().rows?.length ? (
+                            table.getRowModel().rows.map((row) => (
+                                <TableRow
+                                    key={row.id}
+                                    data-state={row.getIsSelected() && "selected"}
+                                >
+                                    {row.getVisibleCells().map((cell) => (
+                                        <TableCell key={cell.id} className="px-3 py-2 text-sm">
+                                            {flexRender(
+                                                cell.column.columnDef.cell,
+                                                cell.getContext()
+                                            )}
+                                        </TableCell>
+                                    ))}
                                 </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
-                    </TableSurface>
-                </CardContent>
-
-                {/* Pagination Footer */}
-                <div className="p-4 border-t bg-slate-50/50 flex items-center justify-between shrink-0">
-                    <span className="text-xs text-muted-foreground">Hiển thị {recentBorrows.length} giao dịch gần nhất</span>
-                </div>
-            </Card>
-        </>
+                            ))
+                        ) : (
+                            <TableRow className="hover:bg-transparent">
+                                <TableCell
+                                    colSpan={columns.length}
+                                    className="h-24 text-center text-muted-foreground text-sm"
+                                >
+                                    Chưa có dữ liệu giao dịch.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </TableSurface>
+        </div>
     );
 }

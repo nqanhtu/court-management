@@ -48,9 +48,9 @@
 }
 
 :root {
-  --font-sans: Arial, Helvetica, sans-serif;
+  --font-sans: "Aptos", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
   --font-geist-mono: "Courier New", Courier, monospace;
-  --background: oklch(1 0 0);
+  --background: oklch(0.985 0.004 255);
   --foreground: oklch(0.13 0.028 261.692);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.13 0.028 261.692);
@@ -125,6 +125,8 @@
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "tnum" 1, "cv02" 1, "cv03" 1;
+    text-rendering: optimizeLegibility;
   }
 }
 

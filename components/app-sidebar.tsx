@@ -11,6 +11,7 @@ import {
   RotateCcw,
   Archive,
   Database,
+  Scale,
 } from "lucide-react";
 import { usePathname } from '@/src/lib/router';
 import type { User } from "@/lib/types/user";
@@ -39,6 +40,11 @@ export function AppSidebar({ user }: AppSidebarProps) {
   if (pathname === "/login") return null;
 
   const role = user?.role;
+  const isItemActive = (href: string) => {
+    if (href === '/') return pathname === '/' || pathname.startsWith('/files/')
+    if (href === '/borrow') return pathname === '/borrow' || pathname.startsWith('/borrow/')
+    return pathname === href
+  }
 
   const menuItems = [
     {
@@ -73,18 +79,26 @@ export function AppSidebar({ user }: AppSidebarProps) {
 
   return (
     <Sidebar>
-      <SidebarHeader>
+      <SidebarHeader className="border-b border-sidebar-border/70 px-3 py-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              className="h-11 data-[slot=sidebar-menu-button]:!p-1.5 hover:bg-transparent"
             >
-              <a href="#">
-                <span className="text-base font-semibold">
-                  Phần mềm quản lý hồ sơ
+              <Link to="/">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-sm shadow-primary/20">
+                  <Scale className="size-4" />
                 </span>
-              </a>
+                <span className="flex min-w-0 flex-col">
+                  <span className="truncate text-sm font-semibold leading-5">
+                    Quản lý hồ sơ
+                  </span>
+                  <span className="truncate text-[11px] font-medium text-sidebar-foreground/55">
+                    Lưu trữ nội bộ
+                  </span>
+                </span>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -99,8 +113,9 @@ export function AppSidebar({ user }: AppSidebarProps) {
                   <SidebarMenuItem key={item.name}>
                     <SidebarMenuButton
                       asChild
-                      isActive={pathname === item.href}
+                      isActive={isItemActive(item.href)}
                       tooltip={item.name}
+                      className="font-medium data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:shadow-sm data-[active=true]:shadow-primary/20"
                     >
                       <Link to={item.href}>
                         <item.icon />

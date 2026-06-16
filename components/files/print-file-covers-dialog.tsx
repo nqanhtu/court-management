@@ -60,8 +60,10 @@ export function PrintFileCoversDialog({
         .map((file) => {
           const typeYear = `${file.type || ""} ${file.year || ""}`.trim();
           const plaintiffs = formatPeople(file.plaintiffs);
-          const defendants = formatPeople(file.defendants);
-          const civilDefendants = formatPeople(file.civilDefendants);
+          const defendants = formatPeople([
+            ...(file.civilDefendants || []),
+            ...(file.defendants || []),
+          ]);
 
           return `
             <div class="cover-wrapper">
@@ -88,12 +90,8 @@ export function PrintFileCoversDialog({
                     <td class="value">${plaintiffs}</td>
                   </tr>
                   <tr>
-                    <td class="label">Bị cáo:</td>
+                    <td class="label">Bị đơn, bị cáo:</td>
                     <td class="value">${defendants}</td>
-                  </tr>
-                  <tr>
-                    <td class="label">Bị đơn:</td>
-                    <td class="value">${civilDefendants}</td>
                   </tr>
                   <tr>
                     <td class="label">Số bút lục:</td>

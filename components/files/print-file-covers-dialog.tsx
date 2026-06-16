@@ -6,7 +6,7 @@ import { vi } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import Modal from "@/components/modal";
 import { Printer } from "lucide-react";
-import { FileWithBox } from "./columns";
+import type { FileWithBox } from "./columns";
 
 export function PrintFileCoversDialog({
   files,
@@ -27,6 +27,16 @@ export function PrintFileCoversDialog({
       return "";
     }
   };
+
+  const escapeHtml = (value: string) =>
+    value
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
+  const formatPeople = (people: string[] | null | undefined) => escapeHtml((people || []).join(", "));
 
   const handlePrint = () => {
     const printWindow = window.open("", "_blank", "width=800,height=800");
@@ -49,8 +59,9 @@ export function PrintFileCoversDialog({
       const chunkHtml = chunkFiles
         .map((file) => {
           const typeYear = `${file.type || ""} ${file.year || ""}`.trim();
-          const plaintiffs = (file.plaintiffs || []).join(", ");
-          const defendants = (file.defendants || []).join(", ");
+          const plaintiffs = formatPeople(file.plaintiffs);
+          const defendants = formatPeople(file.defendants);
+          const civilDefendants = formatPeople(file.civilDefendants);
 
           return `
             <div class="cover-wrapper">
@@ -58,15 +69,15 @@ export function PrintFileCoversDialog({
                 <tbody>
                   <tr>
                     <td class="label">Loại án:</td>
-                    <td class="value font-bold">${typeYear}</td>
+                    <td class="value font-bold">${escapeHtml(typeYear)}</td>
                   </tr>
                   <tr>
                     <td class="label">Mã hồ sơ:</td>
-                    <td class="value">${file.code || ""}</td>
+                    <td class="value">${escapeHtml(file.code || "")}</td>
                   </tr>
                   <tr>
                     <td class="label">Số bản án/<br/>quyết định:</td>
-                    <td class="value">${file.judgmentNumber || ""}</td>
+                    <td class="value">${escapeHtml(file.judgmentNumber || "")}</td>
                   </tr>
                   <tr>
                     <td class="label">Ngày:</td>
@@ -81,12 +92,16 @@ export function PrintFileCoversDialog({
                     <td class="value">${defendants}</td>
                   </tr>
                   <tr>
+                    <td class="label">Bị đơn:</td>
+                    <td class="value">${civilDefendants}</td>
+                  </tr>
+                  <tr>
                     <td class="label">Số bút lục:</td>
                     <td class="value">${file.pageCount || ""}</td>
                   </tr>
                   <tr>
                     <td class="label">Vụ việc:</td>
-                    <td class="value">${file.title || ""}</td>
+                    <td class="value">${escapeHtml(file.title || "")}</td>
                   </tr>
                 </tbody>
               </table>

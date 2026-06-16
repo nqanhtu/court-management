@@ -45,7 +45,7 @@ const mainRoutes: AppRoute[] = [
   { path: '/qr/boxes/:id', element: <QrBoxPage />, permission: 'viewStorage', layout: 'main', lazy: true },
   { path: '/borrow', element: <BorrowPage />, permission: 'viewBorrow', layout: 'main', lazy: true },
   { path: '/borrow/create', element: <CreateBorrowPage />, permission: 'manageBorrow', layout: 'main', lazy: true },
-  { path: '/upload', element: <UploadPage />, permission: 'manageFiles', layout: 'main', lazy: true },
+  { path: '/upload', element: <UploadPage />, permission: 'createFiles', layout: 'main', lazy: true },
   { path: '/users', element: <UsersPage />, permission: 'manageUsers', layout: 'main', lazy: true },
   { path: '/admin/agency', element: <AgencyPage />, permission: 'manageAgencies', layout: 'main', lazy: true },
   { path: '/admin/audit', element: <AuditLogPage />, permission: 'viewAudit', layout: 'main', lazy: true },

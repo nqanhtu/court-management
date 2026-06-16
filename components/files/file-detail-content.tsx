@@ -49,7 +49,9 @@ export function FileDetailContent({ id }: { id: string }) {
     const { session } = useSession()
     const canManageFiles = can(session?.role, 'manageFiles')
     const canManageBorrow = can(session?.role, 'manageBorrow')
-    const showEditButton = (canManageFiles && !file?.isLocked) || session?.role === 'SUPER_ADMIN'
+    const isOwnCoordinatorFile = session?.role === 'COORDINATOR' && Boolean(file?.createdById) && file?.createdById === session.id
+    const canEditFile = canManageFiles || isOwnCoordinatorFile
+    const showEditButton = (canEditFile && !file?.isLocked) || session?.role === 'SUPER_ADMIN'
     const isBasicViewer = session?.role === 'BASIC_VIEWER'
 
     useEffect(() => {
@@ -541,7 +543,7 @@ export function FileDetailContent({ id }: { id: string }) {
                         parentYear={file.year || undefined}
                         parentRetention={file.retention || undefined}
                         documents={file.documents || []}
-                        canManage={canManageFiles}
+                        canManage={canEditFile}
                         onMutate={() => mutate()}
                         entryMode={new URLSearchParams(window.location.search).get('entry') === 'create' ? 'create' : 'idle'}
                     />

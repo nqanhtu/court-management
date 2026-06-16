@@ -9,6 +9,7 @@ export const permissions = {
   manageMaintenance: ['SUPER_ADMIN'],
   viewAudit: ['SUPER_ADMIN'],
   viewFiles: ['SUPER_ADMIN', 'ADMIN', 'VIEWER', 'COORDINATOR', 'BASIC_VIEWER'],
+  createFiles: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'],
   manageFiles: ['SUPER_ADMIN', 'ADMIN'],
   viewBorrow: ['SUPER_ADMIN', 'ADMIN', 'COORDINATOR'],
   manageBorrow: ['SUPER_ADMIN', 'COORDINATOR'],

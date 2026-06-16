@@ -54,7 +54,7 @@ export function AppSidebar({ user }: AppSidebarProps) {
         ...(can(role, "viewBorrow")
           ? [{ name: "Mượn trả", href: "/borrow", icon: FileText }]
           : []),
-        ...(can(role, "manageFiles")
+        ...(can(role, "createFiles")
           ? [{ name: "Nhập liệu", href: "/upload", icon: Upload }]
           : []),
         ...(can(role, "manageUsers")

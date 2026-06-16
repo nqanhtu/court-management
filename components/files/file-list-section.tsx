@@ -44,6 +44,7 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
 
     const queryClient = useQueryClient()
     const { session } = useSession()
+    const canCreateFiles = can(session?.role, 'createFiles')
     const canManageFiles = can(session?.role, 'manageFiles')
     const canManageBorrow = can(session?.role, 'manageBorrow')
 
@@ -62,7 +63,8 @@ export function FileListSection({ onCreate }: FileListSectionProps) {
                 files={files}
                 isLoading={isLoading}
                 role={session?.role}
-                onCreate={canManageFiles ? onCreate : undefined}
+                onCreate={canCreateFiles ? onCreate : undefined}
+                canManageFiles={canManageFiles}
                 canBorrow={canManageBorrow}
                 total={total}
                 page={page}

@@ -54,6 +54,7 @@ interface FileTableProps {
   isLoading?: boolean
   role?: string // For RBAC display
   canBorrow?: boolean
+  canManageFiles?: boolean
   onCreate?: () => void
   total?: number
   page?: number
@@ -62,7 +63,7 @@ interface FileTableProps {
   onRefresh?: () => void
 }
 
-export function FileTable({ files, isLoading, role, canBorrow = false, onCreate, total, page = 1, pageSize = 10, onPaginationChange, onRefresh }: FileTableProps) {
+export function FileTable({ files, isLoading, role, canBorrow = false, canManageFiles = false, onCreate, total, page = 1, pageSize = 10, onPaginationChange, onRefresh }: FileTableProps) {
   const searchParams = useSearchParams()
   const [rowSelection, setRowSelection] = React.useState({})
   const [isBorrowModalOpen, setIsBorrowModalOpen] = React.useState(false);
@@ -148,11 +149,11 @@ export function FileTable({ files, isLoading, role, canBorrow = false, onCreate,
     () => getColumns(
       undefined, 
       () => { }, 
-      !!onCreate, 
+      canManageFiles, 
       handleDeleteFile,
       (file) => handlePrintCovers([file as unknown as FileWithBox])
     ) as unknown as ColumnDef<FileWithBox>[],
-    [onCreate, handleDeleteFile, handlePrintCovers]
+    [canManageFiles, handleDeleteFile, handlePrintCovers]
   )
 
 
@@ -260,7 +261,7 @@ export function FileTable({ files, isLoading, role, canBorrow = false, onCreate,
                       Tạo phiếu mượn
                     </Button>
                   )}
-                  {!!onCreate && (
+                  {canManageFiles && (
                     <Button
                       size="sm"
                       variant="destructive"

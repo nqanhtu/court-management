@@ -384,7 +384,7 @@ export function CaseFileForm({ onSuccess, onCancel, setIsDirty }: CaseFileFormPr
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="plaintiffs" className="text-xs font-semibold text-foreground">Nguyên đơn</Label>
+            <Label htmlFor="plaintiffs" className="text-xs font-semibold text-foreground">Nguyên đơn / Người bị hại</Label>
             <Input
               id="plaintiffs"
               placeholder="Ví dụ: Lê Thị C, Nguyễn Văn D..."

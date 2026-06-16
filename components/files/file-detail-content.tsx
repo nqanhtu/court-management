@@ -364,7 +364,7 @@ export function FileDetailContent({ id }: { id: string }) {
                                 {file.plaintiffs && file.plaintiffs.length > 0 && (
                                     <div className="min-w-0">
                                         <Separator className="my-3" />
-                                        <p className="text-sm font-medium text-muted-foreground mb-2">Nguyên đơn</p>
+                                        <p className="text-sm font-medium text-muted-foreground mb-2">Nguyên đơn / Người bị hại</p>
                                         <div className="flex flex-wrap gap-2">
                                             {file.plaintiffs.map((name: string, i: number) => (
                                                 <Badge key={i} variant="outline" className="text-blue-600 border-blue-200 bg-blue-50">

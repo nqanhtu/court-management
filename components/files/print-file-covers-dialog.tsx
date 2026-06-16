@@ -86,7 +86,7 @@ export function PrintFileCoversDialog({
                     <td class="value">${formatDate(file.judgmentDate)}</td>
                   </tr>
                   <tr>
-                    <td class="label">Nguyên Đơn:</td>
+                    <td class="label">Nguyên đơn / Người bị hại:</td>
                     <td class="value">${plaintiffs}</td>
                   </tr>
                   <tr>

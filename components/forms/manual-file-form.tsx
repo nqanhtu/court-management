@@ -249,7 +249,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                         />
                     </div>
                     <div className="space-y-2 md:col-span-2">
-                        <Label htmlFor="plaintiffs" className="text-blue-600">Nguyên đơn (cách nhau bởi dấu phẩy)</Label>
+                        <Label htmlFor="plaintiffs" className="text-blue-600">Nguyên đơn / Người bị hại (cách nhau bởi dấu phẩy)</Label>
                         <Input
                             id="plaintiffs"
                             placeholder="Le Thi C"

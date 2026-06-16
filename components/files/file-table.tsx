@@ -219,6 +219,8 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
     "createdById",
   ].some((key) => !!searchParams.get(key))
   const selectedFiles = selectedRows.map((row) => row.original)
+  const actionColumnClassName = "sticky right-0 z-20 bg-background shadow-[-10px_0_16px_-14px_rgba(15,23,42,0.55)]"
+  const getStickyActionClassName = (columnId: string) => columnId === "actions" ? actionColumnClassName : undefined
 
   return (
     <div className="flex flex-col gap-4">
@@ -292,7 +294,14 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
               <TableRow key={headerGroup.id} className="hover:bg-transparent">
                 {headerGroup.headers.map((header) => {
                   return (
-                    <TableHead key={header.id} colSpan={header.colSpan} className="text-xs font-semibold py-2 text-foreground">
+                    <TableHead
+                      key={header.id}
+                      colSpan={header.colSpan}
+                      className={cn(
+                        "text-xs font-semibold py-2 text-foreground",
+                        header.column.id === "actions" && "sticky right-0 z-30 bg-muted/95 shadow-[-10px_0_16px_-14px_rgba(15,23,42,0.55)]"
+                      )}
+                    >
                       {header.isPlaceholder
                         ? null
                         : flexRender(
@@ -314,7 +323,8 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
                       key={`skeleton-cell-${cellIndex}`}
                       className={cn(
                         "px-3",
-                        density === 'compact' ? 'py-1.5' : 'py-3'
+                        density === 'compact' ? 'py-1.5' : 'py-3',
+                        getStickyActionClassName(column.id ?? "")
                       )}
                     >
                       <Skeleton className={cn(
@@ -344,7 +354,8 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
                       key={cell.id} 
                       className={cn(
                         "px-3",
-                        density === 'compact' ? 'py-1 text-xs' : 'py-2 text-sm'
+                        density === 'compact' ? 'py-1 text-xs' : 'py-2 text-sm',
+                        getStickyActionClassName(cell.column.id)
                       )}
                     >
                       {flexRender(

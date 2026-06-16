@@ -86,4 +86,19 @@ describe('route guards', () => {
 
     expect(screen.getByText('Forbidden')).toBeInTheDocument()
   })
+
+  it('allows coordinators to access file creation routes', () => {
+    sessionState.value.session = { id: 'u3', username: 'coord', fullName: 'Coordinator', role: 'COORDINATOR' }
+
+    renderWithRouter(
+      <Routes>
+        <Route path="/upload" element={<PermissionRoute permission="createFiles"><div>Upload</div></PermissionRoute>} />
+        <Route path="/forbidden" element={<div>Forbidden</div>} />
+      </Routes>,
+      ['/upload']
+    )
+
+    expect(screen.getByText('Upload')).toBeInTheDocument()
+    expect(screen.queryByText('Forbidden')).not.toBeInTheDocument()
+  })
 })

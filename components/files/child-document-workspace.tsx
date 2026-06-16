@@ -1,7 +1,7 @@
 'use client';
 
 import { apiFetch } from '@/lib/api/client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -49,6 +49,28 @@ export interface RecentChildDocument {
     pageCount: number;
 }
 
+type ChildDocumentEntryDraft = {
+    version: 1;
+    savedAt: string;
+    data: ChildDocumentDraft;
+};
+
+const CHILD_DOCUMENT_DRAFT_VERSION = 1;
+const CHILD_DOCUMENT_DRAFT_KEY_PREFIX = 'child-document-entry-draft:v1';
+const CHILD_DOCUMENT_DRAFT_SAVE_DELAY_MS = 500;
+
+const childDocumentDraftKeys = [
+    'fileId',
+    'title',
+    'code',
+    'contentIndex',
+    'year',
+    'pageCount',
+    'order',
+    'preservationTime',
+    'note',
+] as const satisfies readonly (keyof ChildDocumentDraft)[];
+
 interface ChildDocumentWorkspaceProps {
     fileId: string;
     parentYear?: number;
@@ -57,6 +79,110 @@ interface ChildDocumentWorkspaceProps {
     canManage: boolean;
     onMutate: () => void;
     entryMode?: 'create' | 'idle';
+}
+
+function getChildDocumentDraftKey(fileId: string) {
+    return `${CHILD_DOCUMENT_DRAFT_KEY_PREFIX}:${fileId}`;
+}
+
+function getCreateChildDocumentDraft({
+    fileId,
+    parentYear,
+    parentRetention,
+    documents,
+}: {
+    fileId: string;
+    parentYear?: number;
+    parentRetention?: string;
+    documents: DocumentDto[];
+}): ChildDocumentDraft {
+    const nextOrder = documents.length > 0 ? Math.max(...documents.map(d => d.order || 0)) + 1 : 1;
+    return {
+        fileId,
+        title: '',
+        code: '',
+        contentIndex: '',
+        year: parentYear || new Date().getFullYear(),
+        pageCount: 0,
+        order: nextOrder,
+        preservationTime: parentRetention || '',
+        note: ''
+    };
+}
+
+function isChildDocumentDraftData(value: unknown): value is ChildDocumentDraft {
+    if (!value || typeof value !== 'object') return false;
+    const candidate = value as Record<string, unknown>;
+
+    return childDocumentDraftKeys.every((key) => {
+        if (key === 'fileId' || key === 'title') return typeof candidate[key] === 'string';
+        if (key === 'year' || key === 'pageCount' || key === 'order') {
+            return typeof candidate[key] === 'number' || candidate[key] === undefined;
+        }
+        return typeof candidate[key] === 'string' || candidate[key] === undefined;
+    });
+}
+
+function parseChildDocumentEntryDraft(raw: string | null): ChildDocumentEntryDraft | null {
+    if (!raw) return null;
+
+    try {
+        const parsed = JSON.parse(raw) as unknown;
+        if (!parsed || typeof parsed !== 'object') return null;
+
+        const candidate = parsed as Record<string, unknown>;
+        if (candidate.version !== CHILD_DOCUMENT_DRAFT_VERSION) return null;
+        if (typeof candidate.savedAt !== 'string') return null;
+        if (!isChildDocumentDraftData(candidate.data)) return null;
+
+        return {
+            version: CHILD_DOCUMENT_DRAFT_VERSION,
+            savedAt: candidate.savedAt,
+            data: candidate.data,
+        };
+    } catch {
+        return null;
+    }
+}
+
+function readChildDocumentEntryDraft(key: string): ChildDocumentEntryDraft | null {
+    try {
+        const raw = window.localStorage.getItem(key);
+        const draft = parseChildDocumentEntryDraft(raw);
+        if (!draft && raw) {
+            window.localStorage.removeItem(key);
+        }
+        return draft;
+    } catch {
+        return null;
+    }
+}
+
+function writeChildDocumentEntryDraft(key: string, data: ChildDocumentDraft) {
+    const draft: ChildDocumentEntryDraft = {
+        version: CHILD_DOCUMENT_DRAFT_VERSION,
+        savedAt: new Date().toISOString(),
+        data,
+    };
+    window.localStorage.setItem(key, JSON.stringify(draft));
+}
+
+function removeChildDocumentEntryDraft(key: string) {
+    try {
+        window.localStorage.removeItem(key);
+    } catch {
+        // localStorage can be unavailable in restricted browser modes.
+    }
+}
+
+function isInitialChildDocumentDraft(data: ChildDocumentDraft, initialData: ChildDocumentDraft) {
+    return childDocumentDraftKeys.every((key) => data[key] === initialData[key]);
+}
+
+function formatDraftSavedAt(savedAt: string) {
+    const date = new Date(savedAt);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
 }
 
 export function ChildDocumentWorkspace({
@@ -69,6 +195,12 @@ export function ChildDocumentWorkspace({
     entryMode = 'idle'
 }: ChildDocumentWorkspaceProps) {
     const [mode, setMode] = useState<WorkspaceMode>('idle');
+    const currentInitialCreateDraft = useMemo(
+        () => getCreateChildDocumentDraft({ fileId, parentYear, parentRetention, documents }),
+        [fileId, parentYear, parentRetention, documents]
+    );
+    const draftKey = getChildDocumentDraftKey(fileId);
+    const hasUserEditedRef = useRef(false);
     const [draft, setDraft] = useState<ChildDocumentDraft>({
         fileId,
         title: '',
@@ -87,6 +219,7 @@ export function ChildDocumentWorkspace({
     const [recentlyAdded, setRecentlyAdded] = useState<RecentChildDocument[]>([]);
     const [highlightedRowId, setHighlightedRowId] = useState<string | null>(null);
     const [successMessage, setSuccessMessage] = useState<string | null>(null);
+    const [pendingDraft, setPendingDraft] = useState<ChildDocumentEntryDraft | null>(null);
 
     const scrollToWorkspace = () => {
         setTimeout(() => {
@@ -101,39 +234,49 @@ export function ChildDocumentWorkspace({
     useEffect(() => {
         if (entryMode === 'create' && canManage) {
             setMode('create');
-            const nextOrder = documents.length > 0 ? Math.max(...documents.map(d => d.order || 0)) + 1 : 1;
-            setDraft({
-                fileId,
-                title: '',
-                code: '',
-                contentIndex: '',
-                year: parentYear || new Date().getFullYear(),
-                pageCount: 0,
-                order: nextOrder,
-                preservationTime: parentRetention || '',
-                note: ''
-            });
+            hasUserEditedRef.current = false;
+            setDraft(currentInitialCreateDraft);
             setIsDirty(false);
             scrollToWorkspace();
             setTimeout(() => {
                 window.document.getElementById('workspace-title')?.focus();
             }, 300);
         }
-    }, [entryMode, canManage, fileId, parentYear, parentRetention, documents.length]);
+    }, [entryMode, canManage, currentInitialCreateDraft]);
+
+    useEffect(() => {
+        if (!canManage) {
+            setPendingDraft(null);
+            return;
+        }
+        const savedDraft = readChildDocumentEntryDraft(draftKey);
+        if (savedDraft && savedDraft.data.fileId !== fileId) {
+            removeChildDocumentEntryDraft(draftKey);
+            setPendingDraft(null);
+            return;
+        }
+        setPendingDraft(savedDraft);
+    }, [canManage, draftKey, fileId]);
+
+    useEffect(() => {
+        if (mode !== 'create') return;
+        if (!hasUserEditedRef.current) return;
+        if (isInitialChildDocumentDraft(draft, currentInitialCreateDraft)) return;
+
+        const timeoutId = window.setTimeout(() => {
+            try {
+                writeChildDocumentEntryDraft(draftKey, draft);
+            } catch {
+                // Autosave should never interrupt sub-profile entry.
+            }
+        }, CHILD_DOCUMENT_DRAFT_SAVE_DELAY_MS);
+
+        return () => window.clearTimeout(timeoutId);
+    }, [currentInitialCreateDraft, draft, draftKey, mode]);
 
     const handleStartCreate = () => {
-        const nextOrder = documents.length > 0 ? Math.max(...documents.map(d => d.order || 0)) + 1 : 1;
-        setDraft({
-            fileId,
-            title: '',
-            code: '',
-            contentIndex: '',
-            year: parentYear || new Date().getFullYear(),
-            pageCount: 0,
-            order: nextOrder,
-            preservationTime: parentRetention || '',
-            note: ''
-        });
+        hasUserEditedRef.current = false;
+        setDraft(getCreateChildDocumentDraft({ fileId, parentYear, parentRetention, documents }));
         setIsDirty(false);
         setMode('create');
         setSuccessMessage(null);
@@ -148,6 +291,7 @@ export function ChildDocumentWorkspace({
             toast.warning('Vui lòng hoàn thành hoặc hủy bỏ văn bản đang nhập dở.');
             return;
         }
+        hasUserEditedRef.current = false;
         setDraft({
             id: doc.id,
             fileId,
@@ -170,6 +314,7 @@ export function ChildDocumentWorkspace({
     };
 
     const handleDraftChange = <K extends keyof ChildDocumentDraft>(key: K, value: ChildDocumentDraft[K]) => {
+        hasUserEditedRef.current = mode === 'create';
         setDraft(prev => ({ ...prev, [key]: value }));
         setIsDirty(true);
     };
@@ -184,10 +329,35 @@ export function ChildDocumentWorkspace({
     };
 
     const handleConfirmCancel = () => {
+        if (mode === 'create') {
+            removeChildDocumentEntryDraft(draftKey);
+            hasUserEditedRef.current = false;
+            setPendingDraft(null);
+        }
         setIsDirty(false);
         setShowConfirm(false);
         setMode('idle');
         setSuccessMessage(null);
+    };
+
+    const handleRestoreDraft = () => {
+        if (!pendingDraft) return;
+        hasUserEditedRef.current = true;
+        setDraft(pendingDraft.data);
+        setMode('create');
+        setIsDirty(true);
+        setPendingDraft(null);
+        setSuccessMessage(null);
+        scrollToWorkspace();
+        setTimeout(() => {
+            window.document.getElementById('workspace-title')?.focus();
+        }, 100);
+    };
+
+    const handleDiscardDraft = () => {
+        removeChildDocumentEntryDraft(draftKey);
+        hasUserEditedRef.current = false;
+        setPendingDraft(null);
     };
 
     const handleSave = async (continueAfterSave = false) => {
@@ -213,6 +383,11 @@ export function ChildDocumentWorkspace({
 
             if (response.ok && result.success) {
                 toast.success(isEdit ? 'Cập nhật văn bản thành công' : 'Thêm văn bản thành công');
+                if (!isEdit) {
+                    removeChildDocumentEntryDraft(draftKey);
+                    hasUserEditedRef.current = false;
+                    setPendingDraft(null);
+                }
                 setIsDirty(false);
                 onMutate();
 
@@ -255,7 +430,7 @@ export function ChildDocumentWorkspace({
             }
         } catch (error) {
             console.error(error);
-            toast.error('Có lỗi xảy ra khi lưu tài liệu');
+            toast.error(mode === 'create' ? 'Có lỗi xảy ra khi lưu tài liệu. Bản nháp vẫn được lưu trên thiết bị này.' : 'Có lỗi xảy ra khi lưu tài liệu');
         } finally {
             setIsLoading(false);
         }
@@ -336,6 +511,22 @@ export function ChildDocumentWorkspace({
                 </div>
             </CardHeader>
             <CardContent className="pt-4">
+                {pendingDraft && canManage && (
+                    <div className="mb-4 flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+                        <div>
+                            <p className="font-semibold">Có bản nháp hồ sơ con được lưu{formatDraftSavedAt(pendingDraft.savedAt) ? ` lúc ${formatDraftSavedAt(pendingDraft.savedAt)}` : ''}.</p>
+                            <p className="text-xs text-amber-800/80 dark:text-amber-100/75">Bạn có thể khôi phục để tiếp tục nhập hoặc xóa bản nháp này.</p>
+                        </div>
+                        <div className="flex shrink-0 gap-2">
+                            <Button type="button" size="sm" variant="outline" onClick={handleDiscardDraft} className="h-8 bg-background text-xs">
+                                Xóa bản nháp
+                            </Button>
+                            <Button type="button" size="sm" onClick={handleRestoreDraft} className="h-8 text-xs">
+                                Khôi phục bản nháp
+                            </Button>
+                        </div>
+                    </div>
+                )}
                 <TooltipProvider>
                     <div className="grid grid-cols-1 gap-6 lg:grid-cols-12 items-start">
                         {/* Table column */}

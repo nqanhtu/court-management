@@ -1,7 +1,7 @@
 'use client'
 
 import { apiFetch } from '@/lib/api/client'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,6 +20,7 @@ interface CaseFileFormProps {
   onCancel: () => void
   isDirty: boolean
   setIsDirty: (dirty: boolean) => void
+  draftOwnerId?: string | null
 }
 
 export interface CaseFileFormState {
@@ -38,15 +39,35 @@ export interface CaseFileFormState {
   boxId: string
 }
 
-export function CaseFileForm({ onSuccess, onCancel, setIsDirty }: CaseFileFormProps) {
-  const [isLoading, setIsLoading] = useState(false)
-  const [isBoxesLoading, setIsBoxesLoading] = useState(false)
-  const [submitAction, setSubmitAction] = useState<'save' | 'save_and_continue' | 'save_and_add_child'>('save')
-  const [boxes, setBoxes] = useState<StorageBoxDto[]>([])
-  const { suggestions } = useAutocompleteSuggestions()
-  const codeInputRef = useRef<HTMLInputElement>(null)
+type CaseFileDraft = {
+  version: 1
+  savedAt: string
+  data: CaseFileFormState
+}
 
-  const initialFormState: CaseFileFormState = {
+const CASE_FILE_DRAFT_VERSION = 1
+const CASE_FILE_DRAFT_KEY_PREFIX = 'case-file-entry-draft:v1'
+const CASE_FILE_DRAFT_ANONYMOUS_OWNER = 'anonymous'
+const CASE_FILE_DRAFT_SAVE_DELAY_MS = 500
+
+const caseFileFormStateKeys = [
+  'code',
+  'title',
+  'type',
+  'year',
+  'retention',
+  'note',
+  'judgmentNumber',
+  'judgmentDate',
+  'pageCount',
+  'defendants',
+  'plaintiffs',
+  'civilDefendants',
+  'boxId',
+] as const satisfies readonly (keyof CaseFileFormState)[]
+
+function getInitialCaseFileFormState(): CaseFileFormState {
+  return {
     code: '',
     title: '',
     type: '',
@@ -61,12 +82,136 @@ export function CaseFileForm({ onSuccess, onCancel, setIsDirty }: CaseFileFormPr
     civilDefendants: '',
     boxId: ''
   }
+}
+
+function getCaseFileDraftKey(ownerId?: string | null) {
+  return `${CASE_FILE_DRAFT_KEY_PREFIX}:${ownerId || CASE_FILE_DRAFT_ANONYMOUS_OWNER}`
+}
+
+function isCaseFileFormState(value: unknown): value is CaseFileFormState {
+  if (!value || typeof value !== 'object') return false
+  const candidate = value as Record<string, unknown>
+
+  return caseFileFormStateKeys.every((key) => {
+    if (key === 'year') return typeof candidate[key] === 'number' || candidate[key] === ''
+    if (key === 'pageCount') return typeof candidate[key] === 'number'
+    return typeof candidate[key] === 'string'
+  })
+}
+
+function parseCaseFileDraft(raw: string | null): CaseFileDraft | null {
+  if (!raw) return null
+
+  try {
+    const parsed = JSON.parse(raw) as unknown
+    if (!parsed || typeof parsed !== 'object') return null
+
+    const candidate = parsed as Record<string, unknown>
+    if (candidate.version !== CASE_FILE_DRAFT_VERSION) return null
+    if (typeof candidate.savedAt !== 'string') return null
+    if (!isCaseFileFormState(candidate.data)) return null
+
+    return {
+      version: CASE_FILE_DRAFT_VERSION,
+      savedAt: candidate.savedAt,
+      data: candidate.data,
+    }
+  } catch {
+    return null
+  }
+}
+
+function readCaseFileDraft(key: string): CaseFileDraft | null {
+  try {
+    const raw = window.localStorage.getItem(key)
+    const draft = parseCaseFileDraft(raw)
+    if (!draft && raw) {
+      window.localStorage.removeItem(key)
+    }
+    return draft
+  } catch {
+    return null
+  }
+}
+
+function writeCaseFileDraft(key: string, data: CaseFileFormState) {
+  const draft: CaseFileDraft = {
+    version: CASE_FILE_DRAFT_VERSION,
+    savedAt: new Date().toISOString(),
+    data,
+  }
+  window.localStorage.setItem(key, JSON.stringify(draft))
+}
+
+function removeCaseFileDraft(key: string) {
+  try {
+    window.localStorage.removeItem(key)
+  } catch {
+    // localStorage may be unavailable in private/restricted browser modes.
+  }
+}
+
+function isInitialCaseFileFormState(data: CaseFileFormState, initialState: CaseFileFormState) {
+  return caseFileFormStateKeys.every((key) => data[key] === initialState[key])
+}
+
+function formatDraftSavedAt(savedAt: string) {
+  const date = new Date(savedAt)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+}
+
+export function CaseFileForm({ onSuccess, onCancel, setIsDirty, draftOwnerId }: CaseFileFormProps) {
+  const [isLoading, setIsLoading] = useState(false)
+  const [isBoxesLoading, setIsBoxesLoading] = useState(false)
+  const [submitAction, setSubmitAction] = useState<'save' | 'save_and_continue' | 'save_and_add_child'>('save')
+  const [boxes, setBoxes] = useState<StorageBoxDto[]>([])
+  const { suggestions } = useAutocompleteSuggestions()
+  const codeInputRef = useRef<HTMLInputElement>(null)
+  const hasUserEditedRef = useRef(false)
+  const initialFormState = useMemo(() => getInitialCaseFileFormState(), [])
+  const draftKey = useMemo(() => getCaseFileDraftKey(draftOwnerId), [draftOwnerId])
 
   const [formData, setFormData] = useState<CaseFileFormState>(initialFormState)
+  const [pendingDraft, setPendingDraft] = useState<CaseFileDraft | null>(null)
 
   const handleFieldChange = <K extends keyof CaseFileFormState>(key: K, val: CaseFileFormState[K]) => {
+    hasUserEditedRef.current = true
     setFormData((prev) => ({ ...prev, [key]: val }))
     setIsDirty(true)
+  }
+
+  useEffect(() => {
+    setPendingDraft(readCaseFileDraft(draftKey))
+  }, [draftKey])
+
+  useEffect(() => {
+    if (!hasUserEditedRef.current) return
+    if (isInitialCaseFileFormState(formData, initialFormState)) return
+
+    const timeoutId = window.setTimeout(() => {
+      try {
+        writeCaseFileDraft(draftKey, formData)
+      } catch {
+        // Autosave should never interrupt data entry.
+      }
+    }, CASE_FILE_DRAFT_SAVE_DELAY_MS)
+
+    return () => window.clearTimeout(timeoutId)
+  }, [draftKey, formData, initialFormState])
+
+  const handleRestoreDraft = () => {
+    if (!pendingDraft) return
+    hasUserEditedRef.current = true
+    setFormData(pendingDraft.data)
+    setIsDirty(true)
+    setPendingDraft(null)
+  }
+
+  const handleDiscardDraft = () => {
+    removeCaseFileDraft(draftKey)
+    hasUserEditedRef.current = false
+    setPendingDraft(null)
   }
 
   const handleManualSubmit = async (e?: React.FormEvent, overrideAction?: 'save' | 'save_and_continue' | 'save_and_add_child') => {
@@ -128,6 +273,8 @@ export function CaseFileForm({ onSuccess, onCancel, setIsDirty }: CaseFileFormPr
 
         const fileId = result.file?.id
 
+        removeCaseFileDraft(draftKey)
+        hasUserEditedRef.current = false
         setIsDirty(false)
 
         if (action === 'save_and_continue') {
@@ -159,7 +306,7 @@ export function CaseFileForm({ onSuccess, onCancel, setIsDirty }: CaseFileFormPr
       }
     } catch (error) {
       console.error(error)
-      toast.error('Có lỗi xảy ra')
+      toast.error('Có lỗi xảy ra. Bản nháp vẫn được lưu trên thiết bị này.')
     } finally {
       setIsLoading(false)
     }
@@ -233,6 +380,22 @@ export function CaseFileForm({ onSuccess, onCancel, setIsDirty }: CaseFileFormPr
 
   return (
     <form onSubmit={(e) => handleManualSubmit(e)} noValidate className="space-y-6">
+      {pendingDraft && (
+        <div className="flex flex-col gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 sm:flex-row sm:items-center sm:justify-between dark:border-amber-900/60 dark:bg-amber-950/30 dark:text-amber-100">
+          <div>
+            <p className="font-semibold">Có bản nháp được lưu{formatDraftSavedAt(pendingDraft.savedAt) ? ` lúc ${formatDraftSavedAt(pendingDraft.savedAt)}` : ''}.</p>
+            <p className="text-xs text-amber-800/80 dark:text-amber-100/75">Bạn có thể khôi phục để tiếp tục nhập hoặc xóa bản nháp này.</p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <Button type="button" size="sm" variant="outline" onClick={handleDiscardDraft} className="h-8 bg-background text-xs">
+              Xóa bản nháp
+            </Button>
+            <Button type="button" size="sm" onClick={handleRestoreDraft} className="h-8 text-xs">
+              Khôi phục bản nháp
+            </Button>
+          </div>
+        </div>
+      )}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Column 1: General Info */}
         <div className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">

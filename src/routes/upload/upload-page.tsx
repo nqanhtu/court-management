@@ -18,11 +18,13 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { DataPageShell } from '@/components/common/data-page-shell'
+import { useSession } from '@/lib/hooks/use-auth'
 
 export default function UploadPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const mode = searchParams.get('mode') || 'manual-entry'
+  const { session } = useSession()
   
   const [isDirty, setIsDirty] = useState(false)
   const [showExitConfirm, setShowExitConfirm] = useState(false)
@@ -126,6 +128,7 @@ export default function UploadPage() {
           onCancel={handleBack}
           isDirty={isDirty}
           setIsDirty={setIsDirty}
+          draftOwnerId={session?.id}
         />
 
         {/* Unsaved Changes Confirmation Dialog */}

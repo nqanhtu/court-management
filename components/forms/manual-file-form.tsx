@@ -136,7 +136,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                     router.push(`/files/${fileId}`)
                 }
             } else {
-                toast.error('Tạo thất bại: ' + (result.error || 'Lỗi không xác định'))
+                toast.error('Tạo thất bại: ' + (result.message || result.error || 'Lỗi không xác định'))
             }
         } catch (error) {
             console.error(error)

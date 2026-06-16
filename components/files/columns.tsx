@@ -91,26 +91,32 @@ export const getColumns = (
     {
       accessorKey: "title",
       header: "Trích yếu / Tên văn bản",
-      cell: ({ row }) => (
-        <div className="max-w-100 font-medium leading-5">
-          {!fileId ? (
-            <Link 
-              to={`/files/${row.original.id}`}
-              className="cursor-pointer text-slate-900 transition-colors hover:text-primary hover:underline dark:text-slate-100"
-            >
-              {row.original.title}
-            </Link>
-          ) : (
-             <span>{row.original.title}</span>
-          )}
-          {/* Support both contentIndex (Child) and indexCode (Parent) */}
-          {(row.original.contentIndex || row.original.indexCode) && (
-            <div className="mt-1 text-xs text-muted-foreground">
-              MLVB: {row.original.contentIndex || row.original.indexCode}
-            </div>
-          )}
-        </div>
-      ),
+      cell: ({ row }) => {
+        const title = row.original.title;
+        const contentIndex = row.original.contentIndex || row.original.indexCode;
+
+        return (
+          <div className="w-[320px] max-w-[48vw] min-w-0 font-medium leading-5 sm:w-[420px] lg:w-[520px]">
+            {!fileId ? (
+              <Link
+                to={`/files/${row.original.id}`}
+                className="block truncate cursor-pointer text-slate-900 transition-colors hover:text-primary hover:underline dark:text-slate-100"
+                title={title}
+              >
+                {title}
+              </Link>
+            ) : (
+              <span className="block truncate" title={title}>{title}</span>
+            )}
+            {/* Support both contentIndex (Child) and indexCode (Parent) */}
+            {contentIndex && (
+              <div className="mt-1 truncate text-xs text-muted-foreground" title={`MLVB: ${contentIndex}`}>
+                MLVB: {contentIndex}
+              </div>
+            )}
+          </div>
+        )
+      },
     },
     {
       accessorKey: "status",

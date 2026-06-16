@@ -23,9 +23,10 @@ import {
 import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions';
 import { cn } from '@/lib/utils';
-import { FileText, Plus, Pencil, Trash2, Loader2, Keyboard, CheckCircle2 } from 'lucide-react';
+import { FileText, Plus, Pencil, Trash2, Loader2, Keyboard, CheckCircle2, Printer } from 'lucide-react';
 import type { DocumentDto } from '@/lib/api/types';
 import { toast } from 'sonner';
+import { printChildDocumentList } from '@/lib/files/print-child-documents';
 
 export type WorkspaceMode = 'idle' | 'create' | 'edit';
 
@@ -73,6 +74,8 @@ const childDocumentDraftKeys = [
 
 interface ChildDocumentWorkspaceProps {
     fileId: string;
+    parentFileCode: string;
+    parentFileTitle: string;
     parentYear?: number;
     parentRetention?: string;
     documents: DocumentDto[];
@@ -187,6 +190,8 @@ function formatDraftSavedAt(savedAt: string) {
 
 export function ChildDocumentWorkspace({
     fileId,
+    parentFileCode,
+    parentFileTitle,
     parentYear,
     parentRetention,
     documents,
@@ -494,6 +499,17 @@ export function ChildDocumentWorkspace({
 
     const isWorkspaceActive = mode !== 'idle';
 
+    const handlePrintList = () => {
+        const printed = printChildDocumentList(
+            { code: parentFileCode, title: parentFileTitle },
+            documents
+        );
+
+        if (!printed) {
+            toast.error('Không thể mở cửa sổ in. Vui lòng cho phép trình duyệt mở popup.');
+        }
+    };
+
     return (
         <Card id="documents-card" className={cn("transition-all duration-300", isWorkspaceActive && "ring-1 ring-primary/20 bg-slate-50/30")}>
             <CardHeader className="border-b pb-3">
@@ -502,12 +518,25 @@ export function ChildDocumentWorkspace({
                         <FileText className="mr-2 h-4 w-4 text-primary" />
                         Mục lục văn bản ({documents.length})
                     </CardTitle>
-                    {canManage && !isWorkspaceActive && (
-                        <Button size="sm" onClick={handleStartCreate} className="gap-1.5 h-8 text-xs font-semibold rounded-lg">
-                            <Plus className="w-3.5 h-3.5" />
-                            Thêm văn bản
+                    <div className="flex flex-wrap items-center gap-2">
+                        <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={handlePrintList}
+                            disabled={documents.length === 0}
+                            className="gap-1.5 h-8 text-xs font-semibold rounded-lg"
+                        >
+                            <Printer className="w-3.5 h-3.5" />
+                            In danh sách
                         </Button>
-                    )}
+                        {canManage && !isWorkspaceActive && (
+                            <Button size="sm" onClick={handleStartCreate} className="gap-1.5 h-8 text-xs font-semibold rounded-lg">
+                                <Plus className="w-3.5 h-3.5" />
+                                Thêm văn bản
+                            </Button>
+                        )}
+                    </div>
                 </div>
             </CardHeader>
             <CardContent className="pt-4">
@@ -628,7 +657,7 @@ function ChildDocumentTable({ documents, canManage, highlightedId, onEdit, onMut
                 <TableHeader className="bg-muted/30">
                     <TableRow className="hover:bg-transparent">
                         <TableHead className="w-[70px] text-xs font-semibold text-foreground py-2.5">TT</TableHead>
-                        <TableHead className="text-xs font-semibold text-foreground py-2.5">Trích yếu / Tên văn bản</TableHead>
+                        <TableHead className="w-[320px] max-w-[320px] text-xs font-semibold text-foreground py-2.5">Trích yếu / Tên văn bản</TableHead>
                         <TableHead className="text-xs font-semibold text-foreground py-2.5">Mã VB</TableHead>
                         <TableHead className="text-xs font-semibold text-foreground py-2.5">Thời gian</TableHead>
                         <TableHead className="text-right text-xs font-semibold text-foreground py-2.5">Số tờ</TableHead>
@@ -648,9 +677,17 @@ function ChildDocumentTable({ documents, canManage, highlightedId, onEdit, onMut
                                 )}
                             >
                                 <TableCell className="font-mono text-xs py-2.5 tabular-nums text-muted-foreground">{doc.order || index + 1}</TableCell>
-                                <TableCell className="font-semibold text-xs text-foreground max-w-[280px] py-2.5 break-words">
-                                    {doc.title}
-                                    {doc.contentIndex && <div className="text-[10px] text-muted-foreground font-normal mt-1">MLVB: {doc.contentIndex}</div>}
+                                <TableCell className="w-[320px] max-w-[320px] min-w-0 py-2.5">
+                                    <div className="min-w-0">
+                                        <div className="truncate text-xs font-semibold text-foreground" title={doc.title}>
+                                            {doc.title}
+                                        </div>
+                                        {doc.contentIndex && (
+                                            <div className="mt-1 truncate text-[10px] font-normal text-muted-foreground" title={`MLVB: ${doc.contentIndex}`}>
+                                                MLVB: {doc.contentIndex}
+                                            </div>
+                                        )}
+                                    </div>
                                 </TableCell>
                                 <TableCell className="text-xs py-2.5 font-mono">{doc.code || '-'}</TableCell>
                                 <TableCell className="font-mono text-xs py-2.5 tabular-nums">{doc.year || '-'}</TableCell>

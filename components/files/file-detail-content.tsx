@@ -540,6 +540,8 @@ export function FileDetailContent({ id }: { id: string }) {
                 {!isBasicViewer && (
                     <ChildDocumentWorkspace
                         fileId={file.id}
+                        parentFileCode={file.code}
+                        parentFileTitle={file.title}
                         parentYear={file.year || undefined}
                         parentRetention={file.retention || undefined}
                         documents={file.documents || []}

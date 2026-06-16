@@ -1,8 +1,11 @@
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
+import type { ComponentProps } from 'react'
 
 import { ChildDocumentWorkspace, type ChildDocumentDraft } from '@/components/files/child-document-workspace'
+import type { DocumentDto } from '@/lib/api/types'
 
 const apiFetch = vi.hoisted(() => vi.fn())
+const printChildDocumentList = vi.hoisted(() => vi.fn())
 const toastError = vi.hoisted(() => vi.fn())
 const toastSuccess = vi.hoisted(() => vi.fn())
 const toastWarning = vi.hoisted(() => vi.fn())
@@ -17,6 +20,10 @@ vi.mock('@/lib/hooks/use-autocomplete-suggestions', () => ({
     isLoading: false,
     isError: null,
   }),
+}))
+
+vi.mock('@/lib/files/print-child-documents', () => ({
+  printChildDocumentList,
 }))
 
 vi.mock('sonner', () => ({
@@ -61,15 +68,30 @@ function mockApiFetchSuccess() {
   })
 }
 
-function renderWorkspace() {
+function createDocument(overrides: Partial<DocumentDto> = {}): DocumentDto {
+  return {
+    id: 'doc-1',
+    fileId: 'file-1',
+    title: 'Bản án sơ thẩm',
+    pageCount: 12,
+    order: 1,
+    note: 'Bản chính',
+    ...overrides,
+  }
+}
+
+function renderWorkspace(overrides: Partial<ComponentProps<typeof ChildDocumentWorkspace>> = {}) {
   const props = {
     fileId: 'file-1',
+    parentFileCode: '02/HS/DH',
+    parentFileTitle: 'Hồ sơ vụ án',
     parentYear: 2026,
     parentRetention: '10 năm',
     documents: [],
     canManage: true,
     onMutate: vi.fn(),
     entryMode: 'idle' as const,
+    ...overrides,
   }
 
   render(<ChildDocumentWorkspace {...props} />)
@@ -87,6 +109,8 @@ describe('ChildDocumentWorkspace drafts', () => {
     toastError.mockReset()
     toastSuccess.mockReset()
     toastWarning.mockReset()
+    printChildDocumentList.mockReset()
+    printChildDocumentList.mockReturnValue(true)
     scrollIntoView.mockReset()
     mockApiFetchSuccess()
   })
@@ -173,5 +197,35 @@ describe('ChildDocumentWorkspace drafts', () => {
 
     await waitFor(() => expect(localStorage.getItem(draftKey)).toBeNull())
     expect(screen.queryByText(/Có bản nháp hồ sơ con được lưu/)).not.toBeInTheDocument()
+  })
+
+  it('shows a disabled print list button when there are no child documents', () => {
+    renderWorkspace()
+
+    expect(screen.getByRole('button', { name: /In danh sách/ })).toBeDisabled()
+  })
+
+  it('prints all child documents with parent file information', () => {
+    const documents = [
+      createDocument({ id: 'doc-1', title: 'Văn bản 1' }),
+      createDocument({ id: 'doc-2', title: 'Văn bản 2', order: 2 }),
+    ]
+    renderWorkspace({ documents, canManage: false })
+
+    fireEvent.click(screen.getByRole('button', { name: /In danh sách/ }))
+
+    expect(printChildDocumentList).toHaveBeenCalledWith(
+      { code: '02/HS/DH', title: 'Hồ sơ vụ án' },
+      documents
+    )
+  })
+
+  it('shows a clear error when the print popup is blocked', () => {
+    printChildDocumentList.mockReturnValue(false)
+    renderWorkspace({ documents: [createDocument()] })
+
+    fireEvent.click(screen.getByRole('button', { name: /In danh sách/ }))
+
+    expect(toastError).toHaveBeenCalledWith('Không thể mở cửa sổ in. Vui lòng cho phép trình duyệt mở popup.')
   })
 })

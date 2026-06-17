@@ -17,7 +17,7 @@ export function PrintFileCoversDialog({
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const [layout, setLayout] = useState<"1" | "2" | "4">("2");
+  const [layout, setLayout] = useState<"1" | "2" | "3" | "4">("2");
 
   const formatDate = (date: string | Date | null | undefined) => {
     if (!date) return "";
@@ -45,11 +45,13 @@ export function PrintFileCoversDialog({
     let gridStyle = "grid-template-columns: 1fr;";
     if (layout === "2") {
       gridStyle = "grid-template-columns: 1fr; grid-template-rows: 1fr 1fr; gap: 20mm;";
+    } else if (layout === "3") {
+      gridStyle = "grid-template-columns: 1fr; grid-template-rows: 1fr 1fr 1fr; gap: 10mm;";
     } else if (layout === "4") {
       gridStyle = "grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 10mm;";
     }
 
-    const numPerPage = layout === "1" ? 1 : layout === "2" ? 2 : 4;
+    const numPerPage = layout === "1" ? 1 : layout === "2" ? 2 : layout === "3" ? 3 : 4;
     const chunks = [];
     for (let i = 0; i < files.length; i += numPerPage) {
       chunks.push(files.slice(i, i + numPerPage));
@@ -197,7 +199,7 @@ export function PrintFileCoversDialog({
           Vui lòng chọn cách ghép trên khổ giấy A4:
         </div>
 
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           <Button
             variant={layout === "1" ? "default" : "outline"}
             className="h-auto flex-col py-4"
@@ -212,6 +214,14 @@ export function PrintFileCoversDialog({
             onClick={() => setLayout("2")}
           >
             <span className="text-lg font-bold mb-1">2</span>
+            <span className="text-xs">bìa / A4</span>
+          </Button>
+          <Button
+            variant={layout === "3" ? "default" : "outline"}
+            className="h-auto flex-col py-4"
+            onClick={() => setLayout("3")}
+          >
+            <span className="text-lg font-bold mb-1">3</span>
             <span className="text-xs">bìa / A4</span>
           </Button>
           <Button

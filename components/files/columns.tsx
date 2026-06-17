@@ -43,6 +43,9 @@ export type FileDocument = {
   status?: string | null
   createdBy?: { id: string, username: string, fullName: string } | null
   updatedBy?: { id: string, username: string, fullName: string } | null
+  defendants?: string[] | null
+  plaintiffs?: string[] | null
+  civilDefendants?: string[] | null
 }
 
 export const getColumns = (
@@ -142,6 +145,48 @@ export const getColumns = (
           </Badge>
         )
       },
+    },
+    {
+      id: "defendants_civil",
+      header: "Bị cáo / Bị đơn",
+      cell: ({ row }) => {
+        const defs = row.original.defendants || [];
+        const civilDefs = row.original.civilDefendants || [];
+        if (defs.length === 0 && civilDefs.length === 0) return <span className="text-muted-foreground">-</span>;
+        
+        return (
+          <div className="flex flex-wrap gap-1 max-w-[220px]">
+            {defs.map((name, i) => (
+              <Badge key={`def-${i}`} variant="outline" className="bg-red-50/50 border-red-200 text-red-700 text-xs font-normal px-2 py-0.5 whitespace-normal break-words h-auto text-left">
+                {name}
+              </Badge>
+            ))}
+            {civilDefs.map((name, i) => (
+              <Badge key={`civil-${i}`} variant="outline" className="bg-orange-50/50 border-orange-200 text-orange-700 text-xs font-normal px-2 py-0.5 whitespace-normal break-words h-auto text-left">
+                {name}
+              </Badge>
+            ))}
+          </div>
+        );
+      }
+    },
+    {
+      id: "plaintiffs_victims",
+      header: "Nguyên đơn / Bị hại",
+      cell: ({ row }) => {
+        const plaintiffs = row.original.plaintiffs || [];
+        if (plaintiffs.length === 0) return <span className="text-muted-foreground">-</span>;
+        
+        return (
+          <div className="flex flex-wrap gap-1 max-w-[220px]">
+            {plaintiffs.map((name, i) => (
+              <Badge key={i} variant="outline" className="bg-blue-50/50 border-blue-200 text-blue-700 text-xs font-normal px-2 py-0.5 whitespace-normal break-words h-auto text-left">
+                {name}
+              </Badge>
+            ))}
+          </div>
+        );
+      }
     },
     {
       accessorKey: "year",

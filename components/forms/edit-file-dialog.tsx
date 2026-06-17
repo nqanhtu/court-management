@@ -2,7 +2,7 @@
 
 import { apiFetch } from '@/lib/api/client';
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -23,6 +23,7 @@ import { queryClient } from '@/src/lib/query-client'
 import { queryKeys } from '@/src/lib/query-keys'
 import { AutocompleteInput } from '@/components/ui/autocomplete-input'
 import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 
@@ -49,6 +50,21 @@ interface EditFileDialogProps {
     onSuccess: () => void
 }
 
+const parseStringToDate = (dateStr: string): Date | null => {
+    if (!dateStr) return null
+    const parts = dateStr.split("/")
+    if (parts.length !== 3) return null
+    const day = parseInt(parts[0], 10)
+    const month = parseInt(parts[1], 10) - 1
+    const year = parseInt(parts[2], 10)
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null
+    const date = new Date(year, month, day)
+    if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
+        return date
+    }
+    return null
+}
+
 export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
     const [open, setOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
@@ -59,7 +75,11 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
     const formatDateForInput = (dateVal: string | Date | null | undefined) => {
         if (!dateVal) return ''
         try {
-            return new Date(dateVal).toISOString().split('T')[0]
+            const date = new Date(dateVal)
+            const day = String(date.getDate()).padStart(2, '0')
+            const month = String(date.getMonth() + 1).padStart(2, '0')
+            const year = date.getFullYear()
+            return `${day}/${month}/${year}`
         } catch {
             return ''
         }
@@ -117,9 +137,17 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
         }
     }
 
+    const prevYearRef = useRef<number | null>(null)
+
     useEffect(() => {
         if (open) {
             handleBoxbyYear(formData.year)
+            if (prevYearRef.current !== null && prevYearRef.current !== formData.year) {
+                setFormData(prev => ({ ...prev, boxId: '' }))
+            }
+            prevYearRef.current = formData.year
+        } else {
+            prevYearRef.current = null
         }
     }, [formData.year, open])
 
@@ -162,7 +190,7 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
                     note: formData.note,
                     datetime: new Date(),
                     judgmentNumber: formData.judgmentNumber,
-                    judgmentDate: formData.judgmentDate ? new Date(formData.judgmentDate) : null,
+                    judgmentDate: parseStringToDate(formData.judgmentDate),
                     pageCount: formData.pageCount,
                     defendants: splitToList(formData.defendants),
                     plaintiffs: splitToList(formData.plaintiffs),
@@ -281,11 +309,10 @@ export function EditFileDialog({ file, onSuccess }: EditFileDialogProps) {
                             </div>
                             <div className="space-y-2">
                                 <Label htmlFor="judgmentDate">Ngày xét xử</Label>
-                                <Input
+                                <DatePicker
                                     id="judgmentDate"
-                                    type="date"
                                     value={formData.judgmentDate}
-                                    onChange={(e) => setFormData({ ...formData, judgmentDate: e.target.value })}
+                                    onChange={(val) => setFormData({ ...formData, judgmentDate: val })}
                                 />
                             </div>
                             <div className="space-y-2 md:col-span-2">

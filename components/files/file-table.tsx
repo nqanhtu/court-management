@@ -71,7 +71,22 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
   const [isPrintModalOpen, setIsPrintModalOpen] = React.useState(false);
   const [printFiles, setPrintFiles] = React.useState<FileWithBox[]>([]);
   const [columnVisibility, setColumnVisibility] =
-    React.useState<VisibilityState>({})
+    React.useState<VisibilityState>(() => {
+      if (typeof window !== 'undefined') {
+        const stored = window.localStorage.getItem('files-table-column-visibility')
+        if (stored) {
+          try {
+            return JSON.parse(stored)
+          } catch {
+            // Ignore
+          }
+        }
+      }
+      return {
+        defendants_civil: false,
+        plaintiffs_victims: false,
+      }
+    })
   const [density, setDensity] = React.useState<'compact' | 'comfortable'>('comfortable')
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
@@ -87,6 +102,12 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
     const storedDensity = window.localStorage.getItem('files-table-density')
 
     if (storedVisibility) setColumnVisibility(JSON.parse(storedVisibility))
+    else {
+      setColumnVisibility({
+        defendants_civil: false,
+        plaintiffs_victims: false,
+      })
+    }
     if (storedDensity === 'compact' || storedDensity === 'comfortable') setDensity(storedDensity)
   }, [])
 
@@ -147,9 +168,9 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
 
   const columns = React.useMemo<ColumnDef<FileWithBox>[]>(
     () => getColumns(
-      undefined, 
-      () => { }, 
-      canManageFiles, 
+      undefined,
+      () => { },
+      canManageFiles,
       handleDeleteFile,
       (file) => handlePrintCovers([file as unknown as FileWithBox])
     ) as unknown as ColumnDef<FileWithBox>[],
@@ -235,7 +256,7 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
         toolbar={
           selectedRows.length > 0 ? (
             <div className="relative h-10 w-full overflow-hidden">
-              <div 
+              <div
                 className="absolute inset-0 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-3 text-slate-900 shadow-xs dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
               >
                 <div className="flex items-center gap-2 pl-1 text-sm font-semibold">
@@ -350,8 +371,8 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
                   className="hover:bg-muted/40 transition-colors data-[state=selected]:bg-primary/[0.04] dark:data-[state=selected]:bg-primary/[0.08] border-b border-muted/60"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell 
-                      key={cell.id} 
+                    <TableCell
+                      key={cell.id}
                       className={cn(
                         "px-3",
                         density === 'compact' ? 'py-1 text-xs' : 'py-2 text-sm',
@@ -379,13 +400,13 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
                         {hasActiveFilters ? 'Chưa có hồ sơ phù hợp' : 'Chưa có hồ sơ nào'}
                       </p>
                       <p className="mt-1 text-sm text-muted-foreground max-w-sm mx-auto">
-                        {hasActiveFilters 
-                          ? 'Thử thay đổi từ khóa tìm kiếm hoặc bấm đặt lại các bộ lọc đang áp dụng.' 
+                        {hasActiveFilters
+                          ? 'Thử thay đổi từ khóa tìm kiếm hoặc bấm đặt lại các bộ lọc đang áp dụng.'
                           : 'Tạo hồ sơ đầu tiên để bắt đầu quản lý lưu trữ.'}
                       </p>
                     </div>
                     {hasActiveFilters ? (
-                      <Button 
+                      <Button
                         onClick={() => {
                           const params = new URLSearchParams(searchParams);
                           [
@@ -403,8 +424,8 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
                           ].forEach((key) => params.delete(key));
                           params.set("page", "1");
                           window.location.search = params.toString();
-                        }} 
-                        size="sm" 
+                        }}
+                        size="sm"
                         variant="outline"
                         className="mt-2 rounded-lg"
                       >

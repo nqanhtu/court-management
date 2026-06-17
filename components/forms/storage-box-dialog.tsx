@@ -175,8 +175,8 @@ export function StorageBoxDialog({
   }
 
   const caseTypes = [
-    "Hình sự",
-    "Dân sự",
+    "Hình sự sơ thẩm",
+    "Dân sự sơ thẩm",
     "Hành chính",
     "Kinh doanh thương mại",
     "Lao động",

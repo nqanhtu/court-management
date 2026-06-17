@@ -59,6 +59,14 @@ export function AutocompleteInput({
   }, [normalizedSuggestions, inputValue])
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+      if (!open) {
+        e.preventDefault()
+        setOpen(true)
+        return
+      }
+    }
+
     if (!open || filteredSuggestions.length === 0) return
 
     if (e.key === "ArrowDown") {
@@ -88,7 +96,11 @@ export function AutocompleteInput({
         {...props}
         value={inputValue}
         onChange={handleInputChange}
-        onFocus={() => setOpen(true)}
+        onFocus={() => {
+          if (!value) {
+            setOpen(true)
+          }
+        }}
         onBlur={() => setTimeout(() => setOpen(false), 200)}
         className={cn("w-full", className)}
       />

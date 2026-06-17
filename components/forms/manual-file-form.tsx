@@ -17,11 +17,27 @@ import { queryClient } from '@/src/lib/query-client'
 import { queryKeys } from '@/src/lib/query-keys'
 import { AutocompleteInput } from '@/components/ui/autocomplete-input'
 import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions'
+import { DatePicker } from '@/components/ui/date-picker'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { useRouter } from '@/src/lib/router'
 
 interface ManualFileFormProps {
     onSuccess: () => void
+}
+
+const parseStringToDate = (dateStr: string): Date | null => {
+    if (!dateStr) return null
+    const parts = dateStr.split("/")
+    if (parts.length !== 3) return null
+    const day = parseInt(parts[0], 10)
+    const month = parseInt(parts[1], 10) - 1
+    const year = parseInt(parts[2], 10)
+    if (isNaN(day) || isNaN(month) || isNaN(year)) return null
+    const date = new Date(year, month, day)
+    if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
+        return date
+    }
+    return null
 }
 
 export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
@@ -75,7 +91,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                     note: formData.note,
                     datetime: new Date(),
                     judgmentNumber: formData.judgmentNumber,
-                    judgmentDate: formData.judgmentDate ? new Date(formData.judgmentDate) : null,
+                    judgmentDate: parseStringToDate(formData.judgmentDate),
                     pageCount: formData.pageCount,
                     defendants: splitToList(formData.defendants),
                     plaintiffs: splitToList(formData.plaintiffs),
@@ -152,6 +168,7 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
             const response = await apiFetch(`/api/admin/boxes?year=${year}`)
             if (response.ok) {
                 const data = await response.json()
+                console.log(data);
                 setBoxes(data)
             } else {
                 setBoxes([])
@@ -162,8 +179,14 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
         }
     }
 
+    const prevYearRef = useRef<number>(formData.year)
+
     useEffect(() => {
         handleBoxbyYear(formData.year)
+        if (prevYearRef.current !== formData.year) {
+            setFormData(prev => ({ ...prev, boxId: '' }))
+            prevYearRef.current = formData.year
+        }
     }, [formData.year])
 
     const boxOptions = boxes.map((b) => ({
@@ -241,11 +264,10 @@ export function ManualFileForm({ onSuccess }: ManualFileFormProps) {
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="judgmentDate">Ngày xét xử</Label>
-                        <Input
+                        <DatePicker
                             id="judgmentDate"
-                            type="date"
                             value={formData.judgmentDate}
-                            onChange={(e) => setFormData({ ...formData, judgmentDate: e.target.value })}
+                            onChange={(val) => setFormData({ ...formData, judgmentDate: val })}
                         />
                     </div>
                     <div className="space-y-2 md:col-span-2">

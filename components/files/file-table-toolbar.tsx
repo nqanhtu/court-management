@@ -46,8 +46,8 @@ const statuses = [
 ];
 
 const caseTypes = [
-  { label: "Hình sự", value: "Hình sự" },
-  { label: "Dân sự", value: "Dân sự" },
+  { label: "Hình sự sơ thẩm", value: "Hình sự sơ thẩm" },
+  { label: "Dân sự sơ thẩm", value: "Dân sự sơ thẩm" },
   { label: "Hành chính", value: "Hành chính" },
   { label: "Kinh tế", value: "Kinh tế" },
 ];
@@ -209,7 +209,9 @@ export function FileTableToolbar<TData>({
                     createdBy: 'Người tạo',
                     updatedBy: 'Người cập nhật',
                     note: 'Ghi chú',
-                    actions: 'Thao tác'
+                    actions: 'Thao tác',
+                    defendants_civil: 'Bị cáo / Bị đơn',
+                    plaintiffs_victims: 'Nguyên đơn / Bị hại'
                   }
                   return (
                     <DropdownMenuCheckboxItem

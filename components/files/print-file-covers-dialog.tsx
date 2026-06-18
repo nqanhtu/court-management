@@ -4,6 +4,7 @@ import { useState } from "react";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import Modal from "@/components/modal";
 import { Printer } from "lucide-react";
 import type { FileWithBox } from "./columns";
@@ -18,6 +19,7 @@ export function PrintFileCoversDialog({
   onClose: () => void;
 }) {
   const [layout, setLayout] = useState<"1" | "2" | "3" | "4">("2");
+  const [fontSize, setFontSize] = useState<number>(14);
 
   const formatDate = (date: string | Date | null | undefined) => {
     if (!date) return "";
@@ -126,7 +128,7 @@ export function PrintFileCoversDialog({
               font-family: 'Times New Roman', Times, serif;
               margin: 0;
               padding: 0;
-              font-size: 14pt;
+              font-size: ${fontSize}pt;
               line-height: 1.5;
             }
             .page-container {
@@ -232,6 +234,24 @@ export function PrintFileCoversDialog({
             <span className="text-lg font-bold mb-1">4</span>
             <span className="text-xs">bìa / A4</span>
           </Button>
+        </div>
+
+        <div className="space-y-2 border-t pt-4">
+          <label htmlFor="fontSize" className="text-xs font-semibold text-foreground block">
+            Cỡ chữ in (pt)
+          </label>
+          <div className="flex items-center gap-2">
+            <Input
+              id="fontSize"
+              type="number"
+              min={8}
+              max={36}
+              value={fontSize}
+              onChange={(e) => setFontSize(parseInt(e.target.value) || 14)}
+              className="w-24 h-9"
+            />
+            <span className="text-xs text-muted-foreground">(Mặc định: 14pt)</span>
+          </div>
         </div>
 
         <div className="flex justify-end gap-3 pt-4 border-t">

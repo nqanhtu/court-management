@@ -88,13 +88,42 @@ function getChildDocumentDraftKey(fileId: string) {
     return `${CHILD_DOCUMENT_DRAFT_KEY_PREFIX}:${fileId}`;
 }
 
+export function extractFileNumber(code: string): string {
+    if (!code) return '';
+    const parts = code.split(/[-/]/);
+    
+    // Check the last part if it is numeric
+    const lastPart = parts[parts.length - 1];
+    if (lastPart && /^\d+$/.test(lastPart)) {
+        return lastPart;
+    }
+    
+    // Check the first part if it is numeric
+    const firstPart = parts[0];
+    if (firstPart && /^\d+$/.test(firstPart)) {
+        return firstPart;
+    }
+    
+    // Find any purely numeric part that is not a 4-digit year (unless there is only a 4-digit year)
+    const numericParts = parts.filter(p => /^\d+$/.test(p));
+    if (numericParts.length > 0) {
+        const notYear = numericParts.find(p => p.length !== 4);
+        if (notYear) return notYear;
+        return numericParts[numericParts.length - 1];
+    }
+    
+    return code;
+}
+
 function getCreateChildDocumentDraft({
     fileId,
+    parentFileCode,
     parentYear,
     parentRetention,
     documents,
 }: {
     fileId: string;
+    parentFileCode: string;
     parentYear?: number;
     parentRetention?: string;
     documents: DocumentDto[];
@@ -104,7 +133,7 @@ function getCreateChildDocumentDraft({
         fileId,
         title: '',
         code: '',
-        contentIndex: '',
+        contentIndex: extractFileNumber(parentFileCode),
         year: parentYear || new Date().getFullYear(),
         pageCount: 0,
         order: nextOrder,
@@ -201,8 +230,8 @@ export function ChildDocumentWorkspace({
 }: ChildDocumentWorkspaceProps) {
     const [mode, setMode] = useState<WorkspaceMode>('idle');
     const currentInitialCreateDraft = useMemo(
-        () => getCreateChildDocumentDraft({ fileId, parentYear, parentRetention, documents }),
-        [fileId, parentYear, parentRetention, documents]
+        () => getCreateChildDocumentDraft({ fileId, parentFileCode, parentYear, parentRetention, documents }),
+        [fileId, parentFileCode, parentYear, parentRetention, documents]
     );
     const draftKey = getChildDocumentDraftKey(fileId);
     const hasUserEditedRef = useRef(false);
@@ -210,7 +239,7 @@ export function ChildDocumentWorkspace({
         fileId,
         title: '',
         code: '',
-        contentIndex: '',
+        contentIndex: extractFileNumber(parentFileCode),
         year: parentYear || new Date().getFullYear(),
         pageCount: 0,
         order: 1,
@@ -281,7 +310,7 @@ export function ChildDocumentWorkspace({
 
     const handleStartCreate = () => {
         hasUserEditedRef.current = false;
-        setDraft(getCreateChildDocumentDraft({ fileId, parentYear, parentRetention, documents }));
+        setDraft(getCreateChildDocumentDraft({ fileId, parentFileCode, parentYear, parentRetention, documents }));
         setIsDirty(false);
         setMode('create');
         setSuccessMessage(null);
@@ -416,7 +445,7 @@ export function ChildDocumentWorkspace({
                         fileId: prev.fileId,
                         title: '',
                         code: '',
-                        contentIndex: '',
+                        contentIndex: extractFileNumber(parentFileCode),
                         year: prev.year,
                         pageCount: 0,
                         order: (prev.order || 0) + 1,
@@ -856,25 +885,14 @@ function ChildDocumentEntryPanel({
                         />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2.5">
-                        <div className="space-y-1">
-                            <Label htmlFor="workspace-contentIndex" className="text-[10px] font-semibold text-foreground">MLVB (Ký hiệu)</Label>
-                            <Input
-                                id="workspace-contentIndex"
-                                value={draft.contentIndex}
-                                onChange={(e) => onDraftChange('contentIndex', e.target.value)}
-                                className="h-8 text-xs rounded-md"
-                            />
-                        </div>
-                        <div className="space-y-1">
-                            <Label htmlFor="workspace-code" className="text-[10px] font-semibold text-foreground">Mã quản lý</Label>
-                            <Input
-                                id="workspace-code"
-                                value={draft.code}
-                                onChange={(e) => onDraftChange('code', e.target.value)}
-                                className="h-8 text-xs rounded-md"
-                            />
-                        </div>
+                    <div className="space-y-1">
+                        <Label htmlFor="workspace-contentIndex" className="text-[10px] font-semibold text-foreground">MLVB (Ký hiệu)</Label>
+                        <Input
+                            id="workspace-contentIndex"
+                            value={draft.contentIndex}
+                            onChange={(e) => onDraftChange('contentIndex', e.target.value)}
+                            className="h-8 text-xs rounded-md"
+                        />
                     </div>
 
                     <div className="grid grid-cols-2 gap-2.5">

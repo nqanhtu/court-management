@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 import { Loader2, Plus } from 'lucide-react';
 import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions';
+import { extractFileNumber } from './child-document-workspace';
 
 
 export interface DocumentFormData {
@@ -58,6 +59,7 @@ type EditableDocument = {
 
 interface ChildDocumentFormModalProps {
     fileId: string
+    parentFileCode?: string
     document?: EditableDocument
     trigger?: React.ReactNode
     onSuccess?: () => void
@@ -68,6 +70,7 @@ interface ChildDocumentFormModalProps {
 
 export function ChildDocumentFormModal({
     fileId,
+    parentFileCode,
     document,
     trigger,
     onSuccess,
@@ -88,7 +91,7 @@ export function ChildDocumentFormModal({
         fileId: fileId,
         title: '',
         code: '',
-        contentIndex: '',
+        contentIndex: parentFileCode ? extractFileNumber(parentFileCode) : '',
         year: defaultYear || new Date().getFullYear(),
         pageCount: 0,
         order: defaultOrder || 1,
@@ -117,7 +120,7 @@ export function ChildDocumentFormModal({
                     fileId: fileId,
                     title: '',
                     code: '',
-                    contentIndex: '',
+                    contentIndex: parentFileCode ? extractFileNumber(parentFileCode) : '',
                     year: defaultYear || new Date().getFullYear(),
                     pageCount: 0,
                     order: defaultOrder || 1,
@@ -126,7 +129,7 @@ export function ChildDocumentFormModal({
                 })
             }
         }
-    }, [open, document, fileId, defaultYear, defaultOrder, defaultPreservationTime])
+    }, [open, document, fileId, defaultYear, defaultOrder, defaultPreservationTime, parentFileCode])
 
     const handleChange = (field: keyof DocumentFormData, value: string | number | undefined) => {
         setFormData(prev => ({ ...prev, [field]: value }))
@@ -174,7 +177,7 @@ export function ChildDocumentFormModal({
                         fileId: prev.fileId,
                         title: '',
                         code: '',
-                        contentIndex: '',
+                        contentIndex: parentFileCode ? extractFileNumber(parentFileCode) : '',
                         year: prev.year,
                         pageCount: 0,
                         order: (prev.order || 0) + 1,
@@ -235,21 +238,12 @@ export function ChildDocumentFormModal({
                                             className="h-9 text-xs rounded-md"
                                         />
                                     </div>
-                                    <div className="space-y-1">
+                                    <div className="space-y-1 col-span-2">
                                         <Label htmlFor="contentIndex" className="text-xs font-semibold text-foreground">MLVB (Số ký hiệu)</Label>
                                         <Input
                                             id="contentIndex"
                                             value={formData.contentIndex}
                                             onChange={(e) => handleChange('contentIndex', e.target.value)}
-                                            className="h-9 text-xs rounded-md"
-                                        />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Label htmlFor="code" className="text-xs font-semibold text-foreground">Mã quản lý</Label>
-                                        <Input
-                                            id="code"
-                                            value={formData.code}
-                                            onChange={(e) => handleChange('code', e.target.value)}
                                             className="h-9 text-xs rounded-md"
                                         />
                                     </div>

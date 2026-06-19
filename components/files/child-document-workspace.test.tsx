@@ -155,7 +155,6 @@ describe('ChildDocumentWorkspace drafts', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Khôi phục bản nháp' }))
 
     expect(screen.getByLabelText(/Trích yếu \/ Tên văn bản/)).toHaveValue('Văn bản nháp')
-    expect(screen.getByLabelText('Mã quản lý')).toHaveValue('VB-001')
   })
 
   it('discards a child profile draft and keeps the workspace idle', async () => {

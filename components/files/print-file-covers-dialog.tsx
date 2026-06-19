@@ -207,7 +207,7 @@ export function PrintFileCoversDialog({
             .page-container {
               display: grid;
               ${gridStyle}
-              height: calc(100vh - ${margin * 2}mm);
+              height: calc(297mm - ${margin * 2}mm);
               page-break-after: always;
             }
             .cover-wrapper {

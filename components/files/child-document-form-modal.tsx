@@ -29,7 +29,6 @@ import { toast } from 'sonner';
 import { Loader2, Plus } from 'lucide-react';
 import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions';
-import { extractFileNumber } from './child-document-workspace';
 
 
 export interface DocumentFormData {
@@ -91,7 +90,7 @@ export function ChildDocumentFormModal({
         fileId: fileId,
         title: '',
         code: '',
-        contentIndex: parentFileCode ? extractFileNumber(parentFileCode) : '',
+        contentIndex: parentFileCode || '',
         year: defaultYear || new Date().getFullYear(),
         pageCount: 0,
         order: defaultOrder || 1,
@@ -120,7 +119,7 @@ export function ChildDocumentFormModal({
                     fileId: fileId,
                     title: '',
                     code: '',
-                    contentIndex: parentFileCode ? extractFileNumber(parentFileCode) : '',
+                    contentIndex: parentFileCode || '',
                     year: defaultYear || new Date().getFullYear(),
                     pageCount: 0,
                     order: defaultOrder || 1,
@@ -177,7 +176,7 @@ export function ChildDocumentFormModal({
                         fileId: prev.fileId,
                         title: '',
                         code: '',
-                        contentIndex: parentFileCode ? extractFileNumber(parentFileCode) : '',
+                        contentIndex: parentFileCode || '',
                         year: prev.year,
                         pageCount: 0,
                         order: (prev.order || 0) + 1,
@@ -232,18 +231,9 @@ export function ChildDocumentFormModal({
                                         <AutocompleteInput
                                             id="title"
                                             value={formData.title}
-                                            suggestions={suggestions.titles}
+                                            suggestions={suggestions.documentTitles || []}
                                             onValueChange={(val) => handleChange('title', val)}
                                             placeholder="Nhập hoặc chọn trích yếu văn bản..."
-                                            className="h-9 text-xs rounded-md"
-                                        />
-                                    </div>
-                                    <div className="space-y-1 col-span-2">
-                                        <Label htmlFor="contentIndex" className="text-xs font-semibold text-foreground">MLVB (Số ký hiệu)</Label>
-                                        <Input
-                                            id="contentIndex"
-                                            value={formData.contentIndex}
-                                            onChange={(e) => handleChange('contentIndex', e.target.value)}
                                             className="h-9 text-xs rounded-md"
                                         />
                                     </div>

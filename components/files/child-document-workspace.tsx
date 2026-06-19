@@ -133,7 +133,7 @@ function getCreateChildDocumentDraft({
         fileId,
         title: '',
         code: '',
-        contentIndex: extractFileNumber(parentFileCode),
+        contentIndex: parentFileCode,
         year: parentYear || new Date().getFullYear(),
         pageCount: 0,
         order: nextOrder,
@@ -239,7 +239,7 @@ export function ChildDocumentWorkspace({
         fileId,
         title: '',
         code: '',
-        contentIndex: extractFileNumber(parentFileCode),
+        contentIndex: parentFileCode,
         year: parentYear || new Date().getFullYear(),
         pageCount: 0,
         order: 1,
@@ -445,7 +445,7 @@ export function ChildDocumentWorkspace({
                         fileId: prev.fileId,
                         title: '',
                         code: '',
-                        contentIndex: extractFileNumber(parentFileCode),
+                        contentIndex: parentFileCode,
                         year: prev.year,
                         pageCount: 0,
                         order: (prev.order || 0) + 1,
@@ -878,22 +878,13 @@ function ChildDocumentEntryPanel({
                         <AutocompleteInput
                             id="workspace-title"
                             value={draft.title}
-                            suggestions={suggestions.titles}
+                            suggestions={suggestions.documentTitles || []}
                             onValueChange={(val) => onDraftChange('title', val)}
                             placeholder="Nhập hoặc chọn trích yếu..."
                             className="h-8 text-xs rounded-md"
                         />
                     </div>
 
-                    <div className="space-y-1">
-                        <Label htmlFor="workspace-contentIndex" className="text-[10px] font-semibold text-foreground">MLVB (Ký hiệu)</Label>
-                        <Input
-                            id="workspace-contentIndex"
-                            value={draft.contentIndex}
-                            onChange={(e) => onDraftChange('contentIndex', e.target.value)}
-                            className="h-8 text-xs rounded-md"
-                        />
-                    </div>
 
                     <div className="grid grid-cols-2 gap-2.5">
                         <div className="space-y-1">

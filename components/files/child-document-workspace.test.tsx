@@ -16,7 +16,7 @@ vi.mock('@/lib/api/client', () => ({
 
 vi.mock('@/lib/hooks/use-autocomplete-suggestions', () => ({
   useAutocompleteSuggestions: () => ({
-    suggestions: { types: [], retentions: [], titles: [] },
+    suggestions: { types: [], retentions: [], titles: [], documentTitles: [] },
     isLoading: false,
     isError: null,
   }),

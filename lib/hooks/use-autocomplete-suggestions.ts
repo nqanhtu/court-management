@@ -13,9 +13,10 @@ export function useAutocompleteSuggestions() {
   const rawSuggestions = query.data;
 
   const suggestions = useMemo(() => {
-    if (!rawSuggestions) return { types: [], retentions: [], titles: [] }
+    if (!rawSuggestions) return { types: [], retentions: [], titles: [], documentTitles: [] }
     return {
       ...rawSuggestions,
+      documentTitles: rawSuggestions.documentTitles || [],
       types: (rawSuggestions.types || []).map(t => {
         if (t === 'Hình sự') return 'Hình sự sơ thẩm'
         if (t === 'Dân sự') return 'Dân sự sơ thẩm'

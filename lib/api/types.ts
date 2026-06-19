@@ -193,4 +193,5 @@ export type AutocompleteSuggestions = {
   types: string[]
   retentions: string[]
   titles: string[]
+  documentTitles?: string[]
 }

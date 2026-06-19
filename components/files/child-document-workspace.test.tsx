@@ -227,4 +227,19 @@ describe('ChildDocumentWorkspace drafts', () => {
 
     expect(toastError).toHaveBeenCalledWith('Không thể mở cửa sổ in. Vui lòng cho phép trình duyệt mở popup.')
   })
+
+  it('renders "Nhập từ Excel" button when user can manage and workspace is idle', () => {
+    renderWorkspace({ canManage: true, entryMode: 'idle' })
+    expect(screen.getAllByRole('button', { name: /Nhập từ Excel/ })[0]).toBeInTheDocument()
+  })
+
+  it('hides "Nhập từ Excel" button when user cannot manage', () => {
+    renderWorkspace({ canManage: false })
+    expect(screen.queryByRole('button', { name: /Nhập từ Excel/ })).not.toBeInTheDocument()
+  })
+
+  it('hides "Nhập từ Excel" button when workspace is active (creating or editing)', () => {
+    renderWorkspace({ canManage: true, entryMode: 'create' })
+    expect(screen.queryByRole('button', { name: /Nhập từ Excel/ })).not.toBeInTheDocument()
+  })
 })

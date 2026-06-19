@@ -23,10 +23,11 @@ import {
 import { AutocompleteInput } from '@/components/ui/autocomplete-input';
 import { useAutocompleteSuggestions } from '@/lib/hooks/use-autocomplete-suggestions';
 import { cn } from '@/lib/utils';
-import { FileText, Plus, Pencil, Trash2, Loader2, Keyboard, CheckCircle2, Printer } from 'lucide-react';
+import { FileText, Plus, Pencil, Trash2, Loader2, Keyboard, CheckCircle2, Printer, FileSpreadsheet } from 'lucide-react';
 import type { DocumentDto } from '@/lib/api/types';
 import { toast } from 'sonner';
 import { printChildDocumentList } from '@/lib/files/print-child-documents';
+import { ChildDocumentUploadModal } from './child-document-upload-modal';
 
 export type WorkspaceMode = 'idle' | 'create' | 'edit';
 
@@ -560,10 +561,27 @@ export function ChildDocumentWorkspace({
                             In danh sách
                         </Button>
                         {canManage && !isWorkspaceActive && (
-                            <Button size="sm" onClick={handleStartCreate} className="gap-1.5 h-8 text-xs font-semibold rounded-lg">
-                                <Plus className="w-3.5 h-3.5" />
-                                Thêm văn bản
-                            </Button>
+                            <>
+                                <ChildDocumentUploadModal
+                                    fileId={fileId}
+                                    onSuccess={onMutate}
+                                    trigger={
+                                        <Button
+                                            type="button"
+                                            size="sm"
+                                            variant="outline"
+                                            className="gap-1.5 h-8 text-xs font-semibold rounded-lg border-dashed"
+                                        >
+                                            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-500" />
+                                            Nhập từ Excel
+                                        </Button>
+                                    }
+                                />
+                                <Button size="sm" onClick={handleStartCreate} className="gap-1.5 h-8 text-xs font-semibold rounded-lg">
+                                    <Plus className="w-3.5 h-3.5" />
+                                    Thêm văn bản
+                                </Button>
+                            </>
                         )}
                     </div>
                 </div>
@@ -608,10 +626,27 @@ export function ChildDocumentWorkspace({
                                         {isWorkspaceActive ? "Văn bản vừa lưu sẽ xuất hiện tại đây." : "Nhập văn bản con để hoàn thiện mục lục tài liệu."}
                                     </p>
                                     {canManage && !isWorkspaceActive && (
-                                        <Button size="sm" onClick={handleStartCreate} className="gap-1.5 h-8 text-xs font-semibold rounded-lg">
-                                            <Plus className="w-3.5 h-3.5" />
-                                            Thêm văn bản
-                                        </Button>
+                                        <div className="flex items-center gap-2">
+                                            <ChildDocumentUploadModal
+                                                fileId={fileId}
+                                                onSuccess={onMutate}
+                                                trigger={
+                                                    <Button
+                                                        type="button"
+                                                        size="sm"
+                                                        variant="outline"
+                                                        className="gap-1.5 h-8 text-xs font-semibold rounded-lg border-dashed"
+                                                    >
+                                                        <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-500" />
+                                                        Nhập từ Excel
+                                                    </Button>
+                                                }
+                                            />
+                                            <Button size="sm" onClick={handleStartCreate} className="gap-1.5 h-8 text-xs font-semibold rounded-lg">
+                                                <Plus className="w-3.5 h-3.5" />
+                                                Thêm văn bản
+                                            </Button>
+                                        </div>
                                     )}
                                 </div>
                             )}

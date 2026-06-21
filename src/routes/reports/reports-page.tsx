@@ -4,14 +4,16 @@ import { useState } from "react";
 import { Download, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ReportDashboard } from "@/components/reports/report-dashboard";
+import { UserContributionsReport } from "@/components/reports/user-contributions-report";
 import { apiFetch } from "@/lib/api/client";
 import { toast } from "sonner";
 import { PrintActionButton } from "@/components/common/print-action-button";
-
 import { DataPageShell } from "@/components/common/data-page-shell";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Reports() {
   const [isExporting, setIsExporting] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>("borrows");
 
   const exportReport = async (format: "xlsx" | "csv") => {
     setIsExporting(true);
@@ -43,21 +45,34 @@ export default function Reports() {
             <h1 className="text-xl font-bold text-foreground">Báo cáo & Thống kê</h1>
             <p className="text-xs text-muted-foreground">Theo dõi hiệu suất hoạt động kho hồ sơ.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <PrintActionButton onClick={() => window.print()} />
-            <Button variant="outline" className="h-9" onClick={() => exportReport("csv")} disabled={isExporting}>
-              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              CSV
-            </Button>
-            <Button variant="outline" className="h-9" onClick={() => exportReport("xlsx")} disabled={isExporting}>
-              {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
-              Excel
-            </Button>
-          </div>
+          {activeTab === "borrows" && (
+            <div className="flex items-center gap-2">
+              <PrintActionButton onClick={() => window.print()} />
+              <Button variant="outline" className="h-9" onClick={() => exportReport("csv")} disabled={isExporting}>
+                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                CSV
+              </Button>
+              <Button variant="outline" className="h-9" onClick={() => exportReport("xlsx")} disabled={isExporting}>
+                {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                Excel
+              </Button>
+            </div>
+          )}
         </div>
       }
     >
-      <ReportDashboard />
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full flex flex-col gap-4">
+        <TabsList className="grid grid-cols-2 max-w-[400px]">
+          <TabsTrigger value="borrows">Giao dịch Mượn trả</TabsTrigger>
+          <TabsTrigger value="contributions">Thống kê đóng góp</TabsTrigger>
+        </TabsList>
+        <TabsContent value="borrows" className="mt-0">
+          <ReportDashboard />
+        </TabsContent>
+        <TabsContent value="contributions" className="mt-0">
+          <UserContributionsReport />
+        </TabsContent>
+      </Tabs>
     </DataPageShell>
   );
 }

@@ -43,7 +43,8 @@ describe('api client', () => {
     expect(localStorage.getItem('deviceMacAddress')).toBe(firstHeaders['x-mac-address'])
   })
 
-  it('uses configured backend origins outside production only', async () => {
+  it('uses configured backend origins in production only', async () => {
+    vi.stubEnv('PROD', true)
     vi.stubEnv('VITE_API_URL', 'https://api.example.com/')
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,
@@ -56,8 +57,8 @@ describe('api client', () => {
     expect(fetchMock).toHaveBeenCalledWith('https://api.example.com/api/health', expect.any(Object))
   })
 
-  it('keeps production API calls same-origin even when VITE_API_URL is present', async () => {
-    vi.stubEnv('PROD', true)
+  it('keeps non-production API calls same-origin even when VITE_API_URL is present', async () => {
+    vi.stubEnv('PROD', false)
     vi.stubEnv('VITE_API_URL', 'https://api.example.com/')
     const fetchMock = vi.fn().mockResolvedValue({
       ok: true,

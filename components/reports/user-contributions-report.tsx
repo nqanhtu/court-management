@@ -18,7 +18,8 @@ export function UserContributionsReport() {
   const isAdmin = ['SUPER_ADMIN', 'ADMIN'].includes(session?.role || '')
 
   // State filters
-  const [selectedUserId, setSelectedUserId] = useState<string>(session?.id || '')
+  const [selectedUserId, setSelectedUserId] = useState<string>('')
+  const activeUserId = selectedUserId || session?.id || ''
   const [dateRangePreset, setDateRangePreset] = useState<'7' | '30' | 'month'>('30')
 
   const dateFilters = useMemo(() => {
@@ -38,7 +39,7 @@ export function UserContributionsReport() {
   }, [dateRangePreset])
 
   const { data, isLoading } = useUserContributions({
-    userId: selectedUserId,
+    userId: activeUserId,
     from: dateFilters.from,
     to: dateFilters.to,
   })
@@ -61,10 +62,13 @@ export function UserContributionsReport() {
 
   // Format chart date
   const chartData = useMemo(() => {
-    return contributionsList.map((c) => ({
-      ...c,
-      formattedDate: format(new Date(c.date), 'dd/MM'),
-    }))
+    return contributionsList.map((c) => {
+      const [, m, d] = c.date.split('-')
+      return {
+        ...c,
+        formattedDate: `${d}/${m}`,
+      }
+    })
   }, [contributionsList])
 
   // Filter active users to list
@@ -81,7 +85,7 @@ export function UserContributionsReport() {
 
         <div className="flex flex-wrap gap-2 w-full sm:w-auto">
           {isAdmin && (
-            <Select value={selectedUserId} onValueChange={setSelectedUserId}>
+            <Select value={activeUserId} onValueChange={setSelectedUserId}>
               <SelectTrigger className="w-[200px] h-9">
                 <SelectValue placeholder="Chọn cán bộ" />
               </SelectTrigger>
@@ -139,7 +143,7 @@ export function UserContributionsReport() {
                   <stat.icon className="size-3.5" />
                 </span>
                 <div>
-                  <div className="text-[10px] font-semibold">{stat.label}</div>
+                  <div className="text-xs font-semibold">{stat.label}</div>
                   <p className="mt-0.5 text-lg font-semibold leading-none tabular-nums">{stat.value}</p>
                 </div>
               </div>
@@ -151,7 +155,7 @@ export function UserContributionsReport() {
             <h3 className="text-sm font-semibold mb-4">Biểu đồ đóng góp nhập dữ liệu</h3>
             <div className="h-64 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
+                <BarChart data={chartData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
                   <XAxis dataKey="formattedDate" fontSize={11} stroke="#888888" tickLine={false} />
                   <YAxis fontSize={11} stroke="#888888" tickLine={false} allowDecimals={false} />
                   <Tooltip contentStyle={{ fontSize: 12 }} />
@@ -185,16 +189,20 @@ export function UserContributionsReport() {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  [...contributionsList].reverse().map((row) => (
-                    <TableRow key={row.date} className={row.total > 0 ? '' : 'opacity-60'}>
-                      <TableCell className="font-medium">
-                        {format(new Date(row.date), 'dd/MM/yyyy')}
-                      </TableCell>
-                      <TableCell className="text-center tabular-nums">{row.files}</TableCell>
-                      <TableCell className="text-center tabular-nums">{row.documents}</TableCell>
-                      <TableCell className="text-right font-semibold tabular-nums">{row.total}</TableCell>
-                    </TableRow>
-                  ))
+                  [...contributionsList].reverse().map((row) => {
+                    const [y, m, d] = row.date.split('-')
+                    const formattedDisplayDate = `${d}/${m}/${y}`
+                    return (
+                      <TableRow key={row.date} className={row.total > 0 ? '' : 'opacity-60'}>
+                        <TableCell className="font-medium">
+                          {formattedDisplayDate}
+                        </TableCell>
+                        <TableCell className="text-center tabular-nums">{row.files}</TableCell>
+                        <TableCell className="text-center tabular-nums">{row.documents}</TableCell>
+                        <TableCell className="text-right font-semibold tabular-nums">{row.total}</TableCell>
+                      </TableRow>
+                    )
+                  })
                 )}
               </TableBody>
             </Table>

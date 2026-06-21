@@ -83,6 +83,7 @@ interface ChildDocumentWorkspaceProps {
     canManage: boolean;
     onMutate: () => void;
     entryMode?: 'create' | 'idle';
+    isSuperAdmin?: boolean;
 }
 
 function getChildDocumentDraftKey(fileId: string) {
@@ -227,7 +228,8 @@ export function ChildDocumentWorkspace({
     documents,
     canManage,
     onMutate,
-    entryMode = 'idle'
+    entryMode = 'idle',
+    isSuperAdmin = false
 }: ChildDocumentWorkspaceProps) {
     const [mode, setMode] = useState<WorkspaceMode>('idle');
     const currentInitialCreateDraft = useMemo(
@@ -611,6 +613,7 @@ export function ChildDocumentWorkspace({
                                 <ChildDocumentTable
                                     documents={documents}
                                     canManage={canManage}
+                                    isSuperAdmin={isSuperAdmin}
                                     highlightedId={highlightedRowId}
                                     onEdit={handleStartEdit}
                                     onMutate={onMutate}
@@ -709,12 +712,13 @@ export function ChildDocumentWorkspace({
 interface TableProps {
     documents: DocumentDto[];
     canManage: boolean;
+    isSuperAdmin?: boolean;
     highlightedId: string | null;
     onEdit: (doc: DocumentDto) => void;
     onMutate: () => void;
 }
 
-function ChildDocumentTable({ documents, canManage, highlightedId, onEdit, onMutate }: TableProps) {
+function ChildDocumentTable({ documents, canManage, isSuperAdmin, highlightedId, onEdit, onMutate }: TableProps) {
     return (
         <div className="overflow-x-auto rounded-lg border">
             <Table className="w-full min-w-[650px]">
@@ -768,7 +772,9 @@ function ChildDocumentTable({ documents, canManage, highlightedId, onEdit, onMut
                                                 </TooltipTrigger>
                                                 <TooltipContent className="text-xs">Chỉnh sửa văn bản</TooltipContent>
                                             </Tooltip>
-                                            <ChildDocumentDeleteDialog docId={doc.id} docTitle={doc.title || ''} onMutate={onMutate} />
+                                            {isSuperAdmin && (
+                                                <ChildDocumentDeleteDialog docId={doc.id} docTitle={doc.title || ''} onMutate={onMutate} />
+                                            )}
                                         </div>
                                     </TableCell>
                                 )}

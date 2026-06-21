@@ -172,9 +172,10 @@ export function FileTable({ files, isLoading, role, canBorrow = false, canManage
       () => { },
       canManageFiles,
       handleDeleteFile,
-      (file) => handlePrintCovers([file as unknown as FileWithBox])
+      (file) => handlePrintCovers([file as unknown as FileWithBox]),
+      role === 'SUPER_ADMIN'
     ) as unknown as ColumnDef<FileWithBox>[],
-    [canManageFiles, handleDeleteFile, handlePrintCovers]
+    [canManageFiles, handleDeleteFile, handlePrintCovers, role]
   )
 
 

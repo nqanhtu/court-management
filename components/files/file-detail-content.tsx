@@ -250,7 +250,7 @@ export function FileDetailContent({ id }: { id: string }) {
                     {showEditButton && (
                         <EditFileDialog file={file} onSuccess={() => mutate()} />
                     )}
-                    {canManageFiles && (
+                    {session?.role === 'SUPER_ADMIN' && (
                         <AlertDialog>
                             <AlertDialogTrigger asChild>
                                 <Button variant="outline" className="w-full text-destructive hover:text-destructive sm:w-auto">
@@ -546,6 +546,7 @@ export function FileDetailContent({ id }: { id: string }) {
                         parentRetention={file.retention || undefined}
                         documents={file.documents || []}
                         canManage={canEditFile}
+                        isSuperAdmin={session?.role === 'SUPER_ADMIN'}
                         onMutate={() => mutate()}
                         entryMode={new URLSearchParams(window.location.search).get('entry') === 'create' ? 'create' : 'idle'}
                     />

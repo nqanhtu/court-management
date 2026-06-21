@@ -53,7 +53,8 @@ export const getColumns = (
   mutate: () => void,
   canManageFiles = false,
   onDeleteFile?: (file: FileDocument) => void,
-  onPrintFile?: (file: FileDocument) => void
+  onPrintFile?: (file: FileDocument) => void,
+  isSuperAdmin = false
 ): ColumnDef<FileDocument>[] => {
   const cols: ColumnDef<FileDocument>[] = [
     {
@@ -239,35 +240,37 @@ export const getColumns = (
                   <Printer className="h-4 w-4" />
                 </Button>
               )}
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50 dark:hover:text-red-400"
-                    title="Lưu trữ hồ sơ"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Lưu trữ hồ sơ?</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Hồ sơ sẽ chuyển sang trạng thái ngừng sử dụng và bị ẩn khỏi danh sách mặc định. Lịch sử mượn/trả vẫn được giữ lại.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Hủy</AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-red-600 hover:bg-red-700"
-                      onClick={() => onDeleteFile?.(doc)}
+              {onDeleteFile && isSuperAdmin && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50 dark:hover:text-red-400"
+                      title="Lưu trữ hồ sơ"
                     >
-                      Lưu trữ
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Lưu trữ hồ sơ?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Hồ sơ sẽ chuyển sang trạng thái ngừng sử dụng và bị ẩn khỏi danh sách mặc định. Lịch sử mượn/trả vẫn được giữ lại.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Hủy</AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-red-600 hover:bg-red-700"
+                        onClick={() => onDeleteFile?.(doc)}
+                      >
+                        Lưu trữ
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
             </div>
           )
         }
@@ -289,44 +292,46 @@ export const getColumns = (
               }
               onSuccess={() => mutate()}
             />
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50 dark:hover:text-red-400"
-                  title="Xóa văn bản"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Xác nhận xóa văn bản?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Hành động này không thể hoàn tác. Văn bản này sẽ bị xóa vĩnh viễn khỏi hồ sơ.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Hủy</AlertDialogCancel>
-                  <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
-                    try {
-                      const res = await apiFetch(`/api/documents/${doc.id}`, {
-                        method: 'DELETE'
-                      })
-                      if (res.ok) {
-                        toast.success('Xóa thành công')
-                        mutate()
-                      } else {
+            {isSuperAdmin && (
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-8 w-8 text-muted-foreground hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/50 dark:hover:text-red-400"
+                    title="Xóa văn bản"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Xác nhận xóa văn bản?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Hành động này không thể hoàn tác. Văn bản này sẽ bị xóa vĩnh viễn khỏi hồ sơ.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Hủy</AlertDialogCancel>
+                    <AlertDialogAction className="bg-red-600 hover:bg-red-700" onClick={async () => {
+                      try {
+                        const res = await apiFetch(`/api/documents/${doc.id}`, {
+                          method: 'DELETE'
+                        })
+                        if (res.ok) {
+                          toast.success('Xóa thành công')
+                          mutate()
+                        } else {
+                          toast.error('Xóa thất bại')
+                        }
+                      } catch {
                         toast.error('Xóa thất bại')
                       }
-                    } catch {
-                      toast.error('Xóa thất bại')
-                    }
-                  }}>Xóa</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+                    }}>Xóa</AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            )}
           </div>
         )
       },

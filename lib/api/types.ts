@@ -195,3 +195,17 @@ export type AutocompleteSuggestions = {
   titles: string[]
   documentTitles?: string[]
 }
+
+export type DailyContribution = {
+  date: string
+  files: number
+  documents: number
+  total: number
+}
+
+export type UserContributionsResponse = {
+  userId: string
+  fullName: string
+  username: string
+  contributions: DailyContribution[]
+}

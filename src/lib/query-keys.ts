@@ -36,6 +36,8 @@ export const queryKeys = {
   reports: {
     stats: ['reports', 'stats'] as const,
     files: (params?: string) => ['reports', 'files', params || ''] as const,
+    contributions: (params: { userId?: string; from?: string; to?: string }) => 
+      ['reports', 'contributions', params.userId || '', params.from || '', params.to || ''] as const,
   },
   backup: {
     schedule: ['backup', 'schedule'] as const,
